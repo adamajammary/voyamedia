@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<modal x="0" y="0" width="300" height="300" centered="true">
+  <panel id="modal" orientation="vertical" border-width="1">
+    <panel id="modal_top" height="15%" border-width="1">
+      <button id="modal_desc" halign="center" valign="middle">%settings</button>
+    </panel>
+    <panel id="modal_middle" orientation="vertical" halign="center" valign="middle" border-width="1" margin="3">
+      <button id="modal_settings_clean_db" halign="center" valign="middle" width="90%" height="20%" border-width="1">%settings.clean.db</button>
+      <button id="modal_settings_clean_thumbs" halign="center" valign="middle" width="90%" height="20%" border-width="1">%settings.clean.thumbs</button>
+      <button id="modal_settings_color" halign="center" valign="middle" width="90%" height="20%" border-width="1">%settings.color.light</button>
+      <button id="modal_settings_lang" halign="center" valign="middle" width="90%" height="20%" border-width="1">%settings.lang</button>
+    </panel>
+    <panel id="modal_bottom" halign="center" valign="middle" height="20%" border-width="1">
+      <button id="modal_cancel" halign="center" valign="middle" width="50%" height="50%" border-width="1">%cancel</button>
+    </panel>
+  </panel>
+</modal>

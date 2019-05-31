@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<modal x="0" y="0" width="300" height="300" centered="true">
+  <panel id="modal" orientation="vertical" border-width="1">
+    <panel id="modal_top" height="15%" border-width="1">
+      <button id="modal_desc" halign="center" valign="middle">%settings.player.title</button>
+    </panel>
+    <panel id="modal_middle" orientation="vertical" halign="center" valign="middle" border-width="1" margin="10">
+      <button id="modal_player_settings_audio" halign="center" valign="middle" width="90%" height="20%" border-width="1" modal="modal_player_settings_audio">%settings.player.audio</button>
+      <button id="modal_player_settings_subs"  halign="center" valign="middle" width="90%" height="20%" border-width="1" modal="modal_player_settings_subs">%settings.player.subs</button>
+      <button id="modal_player_settings_info"  halign="center" valign="middle" width="90%" height="20%" border-width="1" modal="modal_details">INFO</button>
+    </panel>
+    <panel id="modal_bottom" halign="center" valign="middle" height="20%" border-width="1">
+      <button id="modal_ok" halign="center" valign="middle" width="50%" height="50%" border-width="1">OK</button>
+    </panel>
+  </panel>
+</modal>

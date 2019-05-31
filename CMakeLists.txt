@@ -1,0 +1,87 @@
+cmake_minimum_required(VERSION 3.12)
+
+project (VoyaMedia)
+
+# Voya Media depends on the following libraries:
+# - curl, ffmpeg, FreeImage, freetype, libupnp, libxml2, mjson, openssl, sdl2, sdl2_ttf, sqlite, zlib
+# You can find the library sources in SOURCEFORGE_URL below:
+
+set(SOURCEFORGE_URL "https://sourceforge.net/projects/voyamedia/files/VoyaMedia/3.x")
+set(EXT_LIB_DIR     "../build/libs/x64")
+set(INC_DIR         "${EXT_LIB_DIR}/include")
+set(LIB_DIR         "${EXT_LIB_DIR}/lib")
+set(CPP_VERSION     "14")
+
+if (APPLE)
+    file(GLOB LIBS_DYLIB "${LIB_DIR}/*.dylib")
+
+    set(OS                  "_macosx")
+    set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -ObjC++ -std=c++${CPP_VERSION}")
+    set(LIBS                ${LIBS_DYLIB})
+    set(OSX_SDK_VERSION     "10.14")
+    set(OSX_FRAMEWORKS_PATH "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SDK_VERSION}.sdk/System/Library/Frameworks")
+elseif (UNIX)
+    file(GLOB LIBS_SO "${LIB_DIR}/*.so")
+
+    set(OS "_linux")
+
+    execute_process(COMMAND pkg-config --cflags gtk+-3.0 OUTPUT_VARIABLE GTK_CFLAGS)
+    string(REPLACE "-I" " -I " GTK_CFLAGS2 ${GTK_CFLAGS})
+    separate_arguments(GTK UNIX_COMMAND ${GTK_CFLAGS2})
+
+    execute_process(COMMAND pkg-config --libs gtk+-3.0 OUTPUT_VARIABLE GTK_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
+    set(LIBS ${LIBS_SO} ${GTK_LIBS})
+elseif (WIN32)
+    file(GLOB LIBS_LIB RELATIVE ${LIB_DIR} "${LIB_DIR}/*.lib")
+    
+    set(OS     "_windows")
+    set(DEFS   "UPNP_INLINE=_inline")
+    set(DIRENT "C:/BUILD_TOOLS/dirent")
+    set(LIBS   ${LIBS_LIB} Ws2_32.lib)
+    set(RES    "build/windows/VoyaMedia.rc")
+endif()
+
+file(GLOB SOURCES_H   "src/*/*.h")
+file(GLOB SOURCES_CPP "src/*/*.cpp")
+
+add_compile_definitions(${OS} ${DEFS})
+
+include_directories(${INC_DIR} ${INC_DIR}/freetype2 ${INC_DIR}/libxml2 ${INC_DIR}/mjson-1.7 ${DIRENT} ${GTK})
+link_directories(${LIB_DIR})
+
+add_executable(VoyaMedia ${SOURCES_CPP} ${SOURCES_H} ${RES})
+target_link_libraries(VoyaMedia ${LIBS})
+
+if (NOT EXISTS ./NotoSans-Merged.ttf)
+    file(DOWNLOAD ${SOURCEFORGE_URL}/Fonts/NotoSans-Merged.ttf  ./NotoSans-Merged.ttf)
+    file(DOWNLOAD ${SOURCEFORGE_URL}/Fonts/NotoSansCJK-Bold.ttc ./NotoSansCJK-Bold.ttc)
+endif()
+
+if (APPLE OR UNIX)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND mkdir -p dist/fonts)
+
+    if (APPLE)
+        set_target_properties(VoyaMedia PROPERTIES LINK_FLAGS "-Wl,-rpath,../Frameworks -F${OSX_FRAMEWORKS_PATH} -framework AppKit -framework SystemConfiguration")
+        add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -af ${LIB_DIR}/*.dylib dist/)
+    elseif (UNIX)
+        add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -df ${LIB_DIR}/*.so* dist/)
+    endif()
+
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f  *.tt[cf]   dist/fonts/)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/gui  dist/)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/img  dist/)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/lang dist/)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/web  dist/)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND mv -f  VoyaMedia  dist/)
+elseif (WIN32)
+    set_target_properties(VoyaMedia PROPERTIES LINK_FLAGS_DEBUG   "-SUBSYSTEM:CONSOLE,5.02")
+    set_target_properties(VoyaMedia PROPERTIES LINK_FLAGS_RELEASE "-SUBSYSTEM:WINDOWS,5.02")
+
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND if not exist $(OutputPath)fonts/ mkdir $(OutputPath)fonts)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f *.tt[cf]    $(OutputPath)fonts/)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/gui  $(OutputPath))
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/img  $(OutputPath))
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/lang $(OutputPath))
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/web  $(OutputPath))
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f ${LIB_DIR}/*.dll $(OutputPath))
+endif()

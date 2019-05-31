@@ -1,0 +1,125 @@
+# ENGLISH
+
+add=ADD
+audio=MUSIC
+cancel=CANCEL
+episode=episode
+episodes=episodes
+file=FILE
+listeners=listeners
+movies=MOVIES
+name=NAME
+off=OFF
+paste=PASTE
+pictures=PICTURES
+playlist_name=PLAYLIST NAME
+playlists=PLAYLISTS
+save=SAVE
+save_playlist=SAVE SEARCH RESULT TO PLAYLIST
+search=SEARCH
+season=season
+seasons=seasons
+select=SELECT
+title=TITLE
+video=VIDEO
+views=views
+votes=votes
+
+# DROPBOX
+dropbox.auth_code=AUTHORIZATION CODE
+
+# ERROR
+
+error.add=Failed to add
+error.add_dir=Failed to add one or more files from
+error.curl=Failed to initialize the CURL library.
+error.db_settings=Failed to create the settings database.
+error.ffmpeg=Failed to initialize the FFMPEG library.
+error.freeimage=Failed to initialize the FreeImage library.
+error.gui_objects=Failed to create the window UI objects.
+error.init_libs=Failed to initialize the 3rd party libraries.
+error.init_upnp=Failed to initialize the UPNP library:
+error.load_gui=Failed to load the GUI design file
+error.modal=Failed to load the modal window
+error.no_nics=Failed to find a valid network interface.
+error.no_upnp=Failed to find a valid UPnP device.
+error.no_upnp_items=Failed to find any shared media files.
+error.open=Failed to open
+error.open_font=Failed to open a valid text font.
+error.play=An error occured during playback.
+error.remove=Failed to remove
+error.renderer=Failed to create the graphics renderer.
+error.save_playlist=Failed to save the playlist - the name already exists.
+error.sdl=Failed to initialize the SDL2 library.
+error.sdl_ttf=Failed to initialize the SDL2_ttf library.
+error.share_invalid=Can only share local music, pictures and video.
+error.share_no_files=Failed to share any local files.
+error.start=Failed to start
+error.validate_dropbox=Failed to generate a valid Dropbox token.
+error.window=Failed to create the window.
+
+# REMOVE
+
+remove=REMOVE
+remove.file.db=REMOVE FILE FROM THE DATABASE
+
+# SETTINGS
+
+settings=SETTINGS
+settings.color.dark=USE DARK COLOR THEME
+settings.color.light=USE LIGHT COLOR THEME
+settings.clean.db=REMOVE INVALID FILES FROM THE DATABASE
+settings.clean.thumbs=DELETE THUMBNAILS FROM THE CACHE
+settings.lang=USE LOCAL SYSTEM LANGUAGE
+
+# SETTINGS - PLAYER
+
+settings.player.audio=AUDIO TRACKS
+settings.player.stream_audio=AUDIO
+settings.player.stream_sub=SUBTITLE
+settings.player.subs=SUBTITLES
+settings.player.title=PLAYER SETTINGS
+settings.player.track=TRACK
+
+# STATUS
+
+status.added=Added
+status.already_added=Already added
+status.adding=Adding
+status.clean.db=Removing invalid files from the database.
+status.clean.db.finished=Finished removing invalid files from the database.
+status.clean.thumbs=Deleting thumbnails from the cache.
+status.clean.thumbs.finished=Finished deleting thumbnails from the cache.
+status.meta=Updating the Media Library
+status.meta.finished=Finished updating the Media Library
+status.removing=Removing
+status.removed=Removed
+status.scan=Scanning
+status.scan.dropbox=Scanning Dropbox files
+status.scan.failed=Failed scanning
+status.scan.finished=Finished scanning
+status.scan.itunes=Scanning iTunes Library
+status.scan.local=Scanning Local Drives
+status.scan.upnp=Searching for UPnP Devices
+status.thumbs=Updating thumbnails
+status.thumbs.finished=Finished updating thumbnails
+status.validate_dropbox=Validating Dropbox token
+status.validate_dropbox.finished=Finished validating Dropbox token
+
+# TMDB
+
+tmdb.search.movie=[TheMovieDB.org] SEARCH FOR MOVIE DETAILS
+tmdb.search.tv=[TheMovieDB.org] SEARCH FOR TV DETAILS
+
+# UPNP
+
+upnp.add=ADD FILES
+upnp.device=UPNP DEVICE
+upnp.devices=UPnP - Select a UPnP device
+upnp.nic=NETWORK INTERFACE
+upnp.nics=UPnP - Select a network interface
+upnp.running=is running
+upnp.share.files=SHARE FILES
+upnp.share.none=STOP SERVER
+upnp.starting=Starting
+upnp.stopped=stopped

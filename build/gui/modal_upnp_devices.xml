@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<modal x="0" y="0" width="300" height="300" centered="true">
+  <panel id="modal" orientation="vertical" border-width="1">
+    <panel id="modal_top" height="15%" border-width="1">
+      <button id="modal_desc" halign="center" valign="middle">%upnp.devices</button>
+    </panel>
+    <panel id="modal_middle" orientation="vertical" border-width="1">
+      <panel id="list">
+        <table id="modal_upnp_devices_list_table" border-width="1">
+          <button id="modal_upnp_thumb" height="15%" width="0"></button>
+          <button id="modal_upnp_device" height="15%" halign="center" valign="middle">%upnp.device</button>
+          <button id="modal_upnp_details" height="15%" width="0"></button>
+        </table>
+        <panel id="list_table_scrollbar" orientation="vertical" width="30" border-width="1">
+          <button id="list_table_scrollbar_prev" halign="center" valign="middle" width="100%" height="width" image-file="triangle-1-512.png" image-width="80%" image-height="image-width"></button>
+          <button id="list_table_scrollbar_bar"></button>
+          <button id="list_table_scrollbar_thumb" height="0" border-width="1"></button>
+          <button id="list_table_scrollbar_next" halign="center" valign="middle" width="100%" height="width" image-file="triangle-2-512.png" image-width="80%" image-height="image-width"></button>
+        </panel>
+      </panel>
+      <panel id="list_table_bottom" height="25" valign="middle">
+        <button id="list_offset_prev" halign="center" valign="middle" height="100%" width="height" image-file="prev-2-512.png" image-width="50%" image-height="image-width"></button>
+        <button id="list_details_text" halign="center" valign="middle"></button>
+        <button id="list_offset_next" halign="center" valign="middle" height="100%" width="height" image-file="next-2-512.png" image-width="50%" image-height="image-width"></button>
+      </panel>
+    </panel>
+    <panel id="modal_bottom" halign="center" valign="middle" height="20%" border-width="1" margin="10">
+      <button id="modal_ok" halign="center" valign="middle" height="50%" border-width="1">%select</button>
+      <button id="modal_cancel" halign="center" valign="middle" height="50%" border-width="1">%cancel</button>
+    </panel>
+  </panel>
+</modal>

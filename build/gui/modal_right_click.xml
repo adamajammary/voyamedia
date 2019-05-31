@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<modal x="0" y="0" width="300" height="300" centered="true">
+  <panel id="modal" orientation="vertical" border-width="1">
+    <panel id="modal_top" height="15%" border-width="1">
+      <button id="modal_desc" halign="center" valign="middle"></button>
+    </panel>
+    <panel id="modal_middle" orientation="vertical" halign="center" valign="middle" border-width="1">
+      <button id="modal_right_click_remove_file" halign="center" valign="middle" width="90%" height="20%" border-width="1">%remove.file.db</button>
+      <button id="modal_right_click_tmbd_movie" halign="center" valign="middle" width="90%" height="20%" border-width="1">%tmdb.search.movie</button>
+      <button id="modal_right_click_tmbd_tv" halign="center" valign="middle" width="90%" height="20%" border-width="1">%tmdb.search.tv</button>
+    </panel>
+    <panel id="modal_bottom" halign="center" valign="middle" height="20%" border-width="1">
+      <button id="modal_cancel" halign="center" valign="middle" width="50%" height="50%" border-width="1">%cancel</button>
+    </panel>
+  </panel>
+</modal>

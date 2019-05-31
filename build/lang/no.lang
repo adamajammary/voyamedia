@@ -1,0 +1,125 @@
+# NORWEGIAN
+
+add=LEGG TIL
+audio=MUSIKK
+cancel=AVBRYT
+episode=episode
+episodes=episoder
+file=FIL
+listeners=lyttere
+movies=FILMER
+name=NAVN
+off=AV
+paste=LIM INN
+pictures=BILDER
+playlist_name=SPILLELISTENAVN
+playlists=SPILLELISTER
+save=LAGRE
+save_playlist=LAGRE SØKERESULTAT TIL SPILLELISTE
+search=SØK
+season=sesong
+seasons=sesonger
+select=VELG
+title=TITTEL
+video=VIDEO
+views=visninger
+votes=stemmer
+
+# DROPBOX
+dropbox.auth_code=AUTORISASJONSKODE
+
+# ERROR
+
+error.add=Klarte ikke å legge til
+error.add_dir=Klarte ikke å legge til en eller flere filer fra
+error.curl=Klarte ikke å initialisere CURL biblioteket.
+error.db_settings=Klarte ikke å lage databasen for instillinger.
+error.ffmpeg=Klarte ikke å initialisere FFMPEG biblioteket.
+error.freeimage=Klarte ikke å initialisere FreeImage biblioteket.
+error.gui_objects=Klarte ikke å lage vindusobjekter.
+error.init_libs=Klarte ikke å initialisere tredjepartsbiblioteker.
+error.init_upnp=Klarte ikke å initialisere UPNP biblioteket:
+error.load_gui=Klarte ikke å laste inn GUI-designfilen
+error.modal=Klarte ikke å laste modal-vinduet
+error.no_nics=Klarte ikke å finne et gyldig nettverkskort.
+error.no_upnp=Klarte ikke å finne en gyldig UPnP enhet.
+error.no_upnp_items=Klarte ikke å finne noen delte mediefiler.
+error.open=Klarte ikke å åpne
+error.open_font=Klarte ikke å åpne en gyldig tekst font.
+error.play=En feil oppstod under avspilling.
+error.remove=Klarte ikke å fjerne
+error.renderer=Klarte ikke å lage grafikkrendereren.
+error.save_playlist=Klarte ikke å lagre spillelisten - navnet existerer allerede.
+error.sdl=Klarte ikke å initialisere SDL2 biblioteket.
+error.sdl_ttf=Klarte ikke å initialisere SDL2_ttf biblioteket.
+error.share_invalid=Kan bare dele lokale musikk, bilder og video.
+error.share_no_files=Klarte ikke å dele noen gyldige lokale filer.
+error.start=Klarte ikke å starte
+error.validate_dropbox=Klarte ikke å få generere et gyldig Dropbox token.
+error.window=Klarte ikke å lage vinduet.
+
+# REMOVE
+
+remove=FJERN
+remove.file.db=FJERN FIL FRA DATABASEN
+
+# SETTINGS
+
+settings=INNSTILLINGER
+settings.color.dark=BRUK MØRKT FARGETEMA
+settings.color.light=BRUK LYST FARGETEMA
+settings.clean.db=FJERN UGYLDIGE FILER FRA DATABASEN
+settings.clean.thumbs=SLETT THUMBNAILS FRA CACHE
+settings.lang=BRUK STANDARDSPRÅK (ENGELSK)
+
+# SETTINGS - PLAYER
+
+settings.player.audio=LYDSPOR
+settings.player.stream_audio=LYD
+settings.player.stream_sub=UNDERTEKST
+settings.player.subs=UNDERTEKSTER
+settings.player.title=SPILLERINNSTILLINGER
+settings.player.track=SPOR
+
+# STATUS
+
+status.added=La til
+status.already_added=Allerede lagt til
+status.adding=Legger til
+status.clean.db=Fjerner ugyldige filer fra databasen.
+status.clean.db.finished=Ferdig med å fjerne ugyldige filer fra databasen.
+status.clean.thumbs=Sletter thumbnails fra cache.
+status.clean.thumbs.finished=Ferdig med å slette thumbnails fra cache.
+status.meta=Oppdaterer mediebiblioteket
+status.meta.finished=Oppdatering av mediebiblioteket er fullført
+status.removing=Fjerner
+status.removed=Fjernet
+status.scan=Skanner
+status.scan.dropbox=Skanner Dropbox filer
+status.scan.failed=Skanning feilet
+status.scan.finished=Skanning er fullført
+status.scan.itunes=Skanner iTunes
+status.scan.local=Skanner lokalt filsystem
+status.scan.upnp=Søker etter UPnP enheter
+status.thumbs=Oppdaterer thumbnails
+status.thumbs.finished=Oppdatering av thumbnails er fullført
+status.validate_dropbox=Validerer Dropbox Token
+status.validate_dropbox.finished=Validering av Dropbox Token er fullført
+
+# TMDB
+
+tmdb.search.movie=[TheMovieDB.org] SØK ETTER FILM-DETALJER
+tmdb.search.tv=[TheMovieDB.org] SØK ETTER TV-DETALJER
+
+# UPNP
+
+upnp.add=LEGG TIL FILER
+upnp.device=UPNP ENHET
+upnp.devices=UPnP - Velg en UPnP enhet
+upnp.nic=NETTVERKSKORT
+upnp.nics=UPnP - Velg et nettverkskort
+upnp.running=kjører
+upnp.share.files=DEL FILER
+upnp.share.none=STOPP SERVER
+upnp.starting=Starter
+upnp.stopped=stoppet

@@ -1,0 +1,29 @@
+#define IDI_ICON 101
+
+IDI_ICON ICON "img\logo.ico"
+
+1 VERSIONINFO
+FILEVERSION    1,0,0
+PRODUCTVERSION 1,0,0
+FILEOS         0x4
+FILETYPE       1
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "040904E4"
+		BEGIN
+			VALUE "CompanyName",      "Adam A. Jammary (Jammary Consulting)"
+			VALUE "LegalCopyright",   "(c) 2012 Adam A. Jammary (Jammary Consulting). All rights reserved."
+			VALUE "ProductName",      "Voya Media"
+			VALUE "FileDescription",  "Voya Media"
+			VALUE "FileVersion",      "1.0.0"
+			VALUE "ProductVersion",   "1.0.0"
+			VALUE "InternalName",     "VoyaMedia.exe"
+			VALUE "OriginalFilename", "VoyaMedia.exe"
+		END
+	END
+	BLOCK "VarFileInfo"
+	BEGIN
+		VALUE "Translation", 0x409, 1252
+	END
+END
