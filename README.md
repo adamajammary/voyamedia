@@ -15,9 +15,9 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Voya Media is a cross-platform media player that easily plays all your music, pictures and videos.
-
 ![Voya Media screenshot](https://sourceforge.net/p/voyamedia/screenshot/VoyaMedia-8-1920.png)
+
+Voya Media is a cross-platform media player that easily plays all your music, pictures and videos.
 
 - Privacy (no spyware, ads or user tracking)
 - Music (AAC, AC3, DTS, FLAC, MP3, TrueHD, Vorbis, WMA)
