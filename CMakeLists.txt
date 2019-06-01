@@ -18,8 +18,9 @@ if (APPLE)
     set(OS                  "_macosx")
     set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -ObjC++ -std=c++${CPP_VERSION}")
     set(LIBS                ${LIBS_DYLIB})
-    set(OSX_SDK_VERSION     "10.14")
-    set(OSX_FRAMEWORKS_PATH "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX${OSX_SDK_VERSION}.sdk/System/Library/Frameworks")
+
+    execute_process(COMMAND xcrun --sdk macosx --show-sdk-path OUTPUT_VARIABLE OSX_SDK_PATH)
+	set(OSX_FRAMEWORKS_PATH "${OSX_SDK_PATH}/System/Library/Frameworks")
 elseif (UNIX)
     file(GLOB LIBS_SO "${LIB_DIR}/*.so")
 
