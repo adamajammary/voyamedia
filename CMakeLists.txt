@@ -7,7 +7,7 @@ project (VoyaMedia)
 # You can find the library sources in SOURCEFORGE_URL below:
 
 set(SOURCEFORGE_URL "https://sourceforge.net/projects/voyamedia/files/VoyaMedia/3.x")
-set(EXT_LIB_DIR     "../build/libs/x64")
+set(EXT_LIB_DIR     "C:/Jenkins/workspace/build-voyamedia/label/windows/build/libs/x64")
 set(INC_DIR         "${EXT_LIB_DIR}/include")
 set(LIB_DIR         "${EXT_LIB_DIR}/lib")
 set(CPP_VERSION     "14")
@@ -40,6 +40,8 @@ elseif (WIN32)
     set(DIRENT "C:/BUILD_TOOLS/dirent")
     set(LIBS   ${LIBS_LIB} Ws2_32.lib)
     set(RES    "build/windows/VoyaMedia.rc")
+
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT VoyaMedia)
 endif()
 
 file(GLOB SOURCES_H   "src/*/*.h")
