@@ -917,8 +917,8 @@ int MediaPlayer::VM_Player::openSub()
 
 				Strings subHeaderParts = VM_Text::Split(subHeaderLine.substr(7), ",");
 
-				if (((version = SUB_STYLE_VERSION_4_SSA)     && (subHeaderParts.size() < NR_OF_V4_SUB_STYLES)) ||
-					((version = SUB_STYLE_VERSION_4PLUS_ASS) && (subHeaderParts.size() < NR_OF_V4PLUS_SUB_STYLES)))
+				if (((version == SUB_STYLE_VERSION_4_SSA)     && (subHeaderParts.size() < NR_OF_V4_SUB_STYLES)) ||
+					((version == SUB_STYLE_VERSION_4PLUS_ASS) && (subHeaderParts.size() < NR_OF_V4PLUS_SUB_STYLES)))
 				{
 					continue;
 				}
@@ -2074,6 +2074,12 @@ int MediaPlayer::VM_Player::threadPackets(void* userData)
 		{
 			VM_Player::TimeOut->stop();
 
+			#if defined _DEBUG
+				char strerror[AV_ERROR_MAX_STRING_SIZE];
+				LIB_FFMPEG::av_strerror(result, strerror, AV_ERROR_MAX_STRING_SIZE);
+				LOG(VM_Text::Format("[MP-P:%d] %s", __LINE__, strerror).c_str());
+			#endif
+
 			if ((result == AVERROR_EOF) || ((VM_Player::FormatContext->pb != NULL) && VM_Player::FormatContext->pb->eof_reached))
 				endOfFile = true;
 			else
@@ -2475,9 +2481,9 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 			SDL_Delay(DELAY_TIME_GUI_RENDER);
 
 		// Video delay (audio is ahead if video)
-		if ((delayTime > (VM_Player::videoContext.frameDuration * 2)) &&
+		if ((delayTime > (VM_Player::videoContext.frameDuration * 2.0)) &&
 			(VM_Player::audioContext.frameDuration > 0) &&
-			(delayTime > (VM_Player::audioContext.frameDuration * 2)))
+			(delayTime > (VM_Player::audioContext.frameDuration * 2.0)))
 		{
 			VM_Player::videoContext.frameDecoded = 0;
 			continue;
