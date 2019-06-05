@@ -44,7 +44,7 @@ void System::VM_Window::Close()
 {
 	VM_Window::Quit = true;
 
-	SDL_Delay(DELAY_TIME_BACKGROUND);
+	SDL_Delay(DELAY_TIME_GUI_RENDER);
 
 	VM_ThreadManager::FreeThreads();
 

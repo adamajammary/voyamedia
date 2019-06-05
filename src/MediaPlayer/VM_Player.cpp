@@ -1805,7 +1805,7 @@ void MediaPlayer::VM_Player::threadAudio(void* userData, Uint8* stream, int stre
 	int  inSamplesBytes = (VM_Player::audioContext.device.channels * LIB_FFMPEG::av_get_bytes_per_sample(inSampleFormat));
 
 	while (VM_Player::State.isPaused && !VM_Player::State.quit)
-		SDL_Delay(DELAY_TIME_GUI_RENDER);
+		SDL_Delay(DELAY_TIME_DEFAULT);
 
 	while ((streamSize > 0) &&
 		VM_Player::State.isPlaying &&
@@ -2003,8 +2003,8 @@ void MediaPlayer::VM_Player::threadAudio(void* userData, Uint8* stream, int stre
 
 int MediaPlayer::VM_Player::threadPackets(void* userData)
 {
-	int                   extSubIntIdx, result, seekFlags;
 	LIB_FFMPEG::AVPacket* packet;
+	int                   result;
 	bool                  endOfFile  = false;
 	int                   errorCount = 0;
 
@@ -2013,14 +2013,16 @@ int MediaPlayer::VM_Player::threadPackets(void* userData)
 		// SEEK
 		if (VM_Player::seekRequested)
 		{
-			seekFlags = SEEK_FLAGS(VM_Player::FormatContext->iformat);
+			SDL_Delay(DELAY_TIME_DEFAULT);
+
+			int seekFlags = SEEK_FLAGS(VM_Player::FormatContext->iformat);
 
 			if (avformat_seek_file(VM_Player::FormatContext, -1, INT64_MIN, VM_Player::seekToPosition, INT64_MAX, seekFlags) >= 0)
 			{
 				if (VM_Player::subContext.index >= SUB_STREAM_EXTERNAL)
 					avformat_seek_file(VM_Player::formatContextExternal, -1, INT64_MIN, VM_Player::seekToPosition, INT64_MAX, seekFlags);
 
-				SDL_Delay(DELAY_TIME_GUI_RENDER);
+				SDL_Delay(DELAY_TIME_DEFAULT);
 
 				VM_Player::packetsClear(VM_Player::audioContext.packets, VM_Player::audioContext.mutex, VM_Player::audioContext.condition, VM_Player::audioContext.packetsAvailable);
 				VM_Player::packetsClear(VM_Player::subContext.packets,   VM_Player::subContext.mutex,   VM_Player::subContext.condition,   VM_Player::subContext.packetsAvailable);
@@ -2123,7 +2125,7 @@ int MediaPlayer::VM_Player::threadPackets(void* userData)
 				break;
 			}
 
-			SDL_Delay(VM_Player::State.isPaused ? DELAY_TIME_GUI_RENDER : DELAY_TIME_DEFAULT);
+			SDL_Delay(DELAY_TIME_DEFAULT);
 		}
 
 		if (VM_Player::State.quit)
@@ -2148,12 +2150,13 @@ int MediaPlayer::VM_Player::threadPackets(void* userData)
 		// SUB PACKET - EXTERNAL
 		if ((VM_Player::subContext.index >= SUB_STREAM_EXTERNAL) && (VM_Player::subContext.packets.size() < MIN_PACKET_QUEUE_SIZE))
 		{
-			extSubIntIdx = ((VM_Player::subContext.index - SUB_STREAM_EXTERNAL) % SUB_STREAM_EXTERNAL);
-			packet       = (LIB_FFMPEG::AVPacket*)LIB_FFMPEG::av_mallocz(sizeof(LIB_FFMPEG::AVPacket));
+			packet = (LIB_FFMPEG::AVPacket*)LIB_FFMPEG::av_mallocz(sizeof(LIB_FFMPEG::AVPacket));
 			
 			if (packet != NULL)
 			{
 				av_init_packet(packet);
+
+				int extSubIntIdx = ((VM_Player::subContext.index - SUB_STREAM_EXTERNAL) % SUB_STREAM_EXTERNAL);
 
 				if ((av_read_frame(VM_Player::formatContextExternal, packet) == 0) && (packet->stream_index == extSubIntIdx))
 					VM_Player::packetAdd(packet, VM_Player::subContext.packets, VM_Player::subContext.mutex, VM_Player::subContext.condition, VM_Player::subContext.packetsAvailable);
@@ -2180,7 +2183,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 			(VM_Player::subContext.index < 0) ||
 			(VM_Player::audioContext.index < 0)) && !VM_Player::State.quit)
 		{
-			SDL_Delay(VM_Player::State.isPaused ? DELAY_TIME_GUI_RENDER : DELAY_TIME_DEFAULT);
+			SDL_Delay(DELAY_TIME_DEFAULT);
 		}
 
 		if (VM_Player::State.quit)
@@ -2403,7 +2406,7 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 		}
 
 		while ((VM_Player::videoContext.packets.empty() || VM_Player::seekRequested) && !VM_Player::State.quit)
-			SDL_Delay(VM_Player::State.isPaused ? DELAY_TIME_GUI_RENDER : DELAY_TIME_DEFAULT);
+			SDL_Delay(DELAY_TIME_DEFAULT);
 
 		if (VM_Player::State.quit)
 			break;
@@ -2478,7 +2481,7 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 
 		// Sleep while paused unless a seek is requested
 		while (VM_Player::State.isPaused && !VM_Player::seekRequested && !VM_Player::State.quit)
-			SDL_Delay(DELAY_TIME_GUI_RENDER);
+			SDL_Delay(DELAY_TIME_DEFAULT);
 
 		// Video delay (audio is ahead if video)
 		if ((delayTime > (VM_Player::videoContext.frameDuration * 2.0)) &&
