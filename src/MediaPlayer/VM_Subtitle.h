@@ -44,7 +44,6 @@ namespace VoyaMedia
 
 		public:
 			void               copy(const VM_Subtitle &subtitle);
-			VM_SubAlignment    getAlignment();
 			int                getBlur();
 			Graphics::VM_Color getColor();
 			Graphics::VM_Color getColorOutline();
@@ -54,7 +53,16 @@ namespace VoyaMedia
 			SDL_Rect           getMargins();
 			int                getOutline();
 			SDL_Point          getShadow();
+			bool               isAlignedBottom();
+			bool               isAlignedCenter();
+			bool               isAlignedLeft();
+			bool               isAlignedMiddle();
+			bool               isAlignedRight();
+			bool               isAlignedTop();
 			int                setPTS(LIB_FFMPEG::AVPacket* packet, LIB_FFMPEG::AVSubtitle &subFrame, LIB_FFMPEG::AVStream* subStream);
+
+		private:
+			VM_SubAlignment getAlignment();
 
 		};
 	}

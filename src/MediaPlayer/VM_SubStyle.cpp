@@ -152,34 +152,34 @@ MediaPlayer::VM_SubStyle* MediaPlayer::VM_SubStyle::getDefault(const VM_SubStyle
 	return NULL;
 }
 
-bool MediaPlayer::VM_SubStyle::IsAlignedBottom(VM_SubAlignment alignment)
+bool MediaPlayer::VM_SubStyle::IsAlignedBottom(VM_SubAlignment a)
 {
-	return ((alignment == SUB_ALIGN_BOTTOM_LEFT) || (alignment == SUB_ALIGN_BOTTOM_RIGHT) || (alignment == SUB_ALIGN_BOTTOM_CENTER));
+	return ((a == SUB_ALIGN_BOTTOM_LEFT) || (a == SUB_ALIGN_BOTTOM_RIGHT) || (a == SUB_ALIGN_BOTTOM_CENTER));
 }
 
-bool MediaPlayer::VM_SubStyle::IsAlignedCenter(VM_SubAlignment alignment)
+bool MediaPlayer::VM_SubStyle::IsAlignedCenter(VM_SubAlignment a)
 {
-	return ((alignment == SUB_ALIGN_BOTTOM_CENTER) || (alignment == SUB_ALIGN_TOP_CENTER) || (alignment == SUB_ALIGN_MIDDLE_CENTER));
+	return ((a == SUB_ALIGN_BOTTOM_CENTER) || (a == SUB_ALIGN_TOP_CENTER) || (a == SUB_ALIGN_MIDDLE_CENTER));
 }
 
-bool MediaPlayer::VM_SubStyle::IsAlignedLeft(VM_SubAlignment alignment)
+bool MediaPlayer::VM_SubStyle::IsAlignedLeft(VM_SubAlignment a)
 {
-	return ((alignment == SUB_ALIGN_BOTTOM_LEFT) || (alignment == SUB_ALIGN_TOP_LEFT) || (alignment == SUB_ALIGN_MIDDLE_LEFT));
+	return ((a == SUB_ALIGN_BOTTOM_LEFT) || (a == SUB_ALIGN_TOP_LEFT) || (a == SUB_ALIGN_MIDDLE_LEFT));
 }
 
-bool MediaPlayer::VM_SubStyle::IsAlignedMiddle(VM_SubAlignment alignment)
+bool MediaPlayer::VM_SubStyle::IsAlignedMiddle(VM_SubAlignment a)
 {
-	return ((alignment == SUB_ALIGN_MIDDLE_LEFT) || (alignment == SUB_ALIGN_MIDDLE_RIGHT) || (alignment == SUB_ALIGN_MIDDLE_CENTER));
+	return ((a == SUB_ALIGN_MIDDLE_LEFT) || (a == SUB_ALIGN_MIDDLE_RIGHT) || (a == SUB_ALIGN_MIDDLE_CENTER));
 }
 
-bool MediaPlayer::VM_SubStyle::IsAlignedRight(VM_SubAlignment alignment)
+bool MediaPlayer::VM_SubStyle::IsAlignedRight(VM_SubAlignment a)
 {
-	return ((alignment == SUB_ALIGN_BOTTOM_RIGHT) || (alignment == SUB_ALIGN_TOP_RIGHT) || (alignment == SUB_ALIGN_MIDDLE_RIGHT));
+	return ((a == SUB_ALIGN_BOTTOM_RIGHT) || (a == SUB_ALIGN_TOP_RIGHT) || (a == SUB_ALIGN_MIDDLE_RIGHT));
 }
 
-bool MediaPlayer::VM_SubStyle::IsAlignedTop(VM_SubAlignment alignment)
+bool MediaPlayer::VM_SubStyle::IsAlignedTop(VM_SubAlignment a)
 {
-	return ((alignment == SUB_ALIGN_TOP_LEFT) || (alignment == SUB_ALIGN_TOP_RIGHT) || (alignment == SUB_ALIGN_TOP_CENTER));
+	return ((a == SUB_ALIGN_TOP_LEFT) || (a == SUB_ALIGN_TOP_RIGHT) || (a == SUB_ALIGN_TOP_CENTER));
 }
 
 bool MediaPlayer::VM_SubStyle::isFontValid(TTF_Font* font)

@@ -25,6 +25,7 @@ namespace VoyaMedia
 		public:
 			static String       RemoveFormatting(const String &subtitleString);
 			static void         RemoveSubs(size_t id);
+			static void         RemoveSubsBottom();
 			static int          RenderSubText(const VM_Subtitles &subs, TTF_Font* fontMerged, TTF_Font* fontCJK);
 			static VM_Subtitles SplitAndFormatSub(const VM_Subtitle &subtitle, const Strings &subTexts, const VM_SubStyles &subStyles, const VM_Subtitles &playerSubs);
 

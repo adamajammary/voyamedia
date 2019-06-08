@@ -850,6 +850,16 @@ void MediaPlayer::VM_SubFontEngine::RemoveSubs(size_t id)
 	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsTop,      id);
 }
 
+void MediaPlayer::VM_SubFontEngine::RemoveSubsBottom()
+{
+	for (auto &subsId : VM_SubFontEngine::subsBottom) {
+		for (auto &sub : subsId.second)
+			DELETE_POINTER(sub);
+	}
+
+	VM_SubFontEngine::subsBottom.clear();
+}
+
 int MediaPlayer::VM_SubFontEngine::renderSub(VM_SubTexture* subTexture)
 {
 	if (subTexture == NULL)
@@ -1034,9 +1044,9 @@ int MediaPlayer::VM_SubFontEngine::RenderSubText(const VM_Subtitles &subs, TTF_F
 			// Organize subs by alignment for positioning
 			if (subFill->subtitle->customPos)
 				VM_SubFontEngine::subsPosition[subFill->subtitle->id].push_back(subFill);
-			else if (VM_SubStyle::IsAlignedTop(subFill->subtitle->getAlignment()))
+			else if (subFill->subtitle->isAlignedTop())
 				VM_SubFontEngine::subsTop[subFill->subtitle->id].push_back(subFill);
-			else if (VM_SubStyle::IsAlignedMiddle(subFill->subtitle->getAlignment()))
+			else if (subFill->subtitle->isAlignedMiddle())
 				VM_SubFontEngine::subsMiddle[subFill->subtitle->id].push_back(subFill);
 			else
 				VM_SubFontEngine::subsBottom[subFill->subtitle->id].push_back(subFill);
@@ -1079,8 +1089,7 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 			if (subTexture->subtitle->skip)
 				continue;
 
-			auto alignment      = subTexture->subtitle->getAlignment();
-			int  rotationPointX = (int)((float)subTexture->subtitle->rotationPoint.x * subScale.x);
+			int rotationPointX = (int)((float)subTexture->subtitle->rotationPoint.x * subScale.x);
 
 			SDL_Point position = {
 				(int)((float)subTexture->subtitle->position.x * subScale.x),
@@ -1135,18 +1144,17 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 			// CLIP
 			if (subTexture->subtitle->customClip)
 			{
-				int       offsetX   = 0;
-				int       offsetY   = 0;
-				auto      alignment = subTexture->subtitle->getAlignment();
+				int offsetX = 0;
+				int offsetY = 0;
 
-				if (VM_SubStyle::IsAlignedRight(alignment))
+				if (subTexture->subtitle->isAlignedRight())
 					offsetX = subTexture->locationRender.w;
-				else if (VM_SubStyle::IsAlignedCenter(alignment))
+				else if (subTexture->subtitle->isAlignedCenter())
 					offsetX = (subTexture->locationRender.w / 2);
 
-				if (VM_SubStyle::IsAlignedBottom(alignment))
+				if (subTexture->subtitle->isAlignedBottom())
 					offsetY = subTexture->locationRender.h;
-				else if (VM_SubStyle::IsAlignedMiddle(alignment))
+				else if (subTexture->subtitle->isAlignedMiddle())
 					offsetY = (subTexture->locationRender.h / 2);
 
 				subTexture->subtitle->clip.x = max((subTexture->subtitle->clip.x - (position.x - offsetX)), 0);
@@ -1158,12 +1166,11 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 			// CUSTOM POSITIONING BASED ON MARGINS AND ALIGNMENT
 			if (subTexture->subtitle->customMargins)
 			{
-				auto alignment = subTexture->subtitle->getAlignment();
-				auto margins   = subTexture->subtitle->getMargins();
+				auto margins = subTexture->subtitle->getMargins();
 
-				if (VM_SubStyle::IsAlignedLeft(alignment))
+				if (subTexture->subtitle->isAlignedLeft())
 					subTexture->locationRender.x = margins.x;
-				else if (VM_SubStyle::IsAlignedRight(alignment))
+				else if (subTexture->subtitle->isAlignedRight())
 					subTexture->locationRender.x = (VM_Window::Dimensions.w - margins.y);
 				else
 					subTexture->locationRender.x = ((VM_Window::Dimensions.w + margins.x - margins.y) / 2);
@@ -1171,9 +1178,9 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 				if (subTexture->subtitle->offsetX)
 					subTexture->locationRender.x += (position.x - subTexture->locationRender.x);
 
-				if (VM_SubStyle::IsAlignedTop(alignment))
+				if (subTexture->subtitle->isAlignedTop())
 					subTexture->locationRender.y = margins.h;
-				else if (VM_SubStyle::IsAlignedBottom(alignment))
+				else if (subTexture->subtitle->isAlignedBottom())
 					subTexture->locationRender.y = (VM_Window::Dimensions.h - margins.h);
 				else
 					subTexture->locationRender.y = ((VM_Window::Dimensions.h - margins.h) / 2);
@@ -1193,9 +1200,9 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 
 				for (size_t i = 0; i < subsX.size(); i++)
 				{
-					if (VM_SubStyle::IsAlignedRight(alignment))
+					if (subTexture->subtitle->isAlignedRight())
 						subsX[i]->locationRender.x -= subTexture->total.w;
-					else if (VM_SubStyle::IsAlignedCenter(alignment))
+					else if (subTexture->subtitle->isAlignedCenter())
 						subsX[i]->locationRender.x -= (subTexture->total.w / 2);
 
 					subsX[i]->total.x = subsX[0]->locationRender.x;
@@ -1218,9 +1225,8 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 			if (subTexture->subtitle->skip)
 				continue;
 
-			auto alignment      = subTexture->subtitle->getAlignment();
-			int  positionY      = (int)((float)subTexture->subtitle->position.y      * subScale.y);
-			int  rotationPointY = (int)((float)subTexture->subtitle->rotationPoint.y * subScale.y);
+			int positionY      = (int)((float)subTexture->subtitle->position.y      * subScale.y);
+			int rotationPointY = (int)((float)subTexture->subtitle->rotationPoint.y * subScale.y);
 
 			subTexture->total.h = totalHeight;
 			subTexture->max.h   = subTexture->total.h;
@@ -1229,9 +1235,9 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 				minX = subTexture->total.x;
 
 			// VERTICAL ALIGN
-			if (VM_SubStyle::IsAlignedBottom(alignment))
+			if (subTexture->subtitle->isAlignedBottom())
 				subTexture->locationRender.y -= subTexture->total.h;
-			else if (VM_SubStyle::IsAlignedMiddle(alignment))
+			else if (subTexture->subtitle->isAlignedMiddle())
 				subTexture->locationRender.y -= (subTexture->total.h / 2);
 
 			if (subTexture->subtitle->customRotation)
@@ -1286,17 +1292,16 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionRelativeTop(const VM_SubTextur
 				continue;
 			}
 
-			auto alignment = subTexture->subtitle->getAlignment();
-			auto margins   = subTexture->subtitle->getMargins();
+			auto margins = subTexture->subtitle->getMargins();
 
 			// OFFSET SUBS HORIZONTALLY (X) BASED ON ALIGNMENT
 			for (auto subWord : subLine)
 			{
-				if (VM_SubStyle::IsAlignedLeft(alignment))
+				if (subTexture->subtitle->isAlignedLeft())
 					subWord->locationRender.x += margins.x;
-				else if (VM_SubStyle::IsAlignedRight(alignment))
+				else if (subTexture->subtitle->isAlignedRight())
 					subWord->locationRender.x += (VM_Window::Dimensions.w - subTexture->total.w - margins.y);
-				else if (VM_SubStyle::IsAlignedCenter(alignment))
+				else if (subTexture->subtitle->isAlignedCenter())
 					subWord->locationRender.x += ALIGN_CENTERED(0, VM_Window::Dimensions.w, subTexture->total.w);
 
 				subWord->total.x = subLine[0]->locationRender.x;
@@ -1325,13 +1330,12 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionRelativeTop(const VM_SubTextur
 				minX = subTexture->total.x;
 
 			// OFFSET SUBS VERTICALLY (Y) BASED ON ALIGNMENT
-			auto alignment = subTexture->subtitle->getAlignment();
-			auto margins   = subTexture->subtitle->getMargins();
-			int  offsetY   = 0;
+			auto margins = subTexture->subtitle->getMargins();
+			int  offsetY = 0;
 
-			if (VM_SubStyle::IsAlignedTop(alignment))
+			if (subTexture->subtitle->isAlignedTop())
 				offsetY = margins.h;
-			else if (VM_SubStyle::IsAlignedMiddle(alignment))
+			else if (subTexture->subtitle->isAlignedMiddle())
 				offsetY = ((VM_Window::Dimensions.h - subTexture->total.h) / 2);
 			else
 				offsetY = (VM_Window::Dimensions.h - subTexture->total.h - margins.h);
@@ -1372,7 +1376,7 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionRelativeTop(const VM_SubTextur
 					if (subTexture->subtitle->layer >= 0)
 						continue;
 
-					if (VM_SubStyle::IsAlignedTop(subTexture->subtitle->getAlignment()))
+					if (subTexture->subtitle->isAlignedTop())
 						subTexture->locationRender.y = (previousSub->total.y + previousSub->total.h + offsetY);
 					else
 						subTexture->locationRender.y = (previousSub->total.y - subTexture->total.h + offsetY);
@@ -1476,13 +1480,12 @@ int MediaPlayer::VM_SubFontEngine::splitSub(uint16_t* subStringUTF16, VM_Subtitl
 
 	// Calculate total sub width
 	int  width, height;
-	auto alignment = sub->getAlignment();
-	auto margins   = sub->getMargins();
-	int  maxWidth  = VM_Window::Dimensions.w;
+	auto margins  = sub->getMargins();
+	int  maxWidth = VM_Window::Dimensions.w;
 
-	if (VM_SubStyle::IsAlignedLeft(alignment))
+	if (sub->isAlignedLeft())
 		maxWidth -= margins.x;
-	else if (VM_SubStyle::IsAlignedRight(alignment))
+	else if (sub->isAlignedRight())
 		maxWidth -= margins.y;
 	else
 		maxWidth -= DEFAULT_MARGIN;

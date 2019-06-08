@@ -65,13 +65,13 @@ namespace VoyaMedia
 				void openFont(umap<String, TTF_Font*> &styleFonts, const Graphics::VM_PointF &subScale, VM_Subtitle* sub = NULL);
 			#endif
 
-			static bool            IsAlignedBottom(VM_SubAlignment alignment);
-			static bool            IsAlignedCenter(VM_SubAlignment alignment);
-			static bool            IsAlignedLeft(VM_SubAlignment   alignment);
-			static bool            IsAlignedMiddle(VM_SubAlignment alignment);
-			static bool            IsAlignedRight(VM_SubAlignment  alignment);
-			static bool            IsAlignedTop(VM_SubAlignment    alignment);
-			static VM_SubAlignment ToSubAlignment(int              alignment);
+			static bool            IsAlignedBottom(VM_SubAlignment a);
+			static bool            IsAlignedCenter(VM_SubAlignment a);
+			static bool            IsAlignedLeft(VM_SubAlignment   a);
+			static bool            IsAlignedMiddle(VM_SubAlignment a);
+			static bool            IsAlignedRight(VM_SubAlignment  a);
+			static bool            IsAlignedTop(VM_SubAlignment    a);
+			static VM_SubAlignment ToSubAlignment(int alignment);
 
 		private:
 			bool      isFontValid(TTF_Font* font);

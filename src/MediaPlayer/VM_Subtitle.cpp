@@ -150,6 +150,42 @@ SDL_Point MediaPlayer::VM_Subtitle::getShadow()
 	return {};
 }
 
+bool MediaPlayer::VM_Subtitle::isAlignedBottom()
+{
+	VM_SubAlignment a = this->getAlignment();
+	return ((a == SUB_ALIGN_BOTTOM_LEFT) || (a == SUB_ALIGN_BOTTOM_RIGHT) || (a == SUB_ALIGN_BOTTOM_CENTER));
+}
+
+bool MediaPlayer::VM_Subtitle::isAlignedCenter()
+{
+	VM_SubAlignment a = this->getAlignment();
+	return ((a == SUB_ALIGN_BOTTOM_CENTER) || (a == SUB_ALIGN_TOP_CENTER) || (a == SUB_ALIGN_MIDDLE_CENTER));
+}
+
+bool MediaPlayer::VM_Subtitle::isAlignedLeft()
+{
+	VM_SubAlignment a = this->getAlignment();
+	return ((a == SUB_ALIGN_BOTTOM_LEFT) || (a == SUB_ALIGN_TOP_LEFT) || (a == SUB_ALIGN_MIDDLE_LEFT));
+}
+
+bool MediaPlayer::VM_Subtitle::isAlignedMiddle()
+{
+	VM_SubAlignment a = this->getAlignment();
+	return ((a == SUB_ALIGN_MIDDLE_LEFT) || (a == SUB_ALIGN_MIDDLE_RIGHT) || (a == SUB_ALIGN_MIDDLE_CENTER));
+}
+
+bool MediaPlayer::VM_Subtitle::isAlignedRight()
+{
+	VM_SubAlignment a = this->getAlignment();
+	return ((a == SUB_ALIGN_BOTTOM_RIGHT) || (a == SUB_ALIGN_TOP_RIGHT) || (a == SUB_ALIGN_MIDDLE_RIGHT));
+}
+
+bool MediaPlayer::VM_Subtitle::isAlignedTop()
+{
+	VM_SubAlignment a = this->getAlignment();
+	return ((a == SUB_ALIGN_TOP_LEFT) || (a == SUB_ALIGN_TOP_RIGHT) || (a == SUB_ALIGN_TOP_CENTER));
+}
+
 int MediaPlayer::VM_Subtitle::setPTS(LIB_FFMPEG::AVPacket* packet, LIB_FFMPEG::AVSubtitle &subFrame, LIB_FFMPEG::AVStream* subStream)
 {
 	if ((packet == NULL) || (subStream == NULL))

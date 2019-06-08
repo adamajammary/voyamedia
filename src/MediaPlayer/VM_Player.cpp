@@ -1251,13 +1251,17 @@ int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
 	// REMOVE EXPIRED SUBS
 	for (auto sub = VM_Player::subContext.subs.begin(); sub != VM_Player::subContext.subs.end();)
 	{
-		if (((*sub)->ptsEnd   < VM_Player::ProgressTime) || // Expired
+		if (((*sub)->ptsEnd  <= VM_Player::ProgressTime) || // Expired
 			((*sub)->ptsStart > VM_Player::ProgressTime))   // Should not be displayed yet
 		{
+			bool bottom = (*sub)->isAlignedBottom();
+
 			VM_SubFontEngine::RemoveSubs((*sub)->id);
 			DELETE_POINTER(*sub);
-
 			sub = VM_Player::subContext.subs.erase(sub);
+
+			if (bottom)
+				VM_SubFontEngine::RemoveSubsBottom();
 
 			VM_Player::refreshSub = true;
 			continue;
