@@ -194,7 +194,7 @@ int MediaPlayer::VM_Subtitle::setPTS(LIB_FFMPEG::AVPacket* packet, LIB_FFMPEG::A
 	bool useFrame = (packet->dts < subStream->cur_dts);
 
 	// NO DURATION - UPDATE END PTS
-	if ((packet->duration == 0) && (packet->size < 100))
+	if ((subFrame.num_rects == 0) && (packet->duration == 0) && (packet->size < 100))
 	{
 		if (useFrame)
 			this->ptsEnd = (double)((double)subFrame.pts / AV_TIME_BASE_D);
@@ -220,7 +220,7 @@ int MediaPlayer::VM_Subtitle::setPTS(LIB_FFMPEG::AVPacket* packet, LIB_FFMPEG::A
 	// SET END PTS
 	if ((packet->duration > 0) && (subFrame.end_display_time > 0))
 		this->ptsEnd = (double)(this->ptsStart + (double)((double)subFrame.end_display_time / (double)ONE_SECOND_MS));
-	// NO DURATION - SET DEFAULT END PTS BASED ON PACKET SIZE
+	// NO DURATION - SET MAX DURATION
 	else
 		this->ptsEnd = (this->ptsStart + SUB_MAX_DURATION);
 

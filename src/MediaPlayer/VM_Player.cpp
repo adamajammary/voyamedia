@@ -2214,10 +2214,10 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		VM_Player::subContext.available = false;
 
 		// UPDATE END PTS FOR PREVIOUS SUB
-		// Some subContext.subs like PGS come in pairs:
+		// Some sub types, like PGS, come in pairs:
 		// - The first one with data but without duration or end PTS
 		// - The second one has no data, but contains the end PTS
-		if ((packet->duration == 0) && (packet->size < 100) && !VM_Player::subContext.subs.empty())
+		if ((subFrame.num_rects == 0) && (packet->duration == 0) && (packet->size < 100) && !VM_Player::subContext.subs.empty())
 			VM_Player::subContext.subs.back()->setPTS(packet, subFrame, VM_Player::subContext.stream);
 
 		VM_Player::subContext.available = true;
@@ -2225,7 +2225,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		SDL_UnlockMutex(VM_Player::subContext.subsMutex);
 
 		// NO FRAMES DECODED
-		if (subFrame.num_rects == 0) {
+		if ((subFrame.num_rects == 0) || (packet->duration == 0)) {
 			FREE_PACKET(packet);
 			continue;
 		}
