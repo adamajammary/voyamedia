@@ -8,6 +8,7 @@ Graphics::VM_Display::VM_Display()
 	this->dDPI           = 0;
 	this->hDPI           = 0;
 	this->vDPI           = 0;
+	this->scaleFactor    = 0;
 	this->scaleFactorDPI = 0;
 	this->scaleFactorRes = 0;
 	this->displayIndex   = 0;
@@ -28,6 +29,11 @@ int Graphics::VM_Display::getDisplayMode()
 	if (VM_Window::MainWindow == NULL)
 		return ERROR_INVALID_ARGUMENTS;
 
+	#if defined _windows
+	if (!IsProcessDPIAware())
+		SetProcessDPIAware();
+	#endif
+
 	SDL_Rect windowDimensions = this->getDimensions();
 
 	this->displayIndex   = SDL_GetWindowDisplayIndex(VM_Window::MainWindow);
@@ -36,8 +42,9 @@ int Graphics::VM_Display::getDisplayMode()
 
 	#if defined _android
 		this->scaleFactor = this->scaleFactorDPI;
-    #elif defined _macosx
-        this->scaleFactor = scaleFactorRes;
+    #elif defined _macosx || defined _windows
+        this->scaleFactor = this->scaleFactorRes;
+	// TODO: iOS? Linux?
 	#else
 		this->scaleFactor = (this->scaleFactorRes * this->scaleFactorDPI);
 	#endif
