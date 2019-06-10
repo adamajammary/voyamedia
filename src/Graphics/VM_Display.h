@@ -12,7 +12,7 @@ namespace VoyaMedia
 		class VM_Display
 		{
 		public:
-			VM_Display()  {}
+			VM_Display();
 			~VM_Display() {}
 
 		public:

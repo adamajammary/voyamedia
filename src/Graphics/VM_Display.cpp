@@ -2,6 +2,17 @@
 
 using namespace VoyaMedia::System;
 
+Graphics::VM_Display::VM_Display()
+{
+	this->display        = {};
+	this->dDPI           = 0;
+	this->hDPI           = 0;
+	this->vDPI           = 0;
+	this->scaleFactorDPI = 0;
+	this->scaleFactorRes = 0;
+	this->displayIndex   = 0;
+}
+
 SDL_Rect Graphics::VM_Display::getDimensions()
 {
 	SDL_Rect dimensions;

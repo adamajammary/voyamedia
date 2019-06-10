@@ -292,9 +292,9 @@ void MediaPlayer::VM_SubFontEngine::formatOverrideMargins(VM_Subtitle* sub)
 	if (!sub->customPos && (sub->textSplit.size() > SUB_DIALOGUE_MARGINV))
 	{
 		int propOffset = VM_SubFontEngine::getDialoguePropOffset(sub->textSplit);
-		int marginL    = std::atoi(sub->textSplit[SUB_DIALOGUE_MARGINL - propOffset].c_str());
-		int marginR    = std::atoi(sub->textSplit[SUB_DIALOGUE_MARGINR - propOffset].c_str());
-		int marginV    = std::atoi(sub->textSplit[SUB_DIALOGUE_MARGINV - propOffset].c_str());
+		int marginL    = std::atoi(sub->textSplit[(int)SUB_DIALOGUE_MARGINL - propOffset].c_str());
+		int marginR    = std::atoi(sub->textSplit[(int)SUB_DIALOGUE_MARGINR - propOffset].c_str());
+		int marginV    = std::atoi(sub->textSplit[(int)SUB_DIALOGUE_MARGINV - propOffset].c_str());
 
 		if ((marginL > 0) || (marginR > 0) || (marginV > 0))
 		{
@@ -804,7 +804,7 @@ MediaPlayer::VM_SubStyle* MediaPlayer::VM_SubFontEngine::getSubStyle(const VM_Su
 	int propOffset = VM_SubFontEngine::getDialoguePropOffset(dialogueSplit);
 
 	for (auto style : subStyles) {
-		if (VM_Text::ToLower(style->name) == VM_Text::ToLower(dialogueSplit[SUB_DIALOGUE_STYLE - propOffset]))
+		if (VM_Text::ToLower(style->name) == VM_Text::ToLower(dialogueSplit[(int)SUB_DIALOGUE_STYLE - propOffset]))
 			return new VM_SubStyle(*style);
 	}
 
