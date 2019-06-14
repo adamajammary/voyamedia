@@ -95,6 +95,10 @@ int main(const int argc, char* argv[])
 		if (VM_Player::State.fullscreenExit)
 			VM_Player::FullScreenExit();
 
+		// Save window dimension and location to DB
+		if (VM_Window::SaveToDB)
+			VM_Window::Save();
+
 		// Open media file if requested via command line arguments
 		if (openFile)
 		{

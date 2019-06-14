@@ -210,6 +210,9 @@ int System::VM_EventManager::HandleEvents()
 				VM_Window::Refresh();
 
 				break;
+			case SDL_WINDOWEVENT_MOVED:
+				VM_Window::SaveToDB = true;
+				break;
 			case SDL_WINDOWEVENT_RESTORED:
 				VM_Player::CursorShow();
 

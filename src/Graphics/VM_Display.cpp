@@ -29,11 +29,6 @@ int Graphics::VM_Display::getDisplayMode()
 	if (VM_Window::MainWindow == NULL)
 		return ERROR_INVALID_ARGUMENTS;
 
-	#if defined _windows
-	if (!IsProcessDPIAware())
-		SetProcessDPIAware();
-	#endif
-
 	SDL_Rect windowDimensions = this->getDimensions();
 
 	this->displayIndex   = SDL_GetWindowDisplayIndex(VM_Window::MainWindow);

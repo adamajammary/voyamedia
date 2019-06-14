@@ -20,6 +20,7 @@ bool             System::VM_Window::Quit                = false;
 SDL_Renderer*    System::VM_Window::Renderer            = NULL;
 bool             System::VM_Window::ResetRenderer       = false;
 uint32_t         System::VM_Window::ResizeTimestamp     = 0;
+bool             System::VM_Window::SaveToDB            = false;
 int              System::VM_Window::StatusBarHeight     = 0;
 char             System::VM_Window::StatusString[DEFAULT_CHAR_BUFFER_SIZE];
 bool             System::VM_Window::SystemLocale        = false;
@@ -66,16 +67,6 @@ void System::VM_Window::Close()
 	SDL_Quit();
 }
 
-void System::VM_Window::init()
-{
-	VM_ThreadManager::AddThreads();
-
-	memset(VM_Window::StatusString, 0, DEFAULT_CHAR_BUFFER_SIZE);
-
-	// Seed the random number generator
-	srand((uint32_t)time(NULL));
-}
-
 #if defined _android
 int System::VM_Window::Minimize()
 {
@@ -96,7 +87,10 @@ int System::VM_Window::Minimize()
 
 int System::VM_Window::Open(const char* guiXML, const char* title)
 {
-	VM_Window::init();
+	VM_ThreadManager::AddThreads();
+
+	memset(VM_Window::StatusString, 0, DEFAULT_CHAR_BUFFER_SIZE);
+	srand((uint32_t)time(NULL));
 
 	if ((VM_FileSystem::SetWorkingDirectory() != RESULT_OK) || VM_Window::WorkingDirectory.empty()) {
 		VM_Modal::ShowMessage("ERROR! Failed to set the working directory.");
@@ -112,6 +106,9 @@ int System::VM_Window::Open(const char* guiXML, const char* title)
 		}
 
 		VM_Window::AndroidStoragePath = VM_FileSystem::GetAndroidStoragePath();
+	#elif defined _windows
+	//if (!IsProcessDPIAware())
+		SetProcessDPIAware();
 	#endif
 
 	if (VM_FileSystem::CreateDefaultDirectoryStructure() != RESULT_OK) {
@@ -340,6 +337,12 @@ void System::VM_Window::resize()
 	}
 }
 
+void System::VM_Window::Save()
+{
+	VM_Window::Dimensions = VM_Window::Display.getDimensions();
+	VM_Window::saveToDB();
+}
+
 void System::VM_Window::saveToDB()
 {
 	int  dbResult;
@@ -362,6 +365,8 @@ void System::VM_Window::saveToDB()
 	DELETE_POINTER(db);
 
 	VM_Window::Display.getDisplayMode();
+
+	VM_Window::SaveToDB = false;
 }
 
 void System::VM_Window::SetStatusProgress(uint32_t current, uint32_t total, const String &label)

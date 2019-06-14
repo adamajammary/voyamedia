@@ -32,6 +32,7 @@ namespace VoyaMedia
 			static SDL_Renderer*        Renderer;
 			static bool                 ResetRenderer;
 			static uint32_t             ResizeTimestamp;
+			static bool                 SaveToDB;
 			static int                  StatusBarHeight;
 			static char                 StatusString[DEFAULT_CHAR_BUFFER_SIZE];
 			static bool                 SystemLocale;
@@ -57,6 +58,7 @@ namespace VoyaMedia
 			static void Refresh();
 			static int  Render();
 			static int  Reset(const char* guiXML, const char* title);
+			static void Save();
 			static void SetStatusProgress(uint32_t current, uint32_t total, const String &label);
 
 			#if defined _android
@@ -64,7 +66,6 @@ namespace VoyaMedia
 			#endif
 
 		private:
-			static void init();
 			static void resize();
 			static void saveToDB();
 			static void showVersionMessage(VM_Version version);
