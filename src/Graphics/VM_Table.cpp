@@ -39,7 +39,6 @@ Graphics::VM_Table::~VM_Table()
 void Graphics::VM_Table::init(const String &id)
 {
 	this->id                    = id;
-	this->limit                 = 10;
 	this->maxRows               = 0;
 	this->pageTokenNext         = "";
 	this->pageTokenPrev         = "";
@@ -47,7 +46,6 @@ void Graphics::VM_Table::init(const String &id)
 	this->shouldRefreshRows     = false;
 	this->shouldRefreshSelected = false;
 	this->shouldRefreshThumbs   = false;
-	this->scrollDrag            = false;
 	this->scrollPane            = NULL;
 	this->scrollBar             = NULL;
 	this->states                = {};
@@ -108,7 +106,7 @@ VM_DBResult Graphics::VM_Table::getNICs()
 		result.push_back(row);
 	}
 
-	return result;
+	return this->getResultLimited(result);
 }
 
 VM_DBResult Graphics::VM_Table::getResult()
@@ -140,10 +138,24 @@ VM_DBResult Graphics::VM_Table::getResult()
 	return result;
 }
 
+VM_DBResult Graphics::VM_Table::getResultLimited(const VM_DBResult &result)
+{
+	this->maxRows = (int)result.size();
+
+	int off = this->states[VM_Top::Selected].offset;
+	int end = ((off + this->limit) > this->maxRows ? (this->maxRows - off) : this->limit);
+
+	return VM_DBResult((result.begin() + off), (result.begin() + off + end));
+}
+
+int Graphics::VM_Table::getRowHeight()
+{
+	return (!this->buttons.empty() ? this->buttons[0]->backgroundArea.h : 1);
+}
+
 int Graphics::VM_Table::getRowsPerPage()
 {
-	int rowHeight = (!this->buttons.empty() ? this->buttons[0]->backgroundArea.h : 1);
-
+	int rowHeight = this->getRowHeight();
 	return max(((this->backgroundArea.h - rowHeight) / max(rowHeight, 1)), 0);
 }
 
@@ -513,7 +525,7 @@ VM_DBResult Graphics::VM_Table::getTracks(VM_MediaType mediaType)
 	}
 
 	if (mediaType != MEDIA_TYPE_SUBTITLE)
-		return result;
+		return this->getResultLimited(result);
 
 	for (const auto &file : VM_Player::SubsExternal)
 	{
@@ -559,7 +571,7 @@ VM_DBResult Graphics::VM_Table::getTracks(VM_MediaType mediaType)
 
 	result.push_back(row);
 
-	return result;
+	return this->getResultLimited(result);
 }
 
 VM_DBResult Graphics::VM_Table::getUPNP()
@@ -577,7 +589,7 @@ VM_DBResult Graphics::VM_Table::getUPNP()
 		result.push_back(row);
 	}
 
-	return result;
+	return this->getResultLimited(result);
 }
 
 VM_DBResult Graphics::VM_Table::getYouTube()
@@ -676,11 +688,16 @@ VM_DBResult Graphics::VM_Table::getYouTube()
 				LIB_JSON::json_t* thumb  = NULL;
 				LIB_JSON::json_t* thumbs = VM_JSON::GetItem(item->child, "thumbnails");
 
-				if (thumbs != NULL) 
+				if (thumbs != NULL)
+				{
 					thumb = VM_JSON::GetItem(thumbs->child, "high");
 
-				if (thumb == NULL) thumb = VM_JSON::GetItem(thumbs->child, "medium");
-				if (thumb == NULL) thumb = VM_JSON::GetItem(thumbs->child, "default");
+					if (thumb == NULL)
+						thumb = VM_JSON::GetItem(thumbs->child, "medium");
+
+					if (thumb == NULL)
+						thumb = VM_JSON::GetItem(thumbs->child, "default");
+				}
 
 				if (thumb != NULL)
 					row["full_path"] = VM_JSON::GetValueString(VM_JSON::GetItem(thumb->child, "url"));
@@ -805,6 +822,9 @@ int Graphics::VM_Table::render()
 	if (this->scrollPane == NULL)
 		this->resetScrollPane();
 
+	if (this->scrollPane == nullptr)
+		return ERROR_UNKNOWN;
+
 	// RENDER TO SCROLL PANE TEXTURE
 	SDL_SetRenderTarget(VM_Window::Renderer, this->scrollPane->data);
 
@@ -845,16 +865,19 @@ int Graphics::VM_Table::render()
 	// RENDER TO SCREEN
 	if (!this->rows.empty() && !this->rows[0][1]->getText().empty())
 	{
-		int rowHeight = (!this->buttons.empty() ? this->buttons[0]->backgroundArea.h : 0);
-
-		SDL_Rect clip = {
+		SDL_Rect dest = {
 			this->backgroundArea.x,
-			(this->backgroundArea.y + this->borderWidth.top + (this->states[VM_Top::Selected].scrollOffset * rowHeight)),
+			(this->backgroundArea.y + this->borderWidth.top),
 			this->backgroundArea.w,
 			(this->backgroundArea.h - this->borderWidth.top - this->borderWidth.bottom)
 		};
 
-		SDL_Rect dest = { clip.x, (this->backgroundArea.y + this->borderWidth.top), clip.w, clip.h };
+		SDL_Rect clip        = dest;
+		int      offset      = this->states[VM_Top::Selected].scrollOffset;
+		int      rowsPerPage = this->getRowsPerPage();
+
+		if (offset + 1 >= rowsPerPage)
+			clip.y += (this->getRowHeight() * (offset + 1 - rowsPerPage));
 
 		SDL_RenderCopy(VM_Window::Renderer, this->scrollPane->data, &clip, &dest);
 	}
@@ -876,13 +899,18 @@ void Graphics::VM_Table::resetScroll(VM_Component* scrollBar)
 
 void Graphics::VM_Table::resetScrollPane()
 {
-	int rowHeight     = (!this->buttons.empty() ? this->buttons[0]->backgroundArea.h : 0);
-	int textureHeight = (VM_Window::Dimensions.h - this->backgroundArea.h + (((int)this->rows.size() + 1) * rowHeight));
+	if (!this->shouldRefreshRows)
+	{
+		int textureHeight = (
+			VM_Window::Dimensions.h - this->backgroundArea.h + 
+			(this->getRowHeight() * ((int)this->rows.size() + 1))
+		);
 
-	this->scrollPane = new VM_Texture(
-		SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_TARGET,
-		VM_Window::Dimensions.w, max(VM_Window::Dimensions.h, textureHeight)
-	);
+		this->scrollPane = new VM_Texture(
+			SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_TARGET,
+			VM_Window::Dimensions.w, max(VM_Window::Dimensions.h, textureHeight)
+		);
+	}
 }
 
 void Graphics::VM_Table::resetRows()
@@ -937,246 +965,29 @@ void Graphics::VM_Table::restoreState(const VM_TableState &state)
 
 int Graphics::VM_Table::scroll(int offset)
 {
-	if (this->scrollBar == NULL)
-		return ERROR_INVALID_ARGUMENTS;
+	int  currentOffset = this->states[VM_Top::Selected].scrollOffset;
+	int  nextOffset    = (currentOffset + offset);
+	bool validNext     = (nextOffset < this->rows.size());
+	bool validPrev     = (nextOffset >= 0);
 
-	// SCROLLBAR BUTTONS
-	VM_Component* next  = NULL;
-	VM_Component* prev  = NULL;
-	VM_Component* thumb = NULL;
-
-	for (auto button : this->scrollBar->buttons)
-	{
-		if (button->id.find("_scrollbar_next") != String::npos)
-			next = button;
-		else if (button->id.find("_scrollbar_prev") != String::npos)
-			prev = button;
-		else if (button->id.find("_scrollbar_thumb") != String::npos)
-			thumb = button;
-	}
-
-	if ((next == NULL) || (prev == NULL) || (thumb == NULL))
-		return ERROR_UNKNOWN;
+	// NEXT/PREVIOUS ROW/PAGE
+	if (validPrev && validNext)
+		this->states[VM_Top::Selected].scrollOffset = nextOffset;
+	// PREVIOUS PAGE (HOME)
+	else if (!validPrev)
+		this->states[VM_Top::Selected].scrollOffset = 0;
+	else if (!validNext)
+		this->states[VM_Top::Selected].scrollOffset = ((int)this->rows.size() - 1);
 
 	// SELECT ROW
-	int nextRow = (this->states[VM_Top::Selected].selectedRow + offset);
-
-	if (nextRow < 0)
-		this->selectRow(0);
-	else if (nextRow >= (int)this->rows.size())
-		this->selectRow((int)(this->rows.size() - 1));
-	else
-		this->selectRow(nextRow);
-
-	// THUMB HEIGHT
-	int rowsPerPage     = this->getRowsPerPage();
-	int remainingRows   = max(((int)this->rows.size() - rowsPerPage + 1), 0);
-	int scrollBarHeight = this->scrollBar->backgroundArea.h;
-
-	scrollBarHeight -= (this->scrollBar->margin.top      + this->scrollBar->margin.bottom);
-	scrollBarHeight -= (this->scrollBar->borderWidth.top + this->scrollBar->borderWidth.bottom);
-	scrollBarHeight -= (next->backgroundArea.h + prev->backgroundArea.h);
-
-	if (remainingRows == 0) {
-		thumb->backgroundArea.h = 0;
-		return RESULT_OK;
-	} else {
-		thumb->backgroundArea.h = (int)ceilf((float)scrollBarHeight / (float)(int)remainingRows);
-	}
-
-	// THUMB POSITION
-	int startY = (prev->backgroundArea.y + prev->backgroundArea.h);
-
-	// RESET/INIT
-	if (offset == 0)
-	{
-		thumb->backgroundArea.y                     = startY;
-		this->states[VM_Top::Selected].scrollOffset = 0;
-	}
-	else
-	{
-		int  nextY      = (thumb->backgroundArea.y + (thumb->backgroundArea.h * offset));
-		bool validPrevY = (nextY >= startY);
-		bool validNextY = (nextY + thumb->backgroundArea.h <= next->backgroundArea.y);
-
-		// NEXT/PREVIOUS ROW/PAGE
-		if (validPrevY && validNextY) {
-			thumb->backgroundArea.y                      = nextY;
-			this->states[VM_Top::Selected].scrollOffset += offset;
-		// PREVIOUS PAGE (HOME)
-		} else if (!validPrevY) {
-			thumb->backgroundArea.y                     = startY;
-			this->states[VM_Top::Selected].scrollOffset = 0;
-		// NEXT PAGE (END)
-		} else if (!validNextY) {
-			thumb->backgroundArea.y                     = (next->backgroundArea.y - thumb->backgroundArea.h);
-			this->states[VM_Top::Selected].scrollOffset = ((int)this->rows.size() - rowsPerPage);
-		}
-	}
+	this->selectRow(this->states[VM_Top::Selected].scrollOffset);
 
 	return RESULT_OK;
-}
-
-int Graphics::VM_Table::scroll(SDL_Event* mouseEvent)
-{
-	if ((mouseEvent == NULL) || (this->scrollBar == NULL))
-		return ERROR_INVALID_ARGUMENTS;
-
-	#if defined _android || defined _ios
-		int y = (int)(mouseEvent->tfinger.y * (float)VM_Window::Dimensions.h);
-	#else
-		int y = mouseEvent->motion.y;
-	#endif
-
-	// SCROLLBAR BUTTONS
-	VM_Component* next  = NULL;
-	VM_Component* prev  = NULL;
-	VM_Component* thumb = NULL;
-
-	for (auto button : this->scrollBar->buttons)
-	{
-		if (button->id.find("_scrollbar_next") != String::npos)
-			next = button;
-		else if (button->id.find("_scrollbar_prev") != String::npos)
-			prev = button;
-		else if (button->id.find("_scrollbar_thumb") != String::npos)
-			thumb = button;
-	}
-
-	if ((next == NULL) || (prev == NULL) || (thumb == NULL))
-		return false;
-
-	if (max(((int)this->rows.size() - this->getRowsPerPage() + 1), 0) == 0)
-		return true;
-
-	int  startY       = (prev->backgroundArea.y + prev->backgroundArea.h);
-	int  prevY        = (y - (thumb->backgroundArea.h / 2));
-	int  nextY        = (y + (thumb->backgroundArea.h / 2));
-	bool validPrevY   = (prevY >= startY);
-	bool validNextY   = (nextY <= next->backgroundArea.y);
-
-	if ((y >= startY) && (y < next->backgroundArea.y)) {
-		this->states[VM_Top::Selected].scrollOffset = ((y - startY) / thumb->backgroundArea.h);
-		this->selectRow(this->states[VM_Top::Selected].scrollOffset);
-	}
-
-	if (!validPrevY)
-		thumb->backgroundArea.y = startY;
-	else if (!validNextY)
-		thumb->backgroundArea.y = (next->backgroundArea.y - thumb->backgroundArea.h);
-	else
-		thumb->backgroundArea.y = prevY;
-
-	return RESULT_OK;
-}
-
-void Graphics::VM_Table::scrollHome()
-{
-	this->states[VM_Top::Selected].scrollOffset = 0;
-	this->scroll(-((int)this->rows.size()));
-}
-
-void Graphics::VM_Table::scrollEnd()
-{
-	this->states[VM_Top::Selected].scrollOffset = ((int)this->rows.size() - this->getRowsPerPage());
-	this->scroll((int)this->rows.size());
-}
-
-void Graphics::VM_Table::scrollNext()
-{
-	this->scroll(1);
-}
-
-void Graphics::VM_Table::scrollPrev()
-{
-	this->scroll(-1);
-}
-
-void Graphics::VM_Table::scrollPageNext()
-{
-	this->scroll(5);
-}
-
-void Graphics::VM_Table::scrollPagePrev()
-{
-	this->scroll(-5);
-}
-
-bool Graphics::VM_Table::scrollPage(SDL_Event* mouseEvent)
-{
-	#if defined _android || defined _ios
-		int y = (int)(mouseEvent->tfinger.y * (float)VM_Window::Dimensions.h);
-	#else
-		int y = mouseEvent->button.y;
-	#endif
-
-	for (auto button : this->scrollBar->buttons)
-	{
-		if (button->id.find("_scrollbar_thumb") == String::npos)
-			continue;
-
-		if (y < button->backgroundArea.y)
-			this->scrollPagePrev();
-		else if (y > button->backgroundArea.y + button->backgroundArea.h)
-			this->scrollPageNext();
-		else
-			return false;
-
-		return true;
-	}
-
-	return false;
 }
 
 void Graphics::VM_Table::scrollTo(int row)
 {
-	this->scroll(0);
-	this->scroll(row);
-}
-
-bool Graphics::VM_Table::scrollThumb(SDL_Event* mouseEvent)
-{
-	if (mouseEvent == NULL)
-		return false;
-
-	// SCROLL MOUSE WHEEL
-	if (mouseEvent->type == SDL_MOUSEWHEEL)
-	{
-		if (mouseEvent->wheel.y != 0) 
-			this->scroll((mouseEvent->wheel.y / std::abs(mouseEvent->wheel.y)) * -1);
-
-		return true;
-	}
-	// DRAG THUMB
-	else if ((mouseEvent->type == SDL_MOUSEMOTION) || (mouseEvent->type == SDL_FINGERMOTION))
-	{
-		#if defined _android || defined _ios
-			int dy = (int)(mouseEvent->tfinger.dy * (float)VM_Window::Dimensions.h);
-		#else
-			int dy = mouseEvent->motion.yrel;
-		#endif
-
-		if (this->scrollDrag && (dy != 0))
-			this->scroll(mouseEvent);
-
-		return true;
-	}
-	// PRESS THUMB
-	else if (((mouseEvent->type == SDL_MOUSEBUTTONDOWN) || (mouseEvent->type == SDL_FINGERDOWN)) && (this->scrollBar != NULL))
-	{
-		for (auto button : this->scrollBar->buttons)
-		{
-			if (button->id.find("_scrollbar_thumb") == String::npos)
-				continue;
-
-			if (VM_Graphics::ButtonPressed(mouseEvent, &button->backgroundArea)) {
-				this->scrollDrag = true;
-				return true;
-			}
-		}
-	}
-
-	return false;
+	this->scroll(row - this->states[VM_Top::Selected].scrollOffset);
 }
 
 void Graphics::VM_Table::selectNext(bool loop)
@@ -1295,6 +1106,9 @@ bool Graphics::VM_Table::selectRow(int row)
 
 bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 {
+	if ((mouseEvent == nullptr) || !VM_Graphics::ButtonPressed(mouseEvent, this->backgroundArea))
+		return false;
+
 	// CHECK IF THE SELECTED ROW IS CLICKABLE (VISIBLE WITHIN SCROLLED AREA)
 	#if defined _android || defined _ios
 		int positionY = (int)(mouseEvent->tfinger.y * (float)VM_Window::Dimensions.h);
@@ -1302,16 +1116,22 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 		int positionY = mouseEvent->button.y;
 	#endif
 
-	int rowHeight = (!this->buttons.empty() ? this->buttons[0]->backgroundArea.h : 0);
-	int startY    = (this->backgroundArea.y + rowHeight);
-	int row       = ((positionY - startY + (this->states[VM_Top::Selected].scrollOffset * rowHeight)) / rowHeight);
+	int clickedY    = positionY;
+	int offset      = this->states[VM_Top::Selected].scrollOffset;
+	int rowHeight   = this->getRowHeight();
+	int rowsPerPage = this->getRowsPerPage();
+	int startY      = (this->backgroundArea.y + rowHeight);
 
-	if ((row < this->states[VM_Top::Selected].scrollOffset) || (row >= this->states[VM_Top::Selected].scrollOffset + this->getRowsPerPage()))
-		return false;
+	if (offset + 1 >= rowsPerPage)
+		clickedY += (rowHeight * (offset + 1 - rowsPerPage));
+
+	int row = ((clickedY - startY) / rowHeight);
 
 	// CHECK IF THE SELECTED ROW IS VALID (PART OF TOTAL ROWS)
 	if (!this->selectRow(row) || (this->rows[row].size() < 3))
 		return false;
+
+	this->states[VM_Top::Selected].scrollOffset = row;
 
 	if ((this->id != "list_table") || VM_Modal::IsVisible())
 		return true;
@@ -1321,18 +1141,23 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 	SDL_Rect   areaThumb = SDL_Rect(thumb->backgroundArea);
 	SDL_Rect   areaInfo  = SDL_Rect(info->backgroundArea);
 
-	areaThumb.y -= (this->states[VM_Top::Selected].scrollOffset * rowHeight);
-	areaInfo.y  -= (this->states[VM_Top::Selected].scrollOffset * rowHeight);
+	if (row + 1 >= rowsPerPage)
+	{
+		int offsetY = (rowHeight * (row + 1 - rowsPerPage));
+
+		areaThumb.y -= offsetY;
+		areaInfo.y  -= offsetY;
+	}
 
 	// SINGLE-CLICKED INFO/DETAILS ICON
-	if (info->selected && VM_Graphics::ButtonPressed(mouseEvent, &areaInfo))
+	if (info->selected && VM_Graphics::ButtonPressed(mouseEvent, areaInfo))
 	{
 		VM_Modal::Open(VM_XML::GetAttribute(info->xmlNode, "modal"));
 	}
 	else if (!TMDB_MOVIE_IS_SELECTED && !TMDB_TV_IS_SELECTED)
 	{
 		// SINGLE-CLICKED PLAY ICON
-		if (thumb->selected && VM_Graphics::ButtonPressed(mouseEvent, &areaThumb))
+		if (thumb->selected && VM_Graphics::ButtonPressed(mouseEvent, areaThumb))
 		{
 			if (YOUTUBE_IS_SELECTED)
 				VM_Player::OpenFilePath(VM_FileSystem::GetYouTubeVideo(thumb->mediaID2));
@@ -1347,9 +1172,11 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 			for (auto button : this->rows[row])
 			{
 				SDL_Rect area = SDL_Rect(button->backgroundArea);
-				area.y       -= (this->states[VM_Top::Selected].scrollOffset * rowHeight);
 
-				if (VM_Graphics::ButtonPressed(mouseEvent, &area, false, true))
+				if (row + 1 >= rowsPerPage)
+					area.y -= (rowHeight * (row + 1 - rowsPerPage));
+
+				if (VM_Graphics::ButtonPressed(mouseEvent, area, false, true))
 				{
 					if (YOUTUBE_IS_SELECTED)
 						VM_Player::OpenFilePath(VM_FileSystem::GetYouTubeVideo(button->mediaID2));
@@ -1358,7 +1185,7 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 					else
 						VM_Player::OpenFilePath(button->mediaURL);
 				}
-				else if (VM_Graphics::ButtonPressed(mouseEvent, &area, true, false))
+				else if (VM_Graphics::ButtonPressed(mouseEvent, area, true, false))
 				{
 					if (!YOUTUBE_IS_SELECTED && !SHOUTCAST_IS_SELECTED)
 						VM_Modal::Open("modal_right_click");

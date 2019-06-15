@@ -298,9 +298,6 @@ int Graphics::VM_Modal::Refresh()
 		VM_Modal::dimensions.y = ALIGN_CENTERED(0, VM_Window::Dimensions.h, VM_Modal::dimensions.h);
 	}
 
-	if (VM_Modal::Components["list_table_scrollbar_thumb"] != NULL)
-		VM_Modal::Components["list_table_scrollbar_thumb"]->backgroundArea.h = 0;
-
 	VM_Modal::rootPanel->backgroundArea = VM_Modal::dimensions;
 
 	int result = VM_GUI::LoadComponents(VM_Modal::rootPanel);

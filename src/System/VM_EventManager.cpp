@@ -56,11 +56,8 @@ int System::VM_EventManager::ConfigureAudioSessionIOS()
 
 int System::VM_EventManager::HandleEvents()
 {
-	#if defined _android || defined _ios
-		VM_Table* listTable = NULL;
-	#endif
-
 	SDL_Event event;
+	VM_Table* listTable = NULL;
 
 	while (SDL_PollEvent(&event) && !VM_Window::Quit)
 	{
@@ -76,11 +73,6 @@ int System::VM_EventManager::HandleEvents()
 			VM_EventManager::swipeDistanceX += event.tfinger.dx;
 			VM_EventManager::swipeDistanceY += event.tfinger.dy;
 
-			if (VM_Modal::IsVisible())
-				VM_EventManager::isScrollDragged(&event, VM_Modal::ListTable);
-			else
-				VM_EventManager::isScrollDragged(&event, VM_GUI::ListTable);
-
 			break;
 		case SDL_FINGERDOWN:
 			VM_Player::CursorLastVisible = SDL_GetTicks();
@@ -90,11 +82,6 @@ int System::VM_EventManager::HandleEvents()
 
 			if (!VM_Player::State.isStopped)
 				break;
-
-			if (VM_Modal::IsVisible())
-				VM_EventManager::isScrollDragged(&event, VM_Modal::ListTable);
-			else
-				VM_EventManager::isScrollDragged(&event, VM_GUI::ListTable);
 
 			break;
 		case SDL_FINGERUP:
@@ -109,11 +96,6 @@ int System::VM_EventManager::HandleEvents()
 					listTable = VM_Modal::ListTable;
 				else
 					listTable = VM_GUI::ListTable;
-
-				if ((listTable != NULL) && listTable->scrollDrag) {
-					listTable->scrollDrag = false;
-					break;
-				}
 
 				// SWIPE_RIGHT
 				if (VM_EventManager::swipeDistanceX > 0.3f) {
@@ -152,8 +134,8 @@ int System::VM_EventManager::HandleEvents()
 			VM_EventManager::touchUpTimestamp   = event.tfinger.timestamp;
 
 			switch (VM_EventManager::TouchEvent) {
-				case TOUCH_EVENT_SWIPE_UP:    listTable->scrollNext(); break;
-				case TOUCH_EVENT_SWIPE_DOWN:  listTable->scrollPrev(); break;
+				case TOUCH_EVENT_SWIPE_UP:    listTable->scroll(1);    break;
+				case TOUCH_EVENT_SWIPE_DOWN:  listTable->scroll(-1);   break;
 				case TOUCH_EVENT_SWIPE_LEFT:  listTable->offsetNext(); break;
 				case TOUCH_EVENT_SWIPE_RIGHT: listTable->offsetPrev(); break;
 				default: VM_EventManager::handleMouseClick(&event);    break;
@@ -161,19 +143,24 @@ int System::VM_EventManager::HandleEvents()
 
 			break;
 		#else
-		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEWHEEL:
-		case SDL_MOUSEMOTION:
 			VM_Player::CursorShow();
 
-			if (!VM_Player::State.isStopped)
-				break;
+			// SCROLL MOUSE WHEEL
+			if (event.wheel.y != 0)
+			{
+				if (VM_Modal::IsVisible())
+					listTable = VM_Modal::ListTable;
+				else
+					listTable = VM_GUI::ListTable;
 
-			if (VM_Modal::IsVisible())
-				VM_EventManager::isScrollDragged(&event, VM_Modal::ListTable);
-			else
-				VM_EventManager::isScrollDragged(&event, VM_GUI::ListTable);
+				listTable->scroll(std::signbit((double)event.wheel.y) ? 1 : -1);
+			}
 
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEMOTION:
+			VM_Player::CursorShow();
 			break;
 		case SDL_MOUSEBUTTONUP:
 			VM_Player::CursorShow();
@@ -185,8 +172,7 @@ int System::VM_EventManager::HandleEvents()
 		#endif
 		#if defined _windows
 		case SDL_SYSWMEVENT:
-			if ((event.syswm.msg != NULL) && (event.syswm.msg->subsystem == SDL_SYSWM_WINDOWS))
-			{
+			if ((event.syswm.msg != NULL) && (event.syswm.msg->subsystem == SDL_SYSWM_WINDOWS)) {
 				switch (event.syswm.msg->msg.win.msg) {
 					case WM_QUERYENDSESSION: case WM_ENDSESSION: VM_Window::Quit = true; break;
 				}
@@ -464,11 +450,6 @@ int System::VM_EventManager::handleMouseClick(SDL_Event* mouseEvent)
 
 	if (VM_Modal::IsVisible())
 	{
-		if ((VM_Modal::ListTable != NULL) && VM_Modal::ListTable->scrollDrag) {
-			VM_Modal::ListTable->scrollDrag = false;
-			return RESULT_OK;
-		}
-
 		if (VM_EventManager::isClickedTextInput(mouseEvent, VM_Modal::TextInput))
 			result = RESULT_OK;
 		else if (VM_EventManager::isClickedModal(mouseEvent))
@@ -480,11 +461,6 @@ int System::VM_EventManager::handleMouseClick(SDL_Event* mouseEvent)
 	}
 	else
 	{
-		if ((VM_GUI::ListTable != NULL) && VM_GUI::ListTable->scrollDrag) {
-			VM_GUI::ListTable->scrollDrag = false;
-			return RESULT_OK;
-		}
-
 		if (VM_EventManager::isClickedTextInput(mouseEvent, VM_GUI::TextInput))
 			result = RESULT_OK;
 		else if (VM_EventManager::isClickedTopBar(mouseEvent))
@@ -514,7 +490,7 @@ bool System::VM_EventManager::isClickedBottom(SDL_Event* mouseEvent)
 	else
 		result = VM_EventManager::isClickedBottomPlayerControls(mouseEvent);
 
-	if (!result && VM_Graphics::ButtonPressed(mouseEvent, &VM_GUI::Components["bottom"]->backgroundArea)) {
+	if (!result && VM_Graphics::ButtonPressed(mouseEvent, VM_GUI::Components["bottom"]->backgroundArea)) {
 		VM_TextInput::SetActive(false);
 		return true;
 	}
@@ -529,7 +505,7 @@ bool System::VM_EventManager::isClickedBottomControls(SDL_Event* mouseEvent)
 
 	for (auto button : VM_GUI::Components["bottom_controls"]->buttons)
 	{
-		if (!VM_Graphics::ButtonPressed(mouseEvent, &button->backgroundArea))
+		if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 			continue;
 
 		if (button->id == "bottom_controls_browse")
@@ -592,7 +568,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 	{
 		for (auto button : VM_GUI::Components["bottom_player_controls_controls_right"]->buttons)
 		{
-			if (!VM_Graphics::ButtonPressed(mouseEvent, &button->backgroundArea))
+			if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 				continue;
 
 			// MUTE
@@ -638,7 +614,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 	{
 		for (auto button : VM_GUI::Components["bottom_player_controls_controls_left"]->buttons)
 		{
-			if (!VM_Graphics::ButtonPressed(mouseEvent, &button->backgroundArea))
+			if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 				continue;
 
 			// PREVIOUS
@@ -664,7 +640,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 	{
 		for (auto button : VM_GUI::Components["bottom_player_controls_left"]->buttons)
 		{
-			if (!VM_Graphics::ButtonPressed(mouseEvent, &button->backgroundArea))
+			if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 				continue;
 
 			// PROGRESS: TIME PASSED VS. TIME LEFT
@@ -679,7 +655,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 	{
 		for (auto button : VM_GUI::Components["bottom_player_controls_middle"]->buttons)
 		{
-			if (!VM_Graphics::ButtonPressed(mouseEvent, &button->backgroundArea))
+			if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 				continue;
 
 			// SEEK BAR
@@ -696,7 +672,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 	{
 		#if !defined _android && !defined _ios
 		// VIDEO-DOUBLE-CLICK -> FULLSCREEN
-		if (VM_Graphics::ButtonPressed(mouseEvent, &snapshot->backgroundArea, false, true))
+		if (VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea, false, true))
 		{
 			VM_Player::FullScreenToggle(false);
 
@@ -710,7 +686,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 		else
 		#endif
 		// VIDEO-SINGLE-CLICK -> PLAY/PAUSE TOGGLE
-		if (VM_Graphics::ButtonPressed(mouseEvent, &snapshot->backgroundArea))
+		if (VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea))
 		{
 			VM_Player::PlayPauseToggle();
 			VM_PlayerControls::Refresh();
@@ -736,7 +712,7 @@ bool System::VM_EventManager::isClickedModal(SDL_Event* mouseEvent)
 		if (!component->visible)
 			continue;
 
-		if (VM_Graphics::ButtonPressed(mouseEvent, &component->backgroundArea))
+		if (VM_Graphics::ButtonPressed(mouseEvent, component->backgroundArea))
 		{
 			VM_Button* button = dynamic_cast<VM_Button*>(component);
 
@@ -783,7 +759,7 @@ bool System::VM_EventManager::isClickedModal(SDL_Event* mouseEvent)
 		if (!component->visible)
 			continue;
 
-		if (VM_Graphics::ButtonPressed(mouseEvent, &component->backgroundArea))
+		if (VM_Graphics::ButtonPressed(mouseEvent, component->backgroundArea))
 		{
 			VM_Button* button = dynamic_cast<VM_Button*>(component);
 
@@ -826,15 +802,13 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 	// SCROLL TABLE
 	for (auto button : table->scrollBar->buttons)
 	{
-		if (!VM_Graphics::ButtonPressed(mouseEvent, &button->backgroundArea))
+		if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 			continue;
 
 		if (button->id.find("_scrollbar_next") != String::npos)
-			table->scrollNext();
+			table->scroll(1);
 		else if (button->id.find("_scrollbar_prev") != String::npos)
-			table->scrollPrev();
-		else if (button->id.find("_scrollbar_bar") != String::npos)
-			table->scrollPage(mouseEvent);
+			table->scroll(-1);
 
 		return true;
 	}
@@ -844,7 +818,7 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 	{
 		for (int i = 1; i < (int)table->buttons.size() - 1; i++)
 		{
-			if (!VM_Graphics::ButtonPressed(mouseEvent, &table->buttons[i]->backgroundArea))
+			if (!VM_Graphics::ButtonPressed(mouseEvent, table->buttons[i]->backgroundArea))
 				continue;
 
 			table->sort(table->buttons[i]->id);
@@ -856,9 +830,7 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 	// SELECT TABLE ROW
 	table->selectRow(mouseEvent);
 
-	if (VM_Graphics::ButtonPressed(mouseEvent, &table->backgroundArea) ||
-		VM_Graphics::ButtonPressed(mouseEvent, &scrollBar->backgroundArea))
-	{
+	if (VM_Graphics::ButtonPressed(mouseEvent, table->backgroundArea)) {
 		VM_TextInput::SetActive(false);
 		return true;
 	}
@@ -868,12 +840,12 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 
 bool System::VM_EventManager::isClickedTableBottom(SDL_Event* mouseEvent, VM_Component* bottomPanel, VM_Table* table)
 {
-	if ((mouseEvent == NULL) || (bottomPanel == NULL) || (table == NULL) || !VM_Player::State.isStopped)
+	if ((mouseEvent == NULL) || (bottomPanel == NULL) || (table == NULL))
 		return false;
 
 	for (auto button : bottomPanel->buttons)
 	{
-		if (!VM_Graphics::ButtonPressed(mouseEvent, &button->backgroundArea))
+		if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 			continue;
 
 		if (button->id == "list_offset_prev")
@@ -884,7 +856,7 @@ bool System::VM_EventManager::isClickedTableBottom(SDL_Event* mouseEvent, VM_Com
 		return true;
 	}
 
-	if (VM_Graphics::ButtonPressed(mouseEvent, &bottomPanel->backgroundArea)) {
+	if (VM_Graphics::ButtonPressed(mouseEvent, bottomPanel->backgroundArea)) {
 		VM_TextInput::SetActive(false);
 		return true;
 	}
@@ -906,7 +878,7 @@ bool System::VM_EventManager::isClickedTextInput(SDL_Event* mouseEvent, VM_Compo
 		if (button->id.find("_input") != String::npos)
 			input = button;
 
-		if (VM_Graphics::ButtonPressed(mouseEvent, &button->backgroundArea))
+		if (VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 		{
 			// INPUT
 			if (button->id.find("_input") != String::npos)
@@ -962,7 +934,7 @@ bool System::VM_EventManager::isClickedTop(SDL_Event* mouseEvent)
 
 	for (auto button : VM_GUI::Components["top"]->buttons)
 	{
-		if (!VM_Graphics::ButtonPressed(mouseEvent, &button->backgroundArea))
+		if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 			continue;
 
 		VM_Top::SelectType(VM_Top::IdToMediaType(button->id));
@@ -970,7 +942,7 @@ bool System::VM_EventManager::isClickedTop(SDL_Event* mouseEvent)
 		return true;
 	}
 
-	if (VM_Graphics::ButtonPressed(mouseEvent, &VM_GUI::Components["top"]->backgroundArea)) {
+	if (VM_Graphics::ButtonPressed(mouseEvent, VM_GUI::Components["top"]->backgroundArea)) {
 		VM_TextInput::SetActive(false);
 		return true;
 	}
@@ -985,7 +957,7 @@ bool System::VM_EventManager::isClickedTopBar(SDL_Event* mouseEvent)
 
 	for (auto component : VM_GUI::Components["top_bar"]->buttons)
 	{
-		if (VM_Graphics::ButtonPressed(mouseEvent, &component->backgroundArea))
+		if (VM_Graphics::ButtonPressed(mouseEvent, component->backgroundArea))
 		{
 			VM_Button* button = dynamic_cast<VM_Button*>(component);
 
@@ -1001,7 +973,7 @@ bool System::VM_EventManager::isClickedTopBar(SDL_Event* mouseEvent)
 		}
 	}
 
-	if (VM_Graphics::ButtonPressed(mouseEvent, &VM_GUI::Components["top_bar"]->backgroundArea)) {
+	if (VM_Graphics::ButtonPressed(mouseEvent, VM_GUI::Components["top_bar"]->backgroundArea)) {
 		VM_TextInput::SetActive(false);
 		return true;
 	}
@@ -1069,24 +1041,24 @@ bool System::VM_EventManager::isKeyPressedTable(SDL_Keycode key, VM_Table* table
 	case SDLK_AUDIONEXT:
 	case SDLK_RIGHT:
 	case SDLK_DOWN:
-		table->scrollNext();
+		table->scroll(1);
 		return true;
 	case SDLK_AUDIOPREV:
 	case SDLK_LEFT:
 	case SDLK_UP:
-		table->scrollPrev();
+		table->scroll(-1);
 		return true;
 	case SDLK_PAGEDOWN:
-		table->scrollPageNext();
+		table->scroll(5);
 		return true;
 	case SDLK_PAGEUP:
-		table->scrollPagePrev();
+		table->scroll(-5);
 		return true;
 	case SDLK_HOME:
-		table->scrollHome();
+		table->scrollTo(0);
 		return true;
 	case SDLK_END:
-		table->scrollEnd();
+		table->scrollTo((int)table->rows.size() - 1);
 		return true;
 	}
 
@@ -1139,14 +1111,6 @@ bool System::VM_EventManager::isKeyPressedTextInput(SDL_Keycode key, uint16_t mo
 	}
 
 	return false;
-}
-
-bool System::VM_EventManager::isScrollDragged(SDL_Event* mouseEvent, VM_Table* table)
-{
-	if ((mouseEvent == NULL) || (table == NULL))
-		return false;
-
-	return table->scrollThumb(mouseEvent);
 }
 
 #if defined _android

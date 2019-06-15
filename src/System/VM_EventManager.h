@@ -53,7 +53,6 @@ namespace VoyaMedia
 			static bool isKeyPressedPlayer(SDL_Keycode key, uint16_t mod);
 			static bool isKeyPressedTable(SDL_Keycode key, Graphics::VM_Table* table);
 			static bool isKeyPressedTextInput(SDL_Keycode key, uint16_t mod);
-			static bool isScrollDragged(SDL_Event* mouseEvent, Graphics::VM_Table* table);
 
 			#if defined _ios
 				static int handleHeadSetUnpluggedIOS(NSNotification* notification);

@@ -17,8 +17,8 @@ namespace VoyaMedia
 
 		public:
 			static int                      Blur(uint8_t* pixelsRGB, int width, int height, int radius);
-			static bool                     ButtonHovered(const SDL_Rect* mouseCoordinates, const SDL_Rect* button);
-			static bool                     ButtonPressed(const SDL_Event* mouseEvent, const SDL_Rect* button, const bool rightClicked = false, const bool doubleClicked = false);
+			static bool                     ButtonHovered(const SDL_Rect* mouseCoordinates, const SDL_Rect &button);
+			static bool                     ButtonPressed(const SDL_Event* mouseEvent, const SDL_Rect &button, const bool rightClicked = false, const bool doubleClicked = false);
 			static VM_Image*                CreateSnapshot(const String &filePath, VM_MediaType mediaType, int mediaID = 0);
 			static LIB_FREEIMAGE::FIBITMAP* CreateSnapshotAudioJFIF(const String &audioFile);
 			static LIB_FREEIMAGE::FIBITMAP* CreateSnapshotVideo(int mediaID, LIB_FFMPEG::AVFormatContext* formatContext, bool seek);

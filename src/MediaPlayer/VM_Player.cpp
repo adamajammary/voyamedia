@@ -247,7 +247,7 @@ int MediaPlayer::VM_Player::cursorHide()
 		SDL_Rect mousePosition = { 0, 0, 0, 0 };
 		SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 
-		if (!VM_Graphics::ButtonHovered(&mousePosition, &VM_GUI::Components["bottom_player_snapshot"]->backgroundArea))
+		if (!VM_Graphics::ButtonHovered(&mousePosition, VM_GUI::Components["bottom_player_snapshot"]->backgroundArea))
 			return ERROR_UNKNOWN;
 
 		SDL_ShowCursor(0);
