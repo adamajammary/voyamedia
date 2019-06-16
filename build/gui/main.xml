@@ -16,7 +16,7 @@
       <button id="top_tmdb_tv" orientation="vertical" halign="center" valign="middle" image-height="30%" image-width="image-height" font-size="9">TV</button>
     </panel>
     <panel id="middle" orientation="vertical">
-      <panel id="middle_search" height="10%" valign="middle">
+      <panel id="middle_search" height="11%" valign="middle">
         <button id="middle_search_playlist_save" halign="center" valign="middle" height="100%" width="height" image-file="playlist-save-2-512.png" image-height="70%" image-width="image-height" modal="modal_playlist_save"></button>
         <button id="middle_search_input" halign="center" valign="middle" border-width="2"></button>
         <button id="middle_search_button" halign="center" valign="middle" height="100%" width="height" image-file="search-4-512.png" image-height="50%" image-width="image-height"></button>

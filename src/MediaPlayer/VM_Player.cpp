@@ -1803,7 +1803,8 @@ int MediaPlayer::VM_Player::Stop(const String &errorMessage)
 
 void MediaPlayer::VM_Player::threadAudio(void* userData, Uint8* stream, int streamSize)
 {
-	int  decodeSize, frameDecoded, samplesResampled, outSamples, outSamplesBytes, writeSize;
+	int64_t framePTS;
+	int     decodeSize, frameDecoded, samplesResampled, outSamples, outSamplesBytes, writeSize;
 
 	auto inSampleFormat = VM_Player::GetAudioSampleFormat(VM_Player::audioContext.device.format);
 	int  inSamplesBytes = (VM_Player::audioContext.device.channels * LIB_FFMPEG::av_get_bytes_per_sample(inSampleFormat));
@@ -1865,9 +1866,14 @@ void MediaPlayer::VM_Player::threadAudio(void* userData, Uint8* stream, int stre
 					VM_Player::progressTimeLast = VM_Player::ProgressTime;
 
 				// SET PROGRESS TIME
-				VM_Player::ProgressTime = (double)(
-					(double)(av_frame_get_best_effort_timestamp(VM_Player::audioContext.frame) - VM_Player::audioContext.stream->start_time)
-				);
+				framePTS = av_frame_get_best_effort_timestamp(VM_Player::audioContext.frame);
+				VM_Player::ProgressTime = (double)framePTS;
+
+				if ((VM_Player::FormatContext->iformat->flags & AVSTREAM_START_FLAGS) &&
+					!VM_Player::FormatContext->iformat->read_seek)
+				{
+					VM_Player::ProgressTime -= (double)VM_Player::audioContext.stream->start_time;
+				}
 
 				VM_Player::ProgressTime *= LIB_FFMPEG::av_q2d(VM_Player::audioContext.stream->time_base);
 
@@ -2376,14 +2382,15 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 
 int MediaPlayer::VM_Player::threadVideo(void* userData)
 {
-	double                delayTime;
-	uint32_t              startWaitTime;
-	int                   decodeResult = -1;
-	int                   errorCount   = 0;
-	double                frameRate    = VM_FileSystem::GetMediaFrameRate(VM_Player::videoContext.stream);
-	LIB_FFMPEG::AVPacket* packet       = NULL;
-	bool                  seekPaused   = false;
-	bool                  seekRefresh  = false;
+	double                delayTime     = 0;
+	uint32_t              startWaitTime = 0;
+	int                   decodeResult  = -1;
+	int                   errorCount    = 0;
+	double                frameRate     = VM_FileSystem::GetMediaFrameRate(VM_Player::videoContext.stream);
+	int64_t               framePTS      = 0;
+	LIB_FFMPEG::AVPacket* packet        = NULL;
+	bool                  seekPaused    = false;
+	bool                  seekRefresh   = false;
 
 	if (frameRate <= 0) {
 		VM_Player::Stop(VM_Text::Format("[MP-P-%d] %s '%s'", __LINE__, VM_Window::Labels["error.play"].c_str(), VM_Player::State.filePath.c_str()));
@@ -2404,6 +2411,124 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 
 	while (!VM_Player::State.quit)
 	{
+		if (VM_Player::seekRequested && VM_Player::State.isPaused) {
+			FREE_PACKET(packet);
+			seekPaused = true;
+		}
+
+		while ((VM_Player::videoContext.packets.empty() || VM_Player::seekRequested) && !VM_Player::State.quit)
+			SDL_Delay(DELAY_TIME_DEFAULT);
+
+		if (VM_Player::State.quit)
+			break;
+
+		// Try to get a new video packet from the queue (re-use packet if paused)
+		if (VM_Player::State.isPlaying || (packet == NULL))
+			packet = VM_Player::packetGet(VM_Player::videoContext.packets, VM_Player::videoContext.mutex, VM_Player::videoContext.condition, VM_Player::videoContext.packetsAvailable);
+
+		if (packet == NULL)
+			continue;
+
+		// Try to decode the video packet to the video frame
+		if (VM_Player::State.isPlaying || (seekPaused && !seekRefresh))
+			decodeResult = avcodec_decode_video2(VM_Player::videoContext.stream->codec, VM_Player::videoContext.frame, &VM_Player::videoContext.frameDecoded, packet);
+
+		// Release the resources allocated for the packet
+		if (VM_Player::State.isPlaying)
+			FREE_PACKET(packet);
+
+		// Handle any errors decoding the packet
+		if (VM_Player::State.isPlaying && ((decodeResult < 0) || !VM_Player::videoContext.frameDecoded))
+		{
+			// Too many errors occured, exit the video thread.
+			if (errorCount > MAX_ERRORS) {
+				VM_Player::Stop(VM_Text::Format("[MP-P-%d] %s '%s'", __LINE__, VM_Window::Labels["error.play"].c_str(), VM_Player::State.filePath.c_str()));
+				break;
+			}
+			
+			errorCount++;
+			VM_Player::videoContext.frameDecoded = 0;
+
+			if (VM_Player::ProgressTime > 1.0) {
+				av_frame_unref(VM_Player::videoContext.frame);
+				VM_Player::videoContext.frame = LIB_FFMPEG::av_frame_alloc();
+			}
+
+			continue;
+		}
+
+		errorCount = 0;
+
+		// Calculate video display time and any delay time
+		framePTS = av_frame_get_best_effort_timestamp(VM_Player::videoContext.frame);
+		VM_Player::videoContext.pts = (double)framePTS;
+
+		if ((VM_Player::FormatContext->iformat->flags & AVSTREAM_START_FLAGS) &&
+			!VM_Player::FormatContext->iformat->read_seek)
+		{
+			VM_Player::videoContext.pts -= (double)VM_Player::videoContext.stream->start_time;
+		}
+
+		VM_Player::videoContext.pts *= LIB_FFMPEG::av_q2d(VM_Player::videoContext.stream->time_base);
+
+		delayTime = (VM_Player::ProgressTime - VM_Player::videoContext.pts);
+
+		// Handle seeking while video is paused
+		if (seekPaused)
+		{
+			// Notify the render thread if we have a valid video frame
+			if (VM_Player::videoContext.frameDecoded && !seekRefresh && (fabs(delayTime) < 1.0)) {
+				VM_Player::Refresh();
+				seekRefresh = true;
+			}
+
+			// If the video frame is invalid, delete the packet so we can try to decode a new packet.
+			if (!seekRefresh)
+				FREE_PACKET(packet);
+
+			// Stop seeking when the new video frame has been successfully rendered
+			if (seekRefresh && !VM_Player::refreshVideo) {
+				seekPaused  = false;
+				seekRefresh = false;
+			// Otherwise, try to decode a new packet.
+			} else {
+				continue;
+			}
+		}
+
+		// Sleep while paused unless a seek is requested
+		while (VM_Player::State.isPaused && !VM_Player::seekRequested && !VM_Player::State.quit)
+			SDL_Delay(DELAY_TIME_DEFAULT);
+
+		// Video delay (audio is ahead of video)
+		if ((delayTime > ((VM_Player::videoContext.frameDuration / (double)ONE_SECOND_MS) * 2.0)) &&
+			(VM_Player::audioContext.frameDuration > 0) &&
+			(delayTime > (VM_Player::audioContext.frameDuration * 2.0)))
+		{
+			VM_Player::videoContext.frameDecoded = 0;
+			continue;
+		}
+
+		startWaitTime = SDL_GetTicks();
+
+		// Wait until it's time to render the video frame
+		while ((VM_Player::ProgressTime < VM_Player::videoContext.pts) &&
+			!VM_Player::seekRequested && !VM_Player::State.quit)
+		{
+			// Don't wait too long if the video display times are incorrect or updates infrequently
+			if ((int)(SDL_GetTicks() - startWaitTime) > (VM_Player::videoContext.frameDuration * 2))
+				break;
+
+			SDL_Delay(DELAY_TIME_ONE_MS);
+		}
+
+		// Notify the render thread to render the new video frame
+		if (VM_Player::State.isPlaying)
+			VM_Player::refreshVideo = true;
+
+		
+		
+		/*
 		if (VM_Player::seekRequested && VM_Player::State.isPaused) {
 			FREE_PACKET(packet);
 			seekPaused = true;
@@ -2487,8 +2612,8 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 		while (VM_Player::State.isPaused && !VM_Player::seekRequested && !VM_Player::State.quit)
 			SDL_Delay(DELAY_TIME_DEFAULT);
 
-		// Video delay (audio is ahead if video)
-		if ((delayTime > (VM_Player::videoContext.frameDuration * 2.0)) &&
+		// Video delay (audio is ahead of video)
+		if ((delayTime > ((VM_Player::videoContext.frameDuration / (double)ONE_SECOND_MS) * 2.0)) &&
 			(VM_Player::audioContext.frameDuration > 0) &&
 			(delayTime > (VM_Player::audioContext.frameDuration * 2.0)))
 		{
@@ -2513,6 +2638,7 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 
 			SDL_Delay(DELAY_TIME_DEFAULT);
 		}
+		*/
 	}
 
 	return RESULT_OK;

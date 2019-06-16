@@ -9,6 +9,8 @@ namespace VoyaMedia
 {
 	namespace MediaPlayer
 	{
+		const int AVSTREAM_START_FLAGS = (AVFMT_NOBINSEARCH | AVFMT_NOGENSEARCH | AVFMT_NO_BYTE_SEEK);
+
 		// libavcodec/dvdsubdec.c
 		struct VM_DVDSubContext
 		{
