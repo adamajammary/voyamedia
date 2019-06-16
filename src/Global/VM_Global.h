@@ -420,6 +420,16 @@ namespace VoyaMedia
 	const double SUB_MAX_DURATION       = 20.0;   // 20 seconds
 	const int    SUB_STREAM_EXTERNAL    = 100;
 
+	#if defined _windows
+		const wchar_t FONT_ARIAL[]    = L"Arial";
+		const wchar_t FONT_NOTO[]     = L"NotoSans-Merged.ttf";
+		const wchar_t FONT_NOTO_CJK[] = L"NotoSansCJK-Bold.ttc";
+	#else
+		const char FONT_ARIAL[]    = "Arial";
+		const char FONT_NOTO[]     = "NotoSans-Merged.ttf";
+		const char FONT_NOTO_CJK[] = "NotoSansCJK-Bold.ttc";
+	#endif
+
 	const int     AV_TIME_BASE_I32 = 1000000;
 	const int64_t AV_TIME_BASE_I64 = 1000000ll;
 	const double  AV_TIME_BASE_D   = 1000000.0;
@@ -438,7 +448,7 @@ namespace VoyaMedia
 	const int          DEFAULT_MARGIN            = 30;
 	const int          DEFAULT_CHAR_BUFFER_SIZE  = 1024;
 	const int          DEFAULT_WCHAR_BUFFER_SIZE = 4096;
-	const double       DEFAULT_FONT_DPI_RATIO    = 0.75; // (72.0 / 96.0)
+	//const double       DEFAULT_FONT_DPI_RATIO    = 0.75; // (72.0 / 96.0)
 	const int          DEFAULT_FONT_SIZE         = 11;
 	const int          DEFAULT_FONT_SIZE_SUB     = 48;
 	const VM_PlayType  DEFAULT_LOOP_TYPE         = PLAY_TYPE_NORMAL;

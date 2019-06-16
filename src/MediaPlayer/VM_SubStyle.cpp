@@ -55,7 +55,15 @@ MediaPlayer::VM_SubStyle::VM_SubStyle(Strings data, VM_SubStyleVersion version)
 	#endif
 
 	// FONT SIZE
-	this->fontSize = (int)(std::atof(data[SUB_STYLE_V4_FONT_SIZE].c_str()) * DEFAULT_FONT_DPI_RATIO);
+	//this->fontSize = (int)(std::atof(data[SUB_STYLE_V4_FONT_SIZE].c_str()) * DEFAULT_FONT_DPI_RATIO);
+	this->fontSize = std::atoi(data[SUB_STYLE_V4_FONT_SIZE].c_str());
+
+	#if defined _windows
+	if ((this->fontName == FONT_ARIAL) && (this->name == "Default") && (this->fontSize == 16))
+	#else
+	if ((this->fontName == FONT_ARIAL) && (this->name == "Default") && (this->fontSize == 16))
+	#endif
+		this->fontSize = 22;
 
 	// FONT COLORS
 	this->colorPrimary = VM_Graphics::ToVMColor(data[SUB_STYLE_V4_COLOR_PRIMARY]);
@@ -277,9 +285,9 @@ void MediaPlayer::VM_SubStyle::openFont(umap<String, TTF_Font*> &styleFonts, con
 		!VM_Text::FontSupportsLanguage(this->font, sub->textUTF16, DEFAULT_CHAR_BUFFER_SIZE))
 	{
 		#if defined _windows
-			WStrings fonts = { L"Arial", L"NotoSansCJK-Bold.ttc", L"NotoSans-Merged.ttf" };
+			WStrings fonts = { FONT_ARIAL, FONT_NOTO_CJK, FONT_NOTO };
 		#else
-			Strings fonts = { "Arial", "NotoSansCJK-Bold.ttc", "NotoSans-Merged.ttf" };
+			Strings fonts = { FONT_ARIAL, FONT_NOTO_CJK, FONT_NOTO };
 		#endif
 
 		for (auto font : fonts)
@@ -293,12 +301,12 @@ void MediaPlayer::VM_SubStyle::openFont(umap<String, TTF_Font*> &styleFonts, con
 			if (styleFonts[fontName] == NULL)
 			{
 				#if defined _windows
-				if (font == L"Arial")
+				if (font == FONT_ARIAL)
 					styleFonts[fontName] = OPEN_FONT(VM_FileSystem::GetPathFontArialW().c_str(), this->fontSizeScaled);
 				else
 					styleFonts[fontName] = OPEN_FONT((VM_FileSystem::GetPathFontW() + font).c_str(), this->fontSizeScaled);
 				#else
-				if (font == "Arial")
+				if (font == FONT_ARIAL)
 					styleFonts[fontName] = OPEN_FONT(VM_FileSystem::GetPathFontArial().c_str(), this->fontSizeScaled);
 				else
 					styleFonts[fontName] = OPEN_FONT((VM_FileSystem::GetPathFont() + font).c_str(), this->fontSizeScaled);

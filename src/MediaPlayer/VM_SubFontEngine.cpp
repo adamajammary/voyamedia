@@ -538,7 +538,8 @@ void MediaPlayer::VM_SubFontEngine::formatOverrideStyleCat2(const Strings &anima
 		else if ((prop.substr(0, 2) == "fs") && isdigit(prop[2]))
 		{
 			if (!VM_SubFontEngine::formatAnimationsContain(animations, "\\fs"))
-				sub->style->fontSize = (int)((float)std::atof(prop.substr(2).c_str()) * DEFAULT_FONT_DPI_RATIO);
+				//sub->style->fontSize = (int)((float)std::atof(prop.substr(2).c_str()) * DEFAULT_FONT_DPI_RATIO);
+				sub->style->fontSize = std::atoi(prop.substr(2).c_str());
 		}
 		// FONT STYLING - BOLD
 		else if (prop == "b1")

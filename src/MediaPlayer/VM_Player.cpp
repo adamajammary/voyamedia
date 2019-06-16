@@ -888,9 +888,19 @@ int MediaPlayer::VM_Player::openSub()
 			VM_Player::subContext.size = { 384, 288 };
 		}
 
+		auto bottom = VM_GUI::Components["bottom"];
+		auto topBar = VM_GUI::Components["top_bar"];
+
+		SDL_Point playerSnapshot = {
+			VM_Window::Dimensions.w,
+			(VM_Window::Dimensions.h - topBar->backgroundArea.h - bottom->backgroundArea.h)
+		};
+
 		VM_Player::subContext.scale = {
-			(float)((float)VM_Window::Dimensions.w / (float)VM_Player::subContext.size.x),
-			(float)((float)VM_Window::Dimensions.h / (float)VM_Player::subContext.size.y)
+			//(float)((float)VM_Window::Dimensions.w / (float)VM_Player::subContext.size.x),
+			//(float)((float)VM_Window::Dimensions.h / (float)VM_Player::subContext.size.y)
+			(float)((float)playerSnapshot.x / (float)VM_Player::subContext.size.x * 0.9f),
+			(float)((float)playerSnapshot.y / (float)VM_Player::subContext.size.y * 0.9f)
 		};
 
 		// STYLE VERSION
@@ -1168,9 +1178,13 @@ void MediaPlayer::VM_Player::Refresh()
 {
 	DELETE_POINTER(VM_Player::subContext.texture);
 
+	auto snapshot = VM_GUI::Components["bottom_player_snapshot"];
+
 	VM_Player::subContext.scale = {
-		(float)((float)VM_Window::Dimensions.w / (float)VM_Player::subContext.size.x),
-		(float)((float)VM_Window::Dimensions.h / (float)VM_Player::subContext.size.y)
+		//(float)((float)VM_Window::Dimensions.w / (float)VM_Player::subContext.size.x),
+		//(float)((float)VM_Window::Dimensions.h / (float)VM_Player::subContext.size.y)
+		(float)((float)snapshot->backgroundArea.w / (float)VM_Player::subContext.size.x * 0.9f),
+		(float)((float)snapshot->backgroundArea.h / (float)VM_Player::subContext.size.y * 0.9f)
 	};
 
 	for (auto sub : VM_Player::subContext.subs)
