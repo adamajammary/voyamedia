@@ -2199,6 +2199,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 	int                    decodeResult, frameDecoded;
 	LIB_FFMPEG::AVPacket*  packet;
 	LIB_FFMPEG::AVSubtitle subFrame = {};
+	LIB_FFMPEG::AVCodecID  codecID  = VM_Player::subContext.stream->codec->codec->id;
 
 	while (!VM_Player::State.quit)
 	{
@@ -2238,21 +2239,28 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		// Some sub types, like PGS, come in pairs:
 		// - The first one with data but without duration or end PTS
 		// - The second one has no data, but contains the end PTS
-		if ((subFrame.num_rects == 0) && (packet->duration == 0) && (packet->size < 100) && !VM_Player::subContext.subs.empty())
+		if ((codecID == LIB_FFMPEG::AV_CODEC_ID_HDMV_PGS_SUBTITLE) &&
+			(subFrame.num_rects == 0) && (packet->duration == 0) && (packet->size < 100) &&
+			!VM_Player::subContext.subs.empty())
+		{
 			VM_Player::subContext.subs.back()->setPTS(packet, subFrame, VM_Player::subContext.stream);
+		}
 
 		VM_Player::subContext.available = true;
 		SDL_CondSignal(VM_Player::subContext.subsCondition);
 		SDL_UnlockMutex(VM_Player::subContext.subsMutex);
 
 		// NO FRAMES DECODED
-		if ((subFrame.num_rects == 0) || (packet->duration == 0)) {
+		if ((subFrame.num_rects == 0) || 
+			((packet->duration == 0) && (codecID != LIB_FFMPEG::AV_CODEC_ID_HDMV_PGS_SUBTITLE)))
+		{
 			FREE_PACKET(packet);
 			continue;
 		}
 
 		// REPLACE YELLOW DVD SUBS WITH WHITE SUBS IF IT'S MISSING THE COLOR PALETTE
-		if (strcmp(VM_Player::subContext.stream->codec->codec->name, "dvdsub") == 0)
+		//if (strcmp(VM_Player::subContext.stream->codec->codec->name, "dvdsub") == 0)
+		if (codecID == LIB_FFMPEG::AV_CODEC_ID_DVD_SUBTITLE)
 		{
 			VM_DVDSubContext* dvdSubContext = static_cast<VM_DVDSubContext*>(VM_Player::subContext.stream->codec->priv_data);
 
