@@ -222,6 +222,8 @@ namespace VoyaMedia
 	#define FREE_WINDOW(w)         if (w != NULL) { SDL_DestroyWindow(w);  w = NULL; }
 	#define FREE_XML_DOC(d)        if (d != NULL) { LIB_XML::xmlFreeDoc(d);    d = NULL; }
 	#define MATH_ROUND_UP(a)       (int)(a + 0.5)
+	#define AV_SEEK_FLAGS(i)       (((i->flags & AVFMT_TS_DISCONT) || !i->read_seek) ? AVSEEK_FLAG_BYTE : 0)
+	#define AV_START_FLAGS(i)      ((i->flags & (AVFMT_NOBINSEARCH | AVFMT_NOGENSEARCH | AVFMT_NO_BYTE_SEEK)) && !i->read_seek)
 	#define AUDIO_IS_SELECTED      (VM_Top::Selected == MEDIA_TYPE_AUDIO)
 	#define PICTURE_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_PICTURE)
 	#define VIDEO_IS_SELECTED      (VM_Top::Selected == MEDIA_TYPE_VIDEO)
@@ -229,7 +231,6 @@ namespace VoyaMedia
 	#define SHOUTCAST_IS_SELECTED  (VM_Top::Selected == MEDIA_TYPE_SHOUTCAST)
 	#define TMDB_MOVIE_IS_SELECTED (VM_Top::Selected == MEDIA_TYPE_TMDB_MOVIE)
 	#define TMDB_TV_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_TMDB_TV)
-	#define SEEK_FLAGS(i)          (((i->flags & AVFMT_TS_DISCONT) || (i->read_seek == NULL)) ? AVSEEK_FLAG_BYTE : 0)
 
 	#if defined _windows
 		#define OPEN_FONT(f, s) TTF_OpenFontRW(VM_FileSystem::FileOpenSDLRWops(_wfopen(f, L"rb")), 1, s)

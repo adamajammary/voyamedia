@@ -341,7 +341,7 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotVideo(int mediaID,
 	{
 		double  fileSize  = 0;
 		int64_t seekPos   = 0;
-		int     seekFlags = SEEK_FLAGS(formatContext->iformat);
+		int     seekFlags = AV_SEEK_FLAGS(formatContext->iformat);
 
 		if (seekFlags == AVSEEK_FLAG_BYTE)
 		{

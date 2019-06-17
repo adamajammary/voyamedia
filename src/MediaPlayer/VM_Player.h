@@ -9,8 +9,6 @@ namespace VoyaMedia
 {
 	namespace MediaPlayer
 	{
-		const int AVSTREAM_START_FLAGS = (AVFMT_NOBINSEARCH | AVFMT_NOGENSEARCH | AVFMT_NO_BYTE_SEEK);
-
 		// libavcodec/dvdsubdec.c
 		struct VM_DVDSubContext
 		{
@@ -47,6 +45,11 @@ namespace VoyaMedia
 			LIB_FFMPEG::AVStream* stream;
 			int                   volumeBeforeMute;
 			int                   writtenToStream;
+
+			VM_PlayerAudioContext()
+			{
+				this->reset();
+			}
 
 			void reset()
 			{
@@ -96,6 +99,11 @@ namespace VoyaMedia
 				umap<String, TTF_Font*> styleFonts;
 			#endif
 
+			VM_PlayerSubContext()
+			{
+				this->reset();
+			}
+
 			void reset()
 			{
 				this->available        = true;
@@ -130,6 +138,11 @@ namespace VoyaMedia
 			LIB_FFMPEG::AVStream* stream;
 			Graphics::VM_Texture* texture;
 			SDL_Thread*           thread;
+
+			VM_PlayerVideoContext()
+			{
+				this->reset();
+			}
 
 			void reset()
 			{
@@ -166,6 +179,14 @@ namespace VoyaMedia
 			bool        quit;
 			Strings     urls;
 
+			VM_PlayerState()
+			{
+				this->isStopped = true;
+				this->quit      = false;
+
+				this->Reset();
+			}
+
 			void Reset()
 			{
 				this->openFile        = false;
@@ -175,8 +196,8 @@ namespace VoyaMedia
 				this->fullscreenExit  = false;
 				this->isPlaying       = false;
 				this->isPaused        = false;
-				this->isStopped       = true;
-				this->quit            = false;
+				//this->isStopped       = true;
+				//this->quit            = false;
 
 				this->urls.clear();
 			}

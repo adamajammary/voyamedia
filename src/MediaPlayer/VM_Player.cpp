@@ -41,6 +41,7 @@ void MediaPlayer::VM_Player::Init()
 
 	VM_Player::audioContext.volumeBeforeMute = VM_Player::State.audioVolume;
 	VM_Player::mediaCompleted                = false;
+	VM_Player::State.quit                    = false;
 
 	int  dbResult;
 	auto db = new VM_Database(dbResult, DATABASE_SETTINGSv3);
@@ -123,7 +124,10 @@ int MediaPlayer::VM_Player::Close()
 		}
 	}
 
-	VM_Window::ResetRenderer = true;
+	VM_Player::isStopping      = false;
+	VM_Player::State.isStopped = true;
+	VM_Player::State.quit      = false;
+	VM_Window::ResetRenderer   = true;
 
 	return RESULT_OK;
 }
@@ -1582,7 +1586,7 @@ void MediaPlayer::VM_Player::reset()
 	VM_Player::formatContextExternal    = NULL;
 	VM_Player::fullscreenEnterWindowed  = false;
 	VM_Player::fullscreenExitStop       = false;
-	VM_Player::isStopping               = false;
+	//VM_Player::isStopping               = false;
 	VM_Player::nrOfStreams              = 0;
 	VM_Player::packetsThread            = NULL;
 	VM_Player::PauseTime                = 0;
@@ -1720,7 +1724,7 @@ int MediaPlayer::VM_Player::SetStream(int streamIndex, bool seek)
 	if (seek)
 	{
 		double percent    = (VM_Player::ProgressTime / VM_Player::DurationTime), fileSize;
-		bool   seekBinary = (SEEK_FLAGS(VM_Player::FormatContext->iformat) == AVSEEK_FLAG_BYTE);
+		bool   seekBinary = (AV_SEEK_FLAGS(VM_Player::FormatContext->iformat) == AVSEEK_FLAG_BYTE);
 
 		if (seekBinary)
 		{
@@ -1883,11 +1887,8 @@ void MediaPlayer::VM_Player::threadAudio(void* userData, Uint8* stream, int stre
 				framePTS = av_frame_get_best_effort_timestamp(VM_Player::audioContext.frame);
 				VM_Player::ProgressTime = (double)framePTS;
 
-				if ((VM_Player::FormatContext->iformat->flags & AVSTREAM_START_FLAGS) &&
-					!VM_Player::FormatContext->iformat->read_seek)
-				{
+				if (AV_START_FLAGS(VM_Player::FormatContext->iformat))
 					VM_Player::ProgressTime -= (double)VM_Player::audioContext.stream->start_time;
-				}
 
 				VM_Player::ProgressTime *= LIB_FFMPEG::av_q2d(VM_Player::audioContext.stream->time_base);
 
@@ -2039,7 +2040,7 @@ int MediaPlayer::VM_Player::threadPackets(void* userData)
 		{
 			SDL_Delay(DELAY_TIME_DEFAULT);
 
-			int seekFlags = SEEK_FLAGS(VM_Player::FormatContext->iformat);
+			int seekFlags = AV_SEEK_FLAGS(VM_Player::FormatContext->iformat);
 
 			if (avformat_seek_file(VM_Player::FormatContext, -1, INT64_MIN, VM_Player::seekToPosition, INT64_MAX, seekFlags) >= 0)
 			{
@@ -2443,6 +2444,13 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 		if (packet == NULL)
 			continue;
 
+		// Wait for renderer to finish drawing video frame
+		while (VM_Player::refreshVideo && !VM_Player::State.quit)
+			SDL_Delay(1);
+
+		if (VM_Player::State.quit)
+			break;
+
 		// Try to decode the video packet to the video frame
 		if (VM_Player::State.isPlaying || (seekPaused && !seekRefresh))
 			decodeResult = avcodec_decode_video2(VM_Player::videoContext.stream->codec, VM_Player::videoContext.frame, &VM_Player::videoContext.frameDecoded, packet);
@@ -2450,6 +2458,9 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 		// Release the resources allocated for the packet
 		if (VM_Player::State.isPlaying)
 			FREE_PACKET(packet);
+
+		if (VM_Player::State.quit)
+			break;
 
 		// Handle any errors decoding the packet
 		if (VM_Player::State.isPlaying && ((decodeResult < 0) || !VM_Player::videoContext.frameDecoded))
@@ -2477,11 +2488,8 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 		framePTS = av_frame_get_best_effort_timestamp(VM_Player::videoContext.frame);
 		VM_Player::videoContext.pts = (double)framePTS;
 
-		if ((VM_Player::FormatContext->iformat->flags & AVSTREAM_START_FLAGS) &&
-			!VM_Player::FormatContext->iformat->read_seek)
-		{
+		if (AV_START_FLAGS(VM_Player::FormatContext->iformat))
 			VM_Player::videoContext.pts -= (double)VM_Player::videoContext.stream->start_time;
-		}
 
 		VM_Player::videoContext.pts *= LIB_FFMPEG::av_q2d(VM_Player::videoContext.stream->time_base);
 

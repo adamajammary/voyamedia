@@ -50,6 +50,8 @@ void System::VM_Window::Close()
 	VM_ThreadManager::FreeThreads();
 
 	VM_Player::Close();
+	VM_Player::State.quit = true;
+
 	VM_GUI::Close();
 
 	#if defined _android
