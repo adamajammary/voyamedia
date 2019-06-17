@@ -95,9 +95,11 @@ namespace VoyaMedia
 			String        getSelectedShoutCast();
 			String        getSelectedYouTube();
 			VM_Buttons    getSelectedRow();
+			int           getSelectedRowIndex();
 			String        getSort();
 			String        getSQL();
 			VM_TableState getState();
+			bool          isRowVisible();
 			bool          offsetNext();
 			bool          offsetPrev();
 			int           refresh();
@@ -115,6 +117,7 @@ namespace VoyaMedia
 			void          selectNext(bool loop = false);
 			void          selectPrev(bool loop = false);
 			void          selectRandom();
+			bool          selectRow(int row);
 			bool          selectRow(SDL_Event* mouseEvent);
 			void          setSearch(const String &searchString, bool saveDB = false);
 			int           setRows(bool temp);
@@ -135,7 +138,6 @@ namespace VoyaMedia
 			Database::VM_DBResult getYouTube();
 			void                  resetRows();
 			void                  resetScrollPane();
-			bool                  selectRow(int row);
 			void                  setRows();
 
 		};

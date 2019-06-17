@@ -234,6 +234,11 @@ Graphics::VM_Buttons Graphics::VM_Table::getSelectedRow()
 	return row;
 }
 
+int Graphics::VM_Table::getSelectedRowIndex()
+{
+	return this->states[VM_Top::Selected].selectedRow;
+}
+
 String Graphics::VM_Table::getSort()
 {
 	String sort = "";
@@ -713,6 +718,15 @@ VM_DBResult Graphics::VM_Table::getYouTube()
 	return result;
 }
 
+bool Graphics::VM_Table::isRowVisible()
+{
+	int scrollOffset = this->states[VM_Top::Selected].scrollOffset;
+	int selectedRow  = this->states[VM_Top::Selected].selectedRow;
+	int maxOffset    = (scrollOffset + this->getRowsPerPage() - 1);
+
+	return ((selectedRow >= scrollOffset) && (selectedRow <= maxOffset));
+}
+
 bool Graphics::VM_Table::offsetNext()
 {
 	if (this->states[VM_Top::Selected].offset + this->limit < this->maxRows)
@@ -872,12 +886,11 @@ int Graphics::VM_Table::render()
 			(this->backgroundArea.h - this->borderWidth.top - this->borderWidth.bottom)
 		};
 
-		SDL_Rect clip        = dest;
+		SDL_Rect clip        = SDL_Rect(dest);
 		int      offset      = this->states[VM_Top::Selected].scrollOffset;
 		int      rowsPerPage = this->getRowsPerPage();
 
-		if (offset + 1 >= rowsPerPage)
-			clip.y += (this->getRowHeight() * (offset + 1 - rowsPerPage));
+		clip.y += (this->getRowHeight() * offset);
 
 		SDL_RenderCopy(VM_Window::Renderer, this->scrollPane->data, &clip, &dest);
 	}
@@ -965,22 +978,20 @@ void Graphics::VM_Table::restoreState(const VM_TableState &state)
 
 int Graphics::VM_Table::scroll(int offset)
 {
+	bool next          = (offset > 0);
+	bool prev          = (offset < 0);
+	int  rowsPerPage   = this->getRowsPerPage();;
 	int  currentOffset = this->states[VM_Top::Selected].scrollOffset;
 	int  nextOffset    = (currentOffset + offset);
-	bool validNext     = (nextOffset < this->rows.size());
+	bool validNext     = (nextOffset <= (int)this->rows.size() - rowsPerPage);
 	bool validPrev     = (nextOffset >= 0);
 
-	// NEXT/PREVIOUS ROW/PAGE
-	if (validPrev && validNext)
+	if ((next && validNext) || (prev && validPrev))
 		this->states[VM_Top::Selected].scrollOffset = nextOffset;
-	// PREVIOUS PAGE (HOME)
-	else if (!validPrev)
+	else if (next && !validNext)
+		this->states[VM_Top::Selected].scrollOffset = ((int)this->rows.size() - rowsPerPage);
+	else if (prev && !validPrev)
 		this->states[VM_Top::Selected].scrollOffset = 0;
-	else if (!validNext)
-		this->states[VM_Top::Selected].scrollOffset = ((int)this->rows.size() - 1);
-
-	// SELECT ROW
-	this->selectRow(this->states[VM_Top::Selected].scrollOffset);
 
 	return RESULT_OK;
 }
@@ -1075,11 +1086,12 @@ void Graphics::VM_Table::selectRandom()
 
 bool Graphics::VM_Table::selectRow(int row)
 {
-	if ((row < 0) || (row >= (int)this->rows.size()))
-		return false;
+	if (row < 0)
+		row = 0;
+	else if (row >= (int)this->rows.size())
+		row = ((int)this->rows.size() - 1);
 
 	this->states[VM_Top::Selected].selectedRow = row;
-
 	this->refreshSelected();
 
 	if (this->id == "list_table")
@@ -1116,22 +1128,17 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 		int positionY = mouseEvent->button.y;
 	#endif
 
-	int clickedY    = positionY;
 	int offset      = this->states[VM_Top::Selected].scrollOffset;
 	int rowHeight   = this->getRowHeight();
-	int rowsPerPage = this->getRowsPerPage();
 	int startY      = (this->backgroundArea.y + rowHeight);
+	int offsetY     = (rowHeight * offset);
+	int row         = ((positionY + offsetY - startY) / rowHeight);
 
-	if (offset + 1 >= rowsPerPage)
-		clickedY += (rowHeight * (offset + 1 - rowsPerPage));
-
-	int row = ((clickedY - startY) / rowHeight);
+	this->selectRow(row);
 
 	// CHECK IF THE SELECTED ROW IS VALID (PART OF TOTAL ROWS)
-	if (!this->selectRow(row) || (this->rows[row].size() < 3))
+	if (this->rows[row].size() < 3)
 		return false;
-
-	this->states[VM_Top::Selected].scrollOffset = row;
 
 	if ((this->id != "list_table") || VM_Modal::IsVisible())
 		return true;
@@ -1141,13 +1148,8 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 	SDL_Rect   areaThumb = SDL_Rect(thumb->backgroundArea);
 	SDL_Rect   areaInfo  = SDL_Rect(info->backgroundArea);
 
-	if (row + 1 >= rowsPerPage)
-	{
-		int offsetY = (rowHeight * (row + 1 - rowsPerPage));
-
-		areaThumb.y -= offsetY;
-		areaInfo.y  -= offsetY;
-	}
+	areaThumb.y -= offsetY;
+	areaInfo.y  -= offsetY;
 
 	// SINGLE-CLICKED INFO/DETAILS ICON
 	if (info->selected && VM_Graphics::ButtonPressed(mouseEvent, areaInfo))
@@ -1172,9 +1174,7 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 			for (auto button : this->rows[row])
 			{
 				SDL_Rect area = SDL_Rect(button->backgroundArea);
-
-				if (row + 1 >= rowsPerPage)
-					area.y -= (rowHeight * (row + 1 - rowsPerPage));
+				area.y       -= offsetY;
 
 				if (VM_Graphics::ButtonPressed(mouseEvent, area, false, true))
 				{

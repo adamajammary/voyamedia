@@ -57,7 +57,8 @@ int System::VM_EventManager::ConfigureAudioSessionIOS()
 int System::VM_EventManager::HandleEvents()
 {
 	SDL_Event event;
-	VM_Table* listTable = NULL;
+	int       scrollAmount;
+	VM_Table* listTable = (VM_Modal::IsVisible() ? VM_Modal::ListTable : VM_GUI::ListTable);
 
 	while (SDL_PollEvent(&event) && !VM_Window::Quit)
 	{
@@ -92,11 +93,6 @@ int System::VM_EventManager::HandleEvents()
 
 			if (VM_Player::State.isStopped)
 			{
-				if (VM_Modal::IsVisible())
-					listTable = VM_Modal::ListTable;
-				else
-					listTable = VM_GUI::ListTable;
-
 				// SWIPE_RIGHT
 				if (VM_EventManager::swipeDistanceX > 0.3f) {
 					VM_EventManager::TouchEvent     = TOUCH_EVENT_SWIPE_RIGHT;
@@ -134,11 +130,29 @@ int System::VM_EventManager::HandleEvents()
 			VM_EventManager::touchUpTimestamp   = event.tfinger.timestamp;
 
 			switch (VM_EventManager::TouchEvent) {
-				case TOUCH_EVENT_SWIPE_UP:    listTable->scroll(1);    break;
-				case TOUCH_EVENT_SWIPE_DOWN:  listTable->scroll(-1);   break;
-				case TOUCH_EVENT_SWIPE_LEFT:  listTable->offsetNext(); break;
-				case TOUCH_EVENT_SWIPE_RIGHT: listTable->offsetPrev(); break;
-				default: VM_EventManager::handleMouseClick(&event);    break;
+				case TOUCH_EVENT_SWIPE_UP:
+					listTable->selectRow(listTable->getSelectedRowIndex() + 1);
+
+					if (!table->isRowVisible())
+						listTable->scroll(1);
+
+					break;
+				case TOUCH_EVENT_SWIPE_DOWN:
+					listTable->selectRow(listTable->getSelectedRowIndex() - 1);
+
+					if (!table->isRowVisible())
+						listTable->scroll(-1);
+
+					break;
+				case TOUCH_EVENT_SWIPE_LEFT:
+					listTable->offsetNext();
+					break;
+				case TOUCH_EVENT_SWIPE_RIGHT:
+					listTable->offsetPrev();
+					break;
+				default:
+					VM_EventManager::handleMouseClick(&event);
+					break;
 			}
 
 			break;
@@ -149,12 +163,11 @@ int System::VM_EventManager::HandleEvents()
 			// SCROLL MOUSE WHEEL
 			if (event.wheel.y != 0)
 			{
-				if (VM_Modal::IsVisible())
-					listTable = VM_Modal::ListTable;
-				else
-					listTable = VM_GUI::ListTable;
+				scrollAmount = (std::signbit((double)event.wheel.y) ? 1 : -1);
+				listTable->selectRow(listTable->getSelectedRowIndex() + scrollAmount);
 
-				listTable->scroll(std::signbit((double)event.wheel.y) ? 1 : -1);
+				if (!listTable->isRowVisible())
+					listTable->scroll(scrollAmount);
 			}
 
 			break;
@@ -805,10 +818,20 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 		if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 			continue;
 
+		int scrollAmount = 0;
+
 		if (button->id.find("_scrollbar_next") != String::npos)
-			table->scroll(1);
+			scrollAmount = 1;
 		else if (button->id.find("_scrollbar_prev") != String::npos)
-			table->scroll(-1);
+			scrollAmount = -1;
+
+		if (scrollAmount != 0)
+		{
+			table->selectRow(table->getSelectedRowIndex() + scrollAmount);
+
+			if (!table->isRowVisible())
+				table->scroll(scrollAmount);
+		}
 
 		return true;
 	}
@@ -1031,34 +1054,72 @@ bool System::VM_EventManager::isKeyPressedTable(SDL_Keycode key, VM_Table* table
 	case SDLK_KP_ENTER:
 	case SDLK_AUDIOPLAY:
 		if (table->id == "list_table")
+		{
 			#if defined _windows
 				VM_Player::OpenFilePath(VM_Text::ToUTF16(table->getSelectedMediaURL().c_str()));
 			#else
 				VM_Player::OpenFilePath(table->getSelectedMediaURL());
 			#endif
+		}
+		else
+		{
+			if (VM_Modal::Apply("modal_ok") == RESULT_OK) {
+				VM_TextInput::SetActive(false);
+				VM_Modal::Hide();
+				VM_Window::Refresh();
+			}
+		}
 
 		return true;
 	case SDLK_AUDIONEXT:
-	case SDLK_RIGHT:
 	case SDLK_DOWN:
-		table->scroll(1);
+		table->selectRow(table->getSelectedRowIndex() + 1);
+
+		if (!table->isRowVisible())
+			table->scroll(1);
+
 		return true;
 	case SDLK_AUDIOPREV:
-	case SDLK_LEFT:
 	case SDLK_UP:
-		table->scroll(-1);
+		table->selectRow(table->getSelectedRowIndex() - 1);
+
+		if (!table->isRowVisible())
+			table->scroll(-1);
+
+		return true;
+	case SDLK_RIGHT:
+		table->offsetNext();
+		return true;
+	case SDLK_LEFT:
+		table->offsetPrev();
 		return true;
 	case SDLK_PAGEDOWN:
-		table->scroll(5);
+		table->selectRow(table->getSelectedRowIndex() + 5);
+
+		if (!table->isRowVisible())
+			table->scroll(5);
+
 		return true;
 	case SDLK_PAGEUP:
-		table->scroll(-5);
+		table->selectRow(table->getSelectedRowIndex() - 5);
+
+		if (!table->isRowVisible())
+			table->scroll(-5);
+
 		return true;
 	case SDLK_HOME:
-		table->scrollTo(0);
+		table->selectRow(0);
+
+		if (!table->isRowVisible())
+			table->scrollTo(0);
+
 		return true;
 	case SDLK_END:
-		table->scrollTo((int)table->rows.size() - 1);
+		table->selectRow((int)table->rows.size() - 1);
+
+		if (!table->isRowVisible())
+			table->scrollTo((int)table->rows.size() - 1);
+
 		return true;
 	}
 
