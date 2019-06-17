@@ -2441,15 +2441,8 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 		if (VM_Player::State.isPlaying || (packet == NULL))
 			packet = VM_Player::packetGet(VM_Player::videoContext.packets, VM_Player::videoContext.mutex, VM_Player::videoContext.condition, VM_Player::videoContext.packetsAvailable);
 
-		if (packet == NULL)
+		if ((packet == NULL) || VM_Player::State.quit)
 			continue;
-
-		// Wait for renderer to finish drawing video frame
-		while (VM_Player::refreshVideo && !VM_Player::State.quit)
-			SDL_Delay(1);
-
-		if (VM_Player::State.quit)
-			break;
 
 		// Try to decode the video packet to the video frame
 		if (VM_Player::State.isPlaying || (seekPaused && !seekRefresh))
