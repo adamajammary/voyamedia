@@ -194,35 +194,36 @@ int MediaPlayer::VM_Subtitle::setPTS(LIB_FFMPEG::AVPacket* packet, LIB_FFMPEG::A
 	bool useFrame = (packet->dts < subStream->cur_dts);
 
 	// NO DURATION - UPDATE END PTS
-	if ((subFrame.num_rects == 0) && (packet->duration == 0) && (packet->size < 100))
+	if ((subFrame.num_rects == 0) && (packet->size > 0))
 	{
 		if (useFrame)
 			this->ptsEnd = (double)((double)subFrame.pts / AV_TIME_BASE_D);
 		else
 			this->ptsEnd = (double)((double)packet->pts * LIB_FFMPEG::av_q2d(subStream->time_base));
-
-		return RESULT_OK;
 	}
-
-	// SET START PTS
-	if (useFrame) {
-		this->ptsStart = (double)((double)(subFrame.pts - subStream->start_time) / AV_TIME_BASE_D);
-	} else {
-		this->ptsStart = (double)((double)(packet->pts  - subStream->start_time) * LIB_FFMPEG::av_q2d(subStream->time_base));
-
-		if (this->ptsStart < VM_Player::ProgressTime)
-			this->ptsStart += (double)((double)subStream->start_time * LIB_FFMPEG::av_q2d(subStream->time_base));
-	}
-
-	if (subFrame.start_display_time > 0)
-		this->ptsStart += (double)((double)subFrame.start_display_time / (double)ONE_SECOND_MS);
-
-	// SET END PTS
-	if ((packet->duration > 0) && (subFrame.end_display_time > 0))
-		this->ptsEnd = (double)(this->ptsStart + (double)((double)subFrame.end_display_time / (double)ONE_SECOND_MS));
-	// NO DURATION - SET MAX DURATION
 	else
-		this->ptsEnd = (this->ptsStart + SUB_MAX_DURATION);
+	{
+		// SET START PTS
+		if (useFrame) {
+			this->ptsStart = (double)((double)(subFrame.pts - subStream->start_time) / AV_TIME_BASE_D);
+		} else {
+			this->ptsStart = (double)((double)(packet->pts  - subStream->start_time) * LIB_FFMPEG::av_q2d(subStream->time_base));
+
+			if (this->ptsStart < VM_Player::ProgressTime)
+				this->ptsStart += (double)((double)subStream->start_time * LIB_FFMPEG::av_q2d(subStream->time_base));
+		}
+
+		if (subFrame.start_display_time > 0)
+			this->ptsStart += (double)((double)subFrame.start_display_time / (double)ONE_SECOND_MS);
+
+		// SET END PTS
+		if (subFrame.end_display_time > 0)
+			this->ptsEnd = (double)(this->ptsStart + (double)((double)subFrame.end_display_time / (double)ONE_SECOND_MS));
+		else if (packet->duration > 0)
+			this->ptsEnd = (double)(this->ptsStart + (double)((double)packet->duration * LIB_FFMPEG::av_q2d(subStream->time_base)));
+		else
+			this->ptsEnd = (this->ptsStart + SUB_MAX_DURATION);
+	}
 
 	return RESULT_OK;
 }

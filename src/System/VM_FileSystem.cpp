@@ -1335,6 +1335,11 @@ LIB_FFMPEG::AVFormatContext* System::VM_FileSystem::GetMediaFormatContext(const 
 		}
 	}
 
+	if (formatContext->nb_streams == 0) {
+		formatContext->max_analyze_duration = (15 * AV_TIME_BASE);
+		formatContext->probesize            = (10 * MEGA_BYTE);
+	}
+
 	if (avformat_find_stream_info(formatContext, NULL) < 0) {
 		VM_FileSystem::CloseMediaFormatContext(formatContext, -1);
 		return NULL;

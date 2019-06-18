@@ -291,6 +291,7 @@ namespace VoyaMedia
 			static void                  closeThreads();
 			static int                   closeVideo();
 			static int                   cursorHide();
+			static bool                  isPacketQueueFull(VM_MediaType streamType);
 			static int                   openAudio();
 			static int                   openFormatContext();
 			static int                   openPlaylist(bool stop, bool next);
@@ -307,6 +308,7 @@ namespace VoyaMedia
 			static int                   renderSubText(const SDL_Rect &location);
 			static int                   renderVideo(const SDL_Rect &location);
 			static void                  reset();
+			static void                  seek();
 			static void                  threadAudio(void* userData, Uint8* outputStream, int outputStreamSize);
 			static int                   threadPackets(void* userData);
 			static int                   threadSub(void* userData);

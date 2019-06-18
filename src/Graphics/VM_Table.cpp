@@ -458,9 +458,6 @@ VM_DBResult Graphics::VM_Table::getTracks(VM_MediaType mediaType)
 	int              selected = VM_Player::GetStreamIndex(mediaType);
 	std::vector<int> tracks   = VM_FileSystem::GetMediaStreamIndices(VM_Player::FormatContext, mediaType);
 
-	if (selected < 0)
-		return result;
-
 	Strings audioTracks, subTracks;
 	int     audioIdx = 0;
 	int     subIdx   = 0;

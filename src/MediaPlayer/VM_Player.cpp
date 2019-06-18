@@ -461,6 +461,23 @@ VM_PointF MediaPlayer::VM_Player::GetSubScale()
 	return VM_Player::subContext.scale;
 }
 
+bool MediaPlayer::VM_Player::isPacketQueueFull(VM_MediaType streamType)
+{
+	switch (streamType) {
+	case MEDIA_TYPE_AUDIO:
+		return ((VM_Player::audioContext.stream != NULL) && (VM_Player::audioContext.packets.size() >= MIN_PACKET_QUEUE_SIZE));
+		break;
+	case MEDIA_TYPE_SUBTITLE:
+		return ((VM_Player::subContext.stream != NULL) && (VM_Player::subContext.packets.size() >= MIN_PACKET_QUEUE_SIZE));
+		break;
+	case MEDIA_TYPE_VIDEO:
+		return ((VM_Player::videoContext.stream != NULL) && (VM_Player::videoContext.packets.size() >= MIN_PACKET_QUEUE_SIZE));
+		break;
+	}
+
+	return false;
+}
+
 bool MediaPlayer::VM_Player::IsYUV(LIB_FFMPEG::AVPixelFormat pixelFormat)
 {
 	switch (pixelFormat) {
@@ -1678,6 +1695,49 @@ int MediaPlayer::VM_Player::Seek(int64_t seekTime)
 	return RESULT_OK;
 }
 
+void MediaPlayer::VM_Player::seek()
+{
+	SDL_Delay(DELAY_TIME_DEFAULT);
+
+	int seekFlags = AV_SEEK_FLAGS(VM_Player::FormatContext->iformat);
+
+	if (avformat_seek_file(VM_Player::FormatContext, -1, INT64_MIN, VM_Player::seekToPosition, INT64_MAX, seekFlags) >= 0)
+	{
+		if (VM_Player::subContext.index >= SUB_STREAM_EXTERNAL)
+			avformat_seek_file(VM_Player::formatContextExternal, -1, INT64_MIN, VM_Player::seekToPosition, INT64_MAX, seekFlags);
+
+		SDL_Delay(DELAY_TIME_DEFAULT);
+
+		VM_Player::packetsClear(VM_Player::audioContext.packets, VM_Player::audioContext.mutex, VM_Player::audioContext.condition, VM_Player::audioContext.packetsAvailable);
+		VM_Player::packetsClear(VM_Player::subContext.packets,   VM_Player::subContext.mutex,   VM_Player::subContext.condition,   VM_Player::subContext.packetsAvailable);
+		VM_Player::packetsClear(VM_Player::videoContext.packets, VM_Player::videoContext.mutex, VM_Player::videoContext.condition, VM_Player::videoContext.packetsAvailable);
+				
+		SDL_LockMutex(VM_Player::subContext.subsMutex);
+		VM_Player::subContext.available = false;
+
+		for (auto sub : VM_Player::subContext.subs) {
+			VM_SubFontEngine::RemoveSubs(sub->id);
+			DELETE_POINTER(sub);
+		}
+		VM_Player::subContext.subs.clear();
+
+		VM_Player::subContext.available = true;
+		SDL_CondSignal(VM_Player::subContext.subsCondition);
+		SDL_UnlockMutex(VM_Player::subContext.subsMutex);
+
+		VM_Player::audioContext.bufferOffset    = 0;
+		VM_Player::audioContext.bufferRemaining = 0;
+		VM_Player::audioContext.writtenToStream = 0;
+		VM_Player::audioContext.decodeFrame     = true;
+		VM_Player::ProgressTime                 = (double)((double)VM_Player::seekToPosition / AV_TIME_BASE_D);
+		VM_Player::videoContext.pts             = 0.0;
+
+		VM_PlayerControls::Refresh();
+	}
+
+	VM_Player::seekRequested = false;
+}
+
 int MediaPlayer::VM_Player::SetAudioVolume(int volume)
 {
 	if (volume <= 5) {
@@ -2037,47 +2097,7 @@ int MediaPlayer::VM_Player::threadPackets(void* userData)
 	{
 		// SEEK
 		if (VM_Player::seekRequested)
-		{
-			SDL_Delay(DELAY_TIME_DEFAULT);
-
-			int seekFlags = AV_SEEK_FLAGS(VM_Player::FormatContext->iformat);
-
-			if (avformat_seek_file(VM_Player::FormatContext, -1, INT64_MIN, VM_Player::seekToPosition, INT64_MAX, seekFlags) >= 0)
-			{
-				if (VM_Player::subContext.index >= SUB_STREAM_EXTERNAL)
-					avformat_seek_file(VM_Player::formatContextExternal, -1, INT64_MIN, VM_Player::seekToPosition, INT64_MAX, seekFlags);
-
-				SDL_Delay(DELAY_TIME_DEFAULT);
-
-				VM_Player::packetsClear(VM_Player::audioContext.packets, VM_Player::audioContext.mutex, VM_Player::audioContext.condition, VM_Player::audioContext.packetsAvailable);
-				VM_Player::packetsClear(VM_Player::subContext.packets,   VM_Player::subContext.mutex,   VM_Player::subContext.condition,   VM_Player::subContext.packetsAvailable);
-				VM_Player::packetsClear(VM_Player::videoContext.packets, VM_Player::videoContext.mutex, VM_Player::videoContext.condition, VM_Player::videoContext.packetsAvailable);
-				
-				SDL_LockMutex(VM_Player::subContext.subsMutex);
-				VM_Player::subContext.available = false;
-
-				for (auto sub : VM_Player::subContext.subs) {
-					VM_SubFontEngine::RemoveSubs(sub->id);
-					DELETE_POINTER(sub);
-				}
-				VM_Player::subContext.subs.clear();
-
-				VM_Player::subContext.available = true;
-				SDL_CondSignal(VM_Player::subContext.subsCondition);
-				SDL_UnlockMutex(VM_Player::subContext.subsMutex);
-
-				VM_Player::audioContext.bufferOffset    = 0;
-				VM_Player::audioContext.bufferRemaining = 0;
-				VM_Player::audioContext.writtenToStream = 0;
-				VM_Player::audioContext.decodeFrame     = true;
-				VM_Player::ProgressTime                 = (double)((double)VM_Player::seekToPosition / AV_TIME_BASE_D);
-				VM_Player::videoContext.pts             = 0.0;
-
-				VM_PlayerControls::Refresh();
-			}
-
-			VM_Player::seekRequested = false;
-		}
+			VM_Player::seek();
 
 		if (VM_Player::State.quit)
 			break;
@@ -2143,14 +2163,10 @@ int MediaPlayer::VM_Player::threadPackets(void* userData)
 		VM_Player::TimeOut->stop();
 
 		// WAIT IF THE QUEUES ARE FULL
-		while (!VM_Player::seekRequested && !VM_Player::State.quit) {
-			if (((VM_Player::audioContext.stream != NULL) && (VM_Player::audioContext.packets.size() < MIN_PACKET_QUEUE_SIZE)) ||
-				((VM_Player::videoContext.stream != NULL) && (VM_Player::videoContext.packets.size() < MIN_PACKET_QUEUE_SIZE)))
-			{
-				break;
-			}
-
-			SDL_Delay(DELAY_TIME_DEFAULT);
+		while ((VM_Player::isPacketQueueFull(MEDIA_TYPE_AUDIO) || VM_Player::isPacketQueueFull(MEDIA_TYPE_VIDEO)) &&
+			!VM_Player::seekRequested && !VM_Player::State.quit)
+		{
+			SDL_Delay(DELAY_TIME_ONE_MS);
 		}
 
 		if (VM_Player::State.quit)
@@ -2198,16 +2214,15 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 {
 	int                    decodeResult, frameDecoded;
 	LIB_FFMPEG::AVPacket*  packet;
-	LIB_FFMPEG::AVSubtitle subFrame = {};
-	LIB_FFMPEG::AVCodecID  codecID  = VM_Player::subContext.stream->codec->codec->id;
+	LIB_FFMPEG::AVSubtitle subFrame  = {};
+	const char*            codecName = VM_Player::subContext.stream->codec->codec->name;
 
 	while (!VM_Player::State.quit)
 	{
 		while ((VM_Player::subContext.packets.empty() ||
-			VM_Player::State.isPaused ||
-			VM_Player::seekRequested ||
-			(VM_Player::subContext.index < 0) ||
-			(VM_Player::audioContext.index < 0)) && !VM_Player::State.quit)
+			VM_Player::State.isPaused || VM_Player::seekRequested ||
+			(VM_Player::subContext.index < 0) || (VM_Player::audioContext.index < 0)) &&
+			!VM_Player::State.quit)
 		{
 			SDL_Delay(DELAY_TIME_DEFAULT);
 		}
@@ -2223,14 +2238,34 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 			continue;
 		}
 
+		if (VM_Player::State.quit)
+			break;
+
 		// DECODE PACKET TO FRAME
 		decodeResult = avcodec_decode_subtitle2(VM_Player::subContext.stream->codec, &subFrame, &frameDecoded, packet);
+
+		// REPLACE YELLOW DVD SUBS WITH WHITE SUBS IF IT'S MISSING THE COLOR PALETTE
+		if (strcmp(codecName, "dvdsub") == 0)
+		{
+			VM_DVDSubContext* dvdSubContext = static_cast<VM_DVDSubContext*>(VM_Player::subContext.stream->codec->priv_data);
+
+			if ((dvdSubContext != NULL) && !dvdSubContext->has_palette) {
+				dvdSubContext->has_palette = 1;
+				dvdSubContext->palette[dvdSubContext->colormap[3]] = 0xFF000000;	// BORDER
+				dvdSubContext->palette[dvdSubContext->colormap[1]] = 0xFFFFFFFF;	// TEXT
+
+				decodeResult = avcodec_decode_subtitle2(VM_Player::subContext.stream->codec, &subFrame, &frameDecoded, packet);
+			}
+		}
 
 		// INVALID PACKET
 		if ((decodeResult < 0) || !frameDecoded) {
 			FREE_PACKET(packet);
 			continue;
 		}
+
+		if (VM_Player::State.quit)
+			break;
 
 		SDL_LockMutex(VM_Player::subContext.subsMutex);
 		VM_Player::subContext.available = false;
@@ -2239,9 +2274,8 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		// Some sub types, like PGS, come in pairs:
 		// - The first one with data but without duration or end PTS
 		// - The second one has no data, but contains the end PTS
-		if ((codecID == LIB_FFMPEG::AV_CODEC_ID_HDMV_PGS_SUBTITLE) &&
-			(subFrame.num_rects == 0) && (packet->duration == 0) && (packet->size < 100) &&
-			!VM_Player::subContext.subs.empty())
+		if ((strcmp(codecName, "pgssub") == 0) &&
+			(subFrame.num_rects == 0) && (packet->size > 0) && !VM_Player::subContext.subs.empty())
 		{
 			VM_Player::subContext.subs.back()->setPTS(packet, subFrame, VM_Player::subContext.stream);
 		}
@@ -2251,27 +2285,9 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		SDL_UnlockMutex(VM_Player::subContext.subsMutex);
 
 		// NO FRAMES DECODED
-		if ((subFrame.num_rects == 0) || 
-			((packet->duration == 0) && (codecID != LIB_FFMPEG::AV_CODEC_ID_HDMV_PGS_SUBTITLE)))
-		{
+		if ((subFrame.num_rects == 0) || ((packet->duration == 0) && (subFrame.end_display_time == 0))) {
 			FREE_PACKET(packet);
 			continue;
-		}
-
-		// REPLACE YELLOW DVD SUBS WITH WHITE SUBS IF IT'S MISSING THE COLOR PALETTE
-		//if (strcmp(VM_Player::subContext.stream->codec->codec->name, "dvdsub") == 0)
-		if (codecID == LIB_FFMPEG::AV_CODEC_ID_DVD_SUBTITLE)
-		{
-			VM_DVDSubContext* dvdSubContext = static_cast<VM_DVDSubContext*>(VM_Player::subContext.stream->codec->priv_data);
-
-			if ((dvdSubContext != NULL) && !dvdSubContext->has_palette)
-			{
-				dvdSubContext->has_palette = 1;
-				dvdSubContext->palette[dvdSubContext->colormap[3]] = 0xFF000000;	// BORDER
-				dvdSubContext->palette[dvdSubContext->colormap[1]] = 0xFFFFFFFF;	// TEXT
-
-				avcodec_decode_subtitle2(VM_Player::subContext.stream->codec, &subFrame, &frameDecoded, packet);
-			}
 		}
 
 		// SET PTS
@@ -2284,25 +2300,9 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 			continue;
 		}
 
-		// WAIT BEFORE MAKING THE FRAME AVAILABLE
-		while ((VM_Player::ProgressTime < subtitle.ptsStart) &&
-			!VM_Player::seekRequested &&
-			(VM_Player::subContext.index >= 0) &&
-			(VM_Player::audioContext.index >= 0) &&
-			!VM_Player::State.quit)
-		{
-			SDL_Delay(DELAY_TIME_DEFAULT);
-		}
-
-		if (VM_Player::State.quit)
-			break;
-
-		if (VM_Player::seekRequested || (VM_Player::subContext.index < 0) || (VM_Player::audioContext.index < 0)) {
-			FREE_SUB_FRAME(subFrame);
-			continue;
-		}
-
-		Strings subTexts;
+		Strings      subTexts;
+		VM_Subtitles textSubs;
+		VM_Subtitle* bitmapSub = NULL;
 
 		for (uint32_t i = 0; i < subFrame.num_rects; i++)
 		{
@@ -2317,66 +2317,70 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 					subTexts.push_back(subFrame.rects[i]->ass);
 					FREE_SUB_TEXT(subFrame.rects[i]->ass);
 				}
-
 				break;
 			case LIB_FFMPEG::SUBTITLE_TEXT:
 				if ((subFrame.rects[i]->text != NULL) && (strlen(subFrame.rects[i]->text) > 0)) {
 					subTexts.push_back(subFrame.rects[i]->text);
 					FREE_SUB_TEXT(subFrame.rects[i]->text);
 				}
-
 				break;
 			case LIB_FFMPEG::SUBTITLE_BITMAP:
-				VM_Subtitle* sub = new VM_Subtitle(subtitle);
-
-				sub->subRect = new VM_SubRect(*subFrame.rects[i]);
-
-				SDL_LockMutex(VM_Player::subContext.subsMutex);
-				VM_Player::subContext.available = false;
-
-				VM_Player::subContext.subs.push_back(sub);
-
-				VM_Player::subContext.available = true;
-				SDL_CondSignal(VM_Player::subContext.subsCondition);
-				SDL_UnlockMutex(VM_Player::subContext.subsMutex);
-
+				bitmapSub          = new VM_Subtitle(subtitle);
+				bitmapSub->subRect = new VM_SubRect(*subFrame.rects[i]);
 				break;
 			}
 		}
 
-		VM_Subtitles textSubs;
-
-		switch (VM_Player::subContext.type)
-		{
+		// SPLIT AND FORMAT THE TEXT SUBS
+		switch (VM_Player::subContext.type) {
 		case LIB_FFMPEG::SUBTITLE_ASS:
 		case LIB_FFMPEG::SUBTITLE_TEXT:
-			SDL_LockMutex(VM_Player::subContext.subsMutex);
-			VM_Player::subContext.available = false;
-
-			// SPLIT AND FORMAT SUB STRINGS
 			textSubs = VM_SubFontEngine::SplitAndFormatSub(
 				subtitle, subTexts, VM_Player::subContext.styles, VM_Player::subContext.subs
 			);
 
-			// ADD THE SUBTITLES TO THE LIST
+			// OPEN THE SUB STYLE FONTS
 			for (auto textSub : textSubs)
 			{
-				if ((textSub->style != NULL) && !textSub->style->fontName.empty())
-				{
+				if ((textSub->style != NULL) && !textSub->style->fontName.empty()) {
 					textSub->style->openFont(
 						VM_Player::subContext.styleFonts, VM_Player::subContext.scale, textSub
 					);
 				}
-
-				VM_Player::subContext.subs.push_back(textSub);
 			}
-
-			VM_Player::subContext.available = true;
-			SDL_CondSignal(VM_Player::subContext.subsCondition);
-			SDL_UnlockMutex(VM_Player::subContext.subsMutex);
 
 			break;
 		}
+
+		// WAIT BEFORE MAKING THE SUB AVAILABLE
+		while ((VM_Player::ProgressTime < subtitle.ptsStart) &&
+			(VM_Player::subContext.index >= 0) && (VM_Player::audioContext.index >= 0) &&
+			!VM_Player::seekRequested && !VM_Player::State.quit)
+		{
+			SDL_Delay(DELAY_TIME_ONE_MS);
+		}
+
+		if (VM_Player::State.quit)
+			break;
+
+		if (VM_Player::seekRequested || (VM_Player::subContext.index < 0) || (VM_Player::audioContext.index < 0)) {
+			FREE_SUB_FRAME(subFrame);
+			continue;
+		}
+
+		// ADD THE SUBTITLES TO THE LIST
+		SDL_LockMutex(VM_Player::subContext.subsMutex);
+		VM_Player::subContext.available = false;
+
+		if (bitmapSub != NULL)
+			VM_Player::subContext.subs.push_back(bitmapSub);
+
+		for (auto textSub : textSubs)
+			VM_Player::subContext.subs.push_back(textSub);
+
+		VM_Player::subContext.available = true;
+		SDL_CondSignal(VM_Player::subContext.subsCondition);
+		SDL_UnlockMutex(VM_Player::subContext.subsMutex);
 
 		// TELL THE RENDERER TO UPDATE THE SUB TEXTURE IF NEEDED
 		VM_Player::refreshSub = true;
