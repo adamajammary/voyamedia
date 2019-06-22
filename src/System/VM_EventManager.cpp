@@ -133,14 +133,14 @@ int System::VM_EventManager::HandleEvents()
 				case TOUCH_EVENT_SWIPE_UP:
 					listTable->selectRow(listTable->getSelectedRowIndex() + 1);
 
-					if (!table->isRowVisible())
+					if (!listTable->isRowVisible())
 						listTable->scroll(1);
 
 					break;
 				case TOUCH_EVENT_SWIPE_DOWN:
 					listTable->selectRow(listTable->getSelectedRowIndex() - 1);
 
-					if (!table->isRowVisible())
+					if (!listTable->isRowVisible())
 						listTable->scroll(-1);
 
 					break;
