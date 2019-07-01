@@ -1081,7 +1081,7 @@ void Graphics::VM_Table::selectRandom()
 	this->refreshSelected();
 }
 
-bool Graphics::VM_Table::selectRow(int row)
+void Graphics::VM_Table::selectRow(int row)
 {
 	if (row < 0)
 		row = 0;
@@ -1109,8 +1109,6 @@ bool Graphics::VM_Table::selectRow(int row)
 
 		DELETE_POINTER(db);
 	}
-
-	return true;
 }
 
 bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
@@ -1130,6 +1128,9 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 	int startY      = (this->backgroundArea.y + rowHeight);
 	int offsetY     = (rowHeight * offset);
 	int row         = ((positionY + offsetY - startY) / rowHeight);
+
+	if ((row < 0) || (row >= (int)this->rows.size()))
+		return false;
 
 	this->selectRow(row);
 

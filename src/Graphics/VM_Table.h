@@ -117,7 +117,7 @@ namespace VoyaMedia
 			void          selectNext(bool loop = false);
 			void          selectPrev(bool loop = false);
 			void          selectRandom();
-			bool          selectRow(int row);
+			void          selectRow(int row);
 			bool          selectRow(SDL_Event* mouseEvent);
 			void          setSearch(const String &searchString, bool saveDB = false);
 			int           setRows(bool temp);
