@@ -918,8 +918,6 @@ int MediaPlayer::VM_Player::openSub()
 		};
 
 		VM_Player::subContext.scale = {
-			//(float)((float)VM_Window::Dimensions.w / (float)VM_Player::subContext.size.x),
-			//(float)((float)VM_Window::Dimensions.h / (float)VM_Player::subContext.size.y)
 			(float)((float)playerSnapshot.x / (float)VM_Player::subContext.size.x * 0.9f),
 			(float)((float)playerSnapshot.y / (float)VM_Player::subContext.size.y * 0.9f)
 		};
@@ -1202,8 +1200,6 @@ void MediaPlayer::VM_Player::Refresh()
 	auto snapshot = VM_GUI::Components["bottom_player_snapshot"];
 
 	VM_Player::subContext.scale = {
-		//(float)((float)VM_Window::Dimensions.w / (float)VM_Player::subContext.size.x),
-		//(float)((float)VM_Window::Dimensions.h / (float)VM_Player::subContext.size.y)
 		(float)((float)snapshot->backgroundArea.w / (float)VM_Player::subContext.size.x * 0.9f),
 		(float)((float)snapshot->backgroundArea.h / (float)VM_Player::subContext.size.y * 0.9f)
 	};
@@ -2300,8 +2296,8 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 			continue;
 		}
 
+		// EXTRACT TEXT/BITMAP FROM FRAME
 		Strings      subTexts;
-		VM_Subtitles textSubs;
 		VM_Subtitle* bitmapSub = NULL;
 
 		for (uint32_t i = 0; i < subFrame.num_rects; i++)
@@ -2332,22 +2328,14 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		}
 
 		// SPLIT AND FORMAT THE TEXT SUBS
+		VM_Subtitles textSubs;
+
 		switch (VM_Player::subContext.type) {
 		case LIB_FFMPEG::SUBTITLE_ASS:
 		case LIB_FFMPEG::SUBTITLE_TEXT:
 			textSubs = VM_SubFontEngine::SplitAndFormatSub(
 				subtitle, subTexts, VM_Player::subContext.styles, VM_Player::subContext.subs
 			);
-
-			// OPEN THE SUB STYLE FONTS
-			for (auto textSub : textSubs)
-			{
-				if ((textSub->style != NULL) && !textSub->style->fontName.empty()) {
-					textSub->style->openFont(
-						VM_Player::subContext.styleFonts, VM_Player::subContext.scale, textSub
-					);
-				}
-			}
 
 			break;
 		}
@@ -2368,27 +2356,34 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 			continue;
 		}
 
-		// ADD THE SUBTITLES TO THE LIST
+		// MAKE THE SUBS AVAILABLE TO THE RENDERER
 		SDL_LockMutex(VM_Player::subContext.subsMutex);
 		VM_Player::subContext.available = false;
 
+		// BITMAP SUB
 		if (bitmapSub != NULL)
 			VM_Player::subContext.subs.push_back(bitmapSub);
 
+		// TEXT SUBS
 		for (auto textSub : textSubs)
+		{
+			// OPEN THE SUB STYLE FONT
+			if ((textSub->style != NULL) && !textSub->style->fontName.empty())
+				textSub->style->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale, textSub);
+
 			VM_Player::subContext.subs.push_back(textSub);
+		}
 
 		VM_Player::subContext.available = true;
 		SDL_CondSignal(VM_Player::subContext.subsCondition);
 		SDL_UnlockMutex(VM_Player::subContext.subsMutex);
 
-		// TELL THE RENDERER TO UPDATE THE SUB TEXTURE IF NEEDED
 		VM_Player::refreshSub = true;
 
 		FREE_SUB_FRAME(subFrame);
 	}
 
-	// FREE SUBS
+	// RELEASE SUB RESOURCES
 	FREE_SUB_FRAME(subFrame);
 
 	SDL_LockMutex(VM_Player::subContext.subsMutex);
