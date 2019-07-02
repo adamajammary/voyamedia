@@ -1693,7 +1693,7 @@ int MediaPlayer::VM_Player::Seek(int64_t seekTime)
 
 void MediaPlayer::VM_Player::seek()
 {
-	SDL_Delay(DELAY_TIME_DEFAULT);
+	//SDL_Delay(DELAY_TIME_DEFAULT);
 
 	int seekFlags = AV_SEEK_FLAGS(VM_Player::FormatContext->iformat);
 
@@ -1702,7 +1702,7 @@ void MediaPlayer::VM_Player::seek()
 		if (VM_Player::subContext.index >= SUB_STREAM_EXTERNAL)
 			avformat_seek_file(VM_Player::formatContextExternal, -1, INT64_MIN, VM_Player::seekToPosition, INT64_MAX, seekFlags);
 
-		SDL_Delay(DELAY_TIME_DEFAULT);
+		//SDL_Delay(DELAY_TIME_DEFAULT);
 
 		VM_Player::packetsClear(VM_Player::audioContext.packets, VM_Player::audioContext.mutex, VM_Player::audioContext.condition, VM_Player::audioContext.packetsAvailable);
 		VM_Player::packetsClear(VM_Player::subContext.packets,   VM_Player::subContext.mutex,   VM_Player::subContext.condition,   VM_Player::subContext.packetsAvailable);
