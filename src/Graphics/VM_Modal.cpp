@@ -161,8 +161,8 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 			int    mediaID   = 0;
 
 			if (!selectedGuiRow.empty()) {
-				mediaID = selectedGuiRow[0]->mediaID;
-				name    = selectedGuiRow[0]->getText();
+				mediaID = selectedGuiRow[1]->mediaID;
+				name    = selectedGuiRow[1]->getText();
 			}
 
 			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.removing"].c_str(), name.c_str());
