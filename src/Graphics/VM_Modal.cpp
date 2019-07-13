@@ -157,8 +157,8 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 	{
 		if (buttonID == "modal_right_click_remove_file")
 		{
-			String name = "";
-			int    mediaID   = 0;
+			String name    = "";
+			int    mediaID = 0;
 
 			if (!selectedGuiRow.empty()) {
 				mediaID = selectedGuiRow[1]->mediaID;

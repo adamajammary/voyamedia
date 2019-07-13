@@ -82,6 +82,7 @@ namespace VoyaMedia
 			SDL_mutex*                 mutex;
 			VM_Packets                 packets;
 			bool                       packetsAvailable;
+			VM_PTS                     pts;
 			Graphics::VM_PointF        scale;
 			SDL_Point                  size;
 			LIB_FFMPEG::AVStream*      stream;
@@ -304,9 +305,9 @@ namespace VoyaMedia
 			static LIB_FFMPEG::AVPacket* packetGet(VM_Packets &packetQueue, SDL_mutex* mutex, SDL_cond* condition, bool &queueAvailable);
 			static int                   packetsClear(VM_Packets &packetQueue, SDL_mutex* mutex, SDL_cond* condition, bool &queueAvailable);
 			static int                   renderSub(const SDL_Rect &location);
-			static int                   renderSubBitmap(const SDL_Rect &location);
-			static int                   renderSubText(const SDL_Rect &location);
-			static int                   renderVideo(const SDL_Rect &location);
+			static void                  renderSubBitmap(const SDL_Rect &location);
+			static void                  renderSubText(const SDL_Rect &location);
+			static void                  renderVideo(const SDL_Rect &location);
 			static void                  reset();
 			static void                  seek();
 			static void                  threadAudio(void* userData, Uint8* outputStream, int outputStreamSize);

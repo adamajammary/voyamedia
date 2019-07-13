@@ -1069,7 +1069,9 @@ int MediaPlayer::VM_SubFontEngine::RenderSubText(const VM_Subtitles &subs, TTF_F
 	VM_SubFontEngine::renderSubsPositionRelative(VM_SubFontEngine::subsBottom);
 
 	#if defined _DEBUG
-		LOG(String("RENDER_SUB: " + std::to_string(SDL_GetTicks() - start) + " ms").c_str());
+		auto time = (SDL_GetTicks() - start);
+		if (time > 0)
+			LOG(String("RENDER_SUB: " + std::to_string(time) + " ms").c_str());
 	#endif
 
 	return RESULT_OK;
@@ -1715,7 +1717,9 @@ MediaPlayer::VM_Subtitles MediaPlayer::VM_SubFontEngine::SplitAndFormatSub(const
 		id++;
 
 		#if defined _DEBUG
-			LOG(String("CREATE_SUB: " + std::to_string(SDL_GetTicks() - start) + " ms").c_str());
+			auto time = (SDL_GetTicks() - start);
+			if (time > 0)
+				LOG(String("CREATE_SUB: " + std::to_string(time) + " ms").c_str());
 		#endif
 	}
 

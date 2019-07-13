@@ -1282,8 +1282,8 @@ int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
 	// REMOVE EXPIRED SUBS
 	for (auto sub = VM_Player::subContext.subs.begin(); sub != VM_Player::subContext.subs.end();)
 	{
-		if (((*sub)->ptsEnd  <= VM_Player::ProgressTime) || // Expired
-			((*sub)->ptsStart > VM_Player::ProgressTime))   // Should not be displayed yet
+		if (((*sub)->pts.end  <= VM_Player::ProgressTime)) //|| // Expired
+			//((*sub)->pts.start > VM_Player::ProgressTime))   // Should not be displayed yet
 		{
 			bool bottom = (*sub)->isAlignedBottom();
 
@@ -1316,27 +1316,26 @@ int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
 	return RESULT_OK;
 }
 
-int MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
+void MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 {
-	LIB_FFMPEG::AVPicture frameEncoded;
-	SDL_Rect              renderLocation;
-	int                   scaleResult = 0;
-	VM_Texture*           texture     = NULL;
-	
 	if (VM_Player::refreshSub &&
 		!VM_Player::seekRequested &&
 		!VM_Player::State.isStopped &&
 		!VM_Player::State.quit)
 	{
-		uint32_t                  sdlPixelFormat    = SDL_PIXELFORMAT_ARGB8888;
-		LIB_FFMPEG::AVPixelFormat ffmpegPixelFormat = LIB_FFMPEG::AV_PIX_FMT_BGRA;
+		VM_Player::refreshSub = false;
+
+		auto ffmpegPixelFormat = LIB_FFMPEG::AV_PIX_FMT_BGRA;
+		auto sdlPixelFormat    = SDL_PIXELFORMAT_ARGB8888;
+		auto subStream         = VM_Player::subContext.stream;
+		auto videoStream       = VM_Player::videoContext.stream;
 
 		if (VM_Player::subContext.texture == NULL)
 		{
 			VM_Player::subContext.texture = new VM_Texture(
 				sdlPixelFormat, SDL_TEXTUREACCESS_TARGET,
-				(VM_Player::subContext.stream->codec->width  > 0 ? VM_Player::subContext.stream->codec->width  : VM_Player::videoContext.stream->codec->width),
-				(VM_Player::subContext.stream->codec->height > 0 ? VM_Player::subContext.stream->codec->height : VM_Player::videoContext.stream->codec->height)
+				(subStream->codec->width  > 0 ? subStream->codec->width  : videoStream->codec->width),
+				(subStream->codec->height > 0 ? subStream->codec->height : videoStream->codec->height)
 			);
 		}
 
@@ -1366,7 +1365,7 @@ int MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 
 					if ((subIter2 != subIter) && SDL_IntersectRect(&sub2Rect, &subRect, &collRect)) {
 						skipSub     = true;
-						sub->ptsEnd = VM_Player::ProgressTime;
+						sub->pts.end = VM_Player::ProgressTime;
 						break;
 					}
 				}
@@ -1374,12 +1373,17 @@ int MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 				if (skipSub)
 					continue;
 
+				LIB_FFMPEG::AVPicture frameEncoded;
+				int                   scaleResult = 0;
+				VM_Texture*           texture     = NULL;
+
 				if (avpicture_alloc(&frameEncoded, ffmpegPixelFormat, sub->subRect->w, sub->subRect->h) == 0)
 				{
 					VM_Player::scaleContextSub = sws_getCachedContext(
 						VM_Player::scaleContextSub,
-						sub->subRect->w, sub->subRect->h, VM_Player::subContext.stream->codec->pix_fmt,
-						sub->subRect->w, sub->subRect->h, ffmpegPixelFormat, DEFAULT_SCALE_FILTER, NULL, NULL, NULL
+						sub->subRect->w, sub->subRect->h, subStream->codec->pix_fmt,
+						sub->subRect->w, sub->subRect->h, ffmpegPixelFormat, DEFAULT_SCALE_FILTER,
+						NULL, NULL, NULL
 					);
 				}
 
@@ -1396,7 +1400,9 @@ int MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 
 				if ((texture != NULL) && (texture->data != NULL))
 				{
-					renderLocation = { sub->subRect->x, sub->subRect->y, sub->subRect->w, sub->subRect->h };
+					SDL_Rect renderLocation = {
+						sub->subRect->x, sub->subRect->y, sub->subRect->w, sub->subRect->h
+					};
 
 					SDL_SetTextureBlendMode(texture->data, SDL_BLENDMODE_BLEND);
 					SDL_UpdateTexture(texture->data, NULL, frameEncoded.data[0], frameEncoded.linesize[0]);
@@ -1410,17 +1416,17 @@ int MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 
 			SDL_SetRenderTarget(VM_Window::Renderer, NULL);
 		
-			VM_Player::refreshSub = false;
+			//VM_Player::refreshSub = false;
 		}
 	}
 
 	if (!VM_Player::subContext.subs.empty() && (VM_Player::subContext.texture != NULL) && (VM_Player::subContext.texture->data != NULL))
 		SDL_RenderCopy(VM_Window::Renderer, VM_Player::subContext.texture->data, NULL, &location); 
 
-	return RESULT_OK;
+	//return RESULT_OK;
 }
 
-int MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
+void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 {
 	// Only re-create the ubs if they have changed
 	if (VM_Player::refreshSub &&
@@ -1429,6 +1435,8 @@ int MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 		!VM_Player::State.isStopped &&
 		!VM_Player::State.quit)
 	{
+		VM_Player::refreshSub = false;
+
 		// Create the texture
 		if (VM_Player::subContext.texture == NULL)
 		{
@@ -1454,33 +1462,57 @@ int MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 			SDL_SetRenderTarget(VM_Window::Renderer, NULL);
 		}
 
-		VM_Player::refreshSub = false;
+		//VM_Player::refreshSub = false;
+
+		VM_Player::subContext.pts.start = 0;
+
+		for (auto sub : VM_Player::subContext.subs) {
+			if ((sub->pts.start < VM_Player::subContext.pts.start) || (VM_Player::subContext.pts.start == 0))
+				VM_Player::subContext.pts.start = sub->pts.start;
+		}
+
+		#if defined _DEBUG
+			auto delay = (VM_Player::ProgressTime - VM_Player::subContext.pts.start);
+			if (delay > 0)
+				LOG("DELAY: %.3fs (%.3f - %.3f)", delay, VM_Player::ProgressTime, VM_Player::subContext.pts.start);
+		#endif
 	}
 
 	SDL_SetRenderDrawBlendMode(VM_Window::Renderer, SDL_BLENDMODE_BLEND);
 
-	if (!VM_Player::subContext.subs.empty() && (VM_Player::subContext.texture != NULL) && (VM_Player::subContext.texture->data != NULL))
-		SDL_RenderCopy(VM_Window::Renderer, VM_Player::subContext.texture->data, NULL, &VM_Player::videoContext.renderLocation);
+	if (!VM_Player::subContext.subs.empty() &&
+		(VM_Player::subContext.texture != NULL) && (VM_Player::subContext.texture->data != NULL) &&
+		(VM_Player::ProgressTime >= VM_Player::subContext.pts.start))
+	{
+		SDL_RenderCopy(
+			VM_Window::Renderer, VM_Player::subContext.texture->data,
+			NULL, &VM_Player::videoContext.renderLocation
+		);
+	}
 
-	return RESULT_OK;
+	//return RESULT_OK;
 }
 
-int MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
+void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 {
-	if ((VM_Player::videoContext.stream == NULL) || (VM_Player::videoContext.stream->codec == NULL) || VM_Player::State.quit)
-		return ERROR_INVALID_ARGUMENTS; 
+	//if ((VM_Player::videoContext.stream == NULL) || (VM_Player::videoContext.stream->codec == NULL) || VM_Player::State.quit)
+	//	return ERROR_INVALID_ARGUMENTS; 
 
 	// UPDATE THE VIDEO TEXTURE WITH THE NEWLY DECODED VIDEO FRAME
 	if (VM_Player::refreshVideo && !VM_Player::State.isStopped && !VM_Player::State.quit)
 	{
-		int maxWidth, maxHeight, scaledWidth, scaledHeight;
-		int scaleResult = 0;
+		VM_Player::refreshVideo = false;
+
+		int  maxWidth, maxHeight, scaledWidth, scaledHeight;
+		int  scaleResult = 0;
+		auto videoFrame  = VM_Player::videoContext.frame;
+		auto videoStream = VM_Player::videoContext.stream;
 
 		// CALCULATE THE OUTPUT SIZE RELATIVE TO THE ASPECT RATIO
 		if (VM_Player::State.keepAspectRatio)
 		{
-			maxWidth     = (int)((float)VM_Player::videoContext.stream->codec->width  / (float)VM_Player::videoContext.stream->codec->height * (float)location.h);
-			maxHeight    = (int)((float)VM_Player::videoContext.stream->codec->height / (float)VM_Player::videoContext.stream->codec->width  * (float)location.w);
+			maxWidth     = (int)((float)videoStream->codec->width  / (float)videoStream->codec->height * (float)location.h);
+			maxHeight    = (int)((float)videoStream->codec->height / (float)videoStream->codec->width  * (float)location.w);
 			scaledWidth  = (maxWidth  <= location.w ? maxWidth  : location.w);
 			scaledHeight = (maxHeight <= location.h ? maxHeight : location.h);
 		} else {
@@ -1494,36 +1526,37 @@ int MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 		VM_Player::videoContext.renderLocation.w = scaledWidth;
 		VM_Player::videoContext.renderLocation.h = scaledHeight;
 
-		if (VM_Player::videoContext.frameDecoded             && !VM_Player::State.quit &&
-			(VM_Player::videoContext.frame->data[0] != NULL) && (VM_Player::videoContext.frame->linesize[0] > 0) &&
-			(VM_Player::videoContext.frame->width > 0)       && (VM_Player::videoContext.frame->height > 0))
+		if (VM_Player::videoContext.frameDecoded && !VM_Player::State.quit &&
+			(videoFrame->data[0] != NULL) && (videoFrame->linesize[0] > 0) &&
+			(videoFrame->width > 0) && (videoFrame->height > 0))
 		{
 			// CREATE THE VIDEO TEXTURE IF NOT ALREADY CREATED
 			if (((VM_Player::videoContext.texture == NULL) || (VM_Player::videoContext.texture->data == NULL) || 
-				(VM_Player::videoContext.texture->width  != VM_Player::videoContext.frame->width) || 
-				(VM_Player::videoContext.texture->height != VM_Player::videoContext.frame->height)) && !VM_Player::State.quit)
+				(VM_Player::videoContext.texture->width  != videoFrame->width) ||
+				(VM_Player::videoContext.texture->height != videoFrame->height)) &&
+				!VM_Player::State.quit)
 			{
 				DELETE_POINTER(VM_Player::videoContext.texture);
 
-				uint32_t sdlPixelFormat = VM_Player::GetVideoPixelFormat(VM_Player::videoContext.stream->codec->pix_fmt);
+				uint32_t sdlPixelFormat = VM_Player::GetVideoPixelFormat(videoStream->codec->pix_fmt);
 
 				VM_Player::videoContext.texture = new VM_Texture(
-					sdlPixelFormat, SDL_TEXTUREACCESS_STREAMING, VM_Player::videoContext.frame->width, VM_Player::videoContext.frame->height
+					sdlPixelFormat, SDL_TEXTUREACCESS_STREAMING, videoFrame->width, videoFrame->height
 				);
 
 				// CREATE A SCALING CONTEXT FOR NON-YUV420P VIDEOS
 				if ((VM_Player::videoContext.texture->data != NULL) &&
-					(VM_Player::videoContext.stream->codec->pix_fmt != LIB_FFMPEG::AV_PIX_FMT_YUV420P))
+					(videoStream->codec->pix_fmt != LIB_FFMPEG::AV_PIX_FMT_YUV420P))
 				{
 					LIB_FFMPEG::AVPixelFormat ffmpegPixelFormat = VM_Player::GetVideoPixelFormat(sdlPixelFormat);
 
-					if (avpicture_alloc(&VM_Player::videoContext.frameEncoded, ffmpegPixelFormat, VM_Player::videoContext.frame->width, VM_Player::videoContext.frame->height) < 0)
+					if (avpicture_alloc(&VM_Player::videoContext.frameEncoded, ffmpegPixelFormat, videoFrame->width, videoFrame->height) < 0)
 						DELETE_POINTER(VM_Player::videoContext.texture);
 
 					VM_Player::scaleContextVideo = sws_getCachedContext(
 						VM_Player::scaleContextVideo,
-						VM_Player::videoContext.frame->width, VM_Player::videoContext.frame->height, VM_Player::videoContext.stream->codec->pix_fmt,
-						VM_Player::videoContext.frame->width, VM_Player::videoContext.frame->height, ffmpegPixelFormat,
+						videoFrame->width, videoFrame->height, videoStream->codec->pix_fmt,
+						videoFrame->width, videoFrame->height, ffmpegPixelFormat,
 						DEFAULT_SCALE_FILTER, NULL, NULL, NULL
 					);
 					
@@ -1539,20 +1572,20 @@ int MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 				!VM_Player::State.quit)
 			{
 				// FOR YUV420P VIDEOS, COPY THE FRAME DIRECTLY TO THE TEXTURE
-				if (VM_Player::IsYUV(VM_Player::videoContext.stream->codec->pix_fmt))
+				if (VM_Player::IsYUV(videoStream->codec->pix_fmt))
 				{
 					SDL_UpdateYUVTexture(
 						VM_Player::videoContext.texture->data, NULL,
-						VM_Player::videoContext.frame->data[0], VM_Player::videoContext.frame->linesize[0],
-						VM_Player::videoContext.frame->data[1], VM_Player::videoContext.frame->linesize[1],
-						VM_Player::videoContext.frame->data[2], VM_Player::videoContext.frame->linesize[2]
+						videoFrame->data[0], videoFrame->linesize[0],
+						videoFrame->data[1], videoFrame->linesize[1],
+						videoFrame->data[2], videoFrame->linesize[2]
 					);
 				}
 				// FOR NON-YUV420P VIDEOS, CONVERT THE PIXEL FORMAT TO YUV420P
 				else
 				{
 					scaleResult = sws_scale(
-						VM_Player::scaleContextVideo, VM_Player::videoContext.frame->data, VM_Player::videoContext.frame->linesize, 0, VM_Player::videoContext.frame->height,
+						VM_Player::scaleContextVideo, videoFrame->data, videoFrame->linesize, 0, videoFrame->height,
 						VM_Player::videoContext.frameEncoded.data, VM_Player::videoContext.frameEncoded.linesize
 					);
 
@@ -1567,7 +1600,7 @@ int MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 					}
 				}
 
-				VM_Player::refreshVideo = false;
+				//VM_Player::refreshVideo = false;
 			}
 		}
 	}
@@ -1587,7 +1620,7 @@ int MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 		);
 	}
 
-	return RESULT_OK;
+	//return RESULT_OK;
 }
 
 void MediaPlayer::VM_Player::reset()
@@ -2291,7 +2324,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		subtitle.setPTS(packet, subFrame, VM_Player::subContext.stream);
 		FREE_PACKET(packet);
 
-		if ((subtitle.ptsEnd - subtitle.ptsStart) < 0.3) {
+		if ((subtitle.pts.end - subtitle.pts.start) < 0.3) {
 			FREE_SUB_FRAME(subFrame);
 			continue;
 		}
@@ -2337,11 +2370,18 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 				subtitle, subTexts, VM_Player::subContext.styles, VM_Player::subContext.subs
 			);
 
+			// OPEN THE SUB STYLE FONTS
+			for (auto textSub : textSubs) {
+				if ((textSub->style != NULL) && !textSub->style->fontName.empty())
+					textSub->style->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale, textSub);
+			}
+
 			break;
 		}
 
 		// WAIT BEFORE MAKING THE SUB AVAILABLE
-		while ((VM_Player::ProgressTime < subtitle.ptsStart) &&
+		//while ((VM_Player::ProgressTime < subtitle.pts.start) &&
+		while ((VM_Player::ProgressTime < (subtitle.pts.start - DELAY_TIME_SUB_RENDER)) &&
 			(VM_Player::subContext.index >= 0) && (VM_Player::audioContext.index >= 0) &&
 			!VM_Player::seekRequested && !VM_Player::State.quit)
 		{
@@ -2366,13 +2406,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 
 		// TEXT SUBS
 		for (auto textSub : textSubs)
-		{
-			// OPEN THE SUB STYLE FONT
-			if ((textSub->style != NULL) && !textSub->style->fontName.empty())
-				textSub->style->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale, textSub);
-
 			VM_Player::subContext.subs.push_back(textSub);
-		}
 
 		VM_Player::subContext.available = true;
 		SDL_CondSignal(VM_Player::subContext.subsCondition);

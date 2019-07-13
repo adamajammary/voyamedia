@@ -30,8 +30,7 @@ namespace VoyaMedia
 			SDL_Point    position;
 			double       rotation;
 			SDL_Point    rotationPoint;
-			double       ptsEnd;
-			double       ptsStart;
+			VM_PTS       pts;
 			bool         skip;
 			bool         splitStyling;
 			VM_SubStyle* style;

@@ -466,10 +466,11 @@ namespace VoyaMedia
 		const float DEFAULT_DPI = 96.0f;
 	#endif
 
-	const int DELAY_TIME_BACKGROUND = 200;
-	const int DELAY_TIME_DEFAULT    = 15;
-	const int DELAY_TIME_GUI_RENDER = 300;
-	const int DELAY_TIME_ONE_MS     = 1;
+	const int    DELAY_TIME_BACKGROUND = 200;
+	const int    DELAY_TIME_DEFAULT    = 15;
+	const int    DELAY_TIME_GUI_RENDER = 300;
+	const int    DELAY_TIME_ONE_MS     = 1;
+	const double DELAY_TIME_SUB_RENDER = 0.100;
 
 	const float FLOAT_MAX_ONE  = 1.01f;
 	const float FLOAT_MIN_ONE  = 0.99f;
@@ -592,6 +593,13 @@ namespace VoyaMedia
 		class VM_Subtitle;
 		class VM_SubStyle;
 		class VM_SubTexture;
+
+		struct VM_PTS
+		{
+			double start, end;
+			VM_PTS() { this->start = 0; this->end = 0; }
+			VM_PTS(double start, double end) { this->start = start; this->end = end; }
+		};
 
 		typedef std::queue<LIB_FFMPEG::AVPacket*> VM_Packets;
 		typedef std::list<VM_Subtitle*>           VM_Subtitles;

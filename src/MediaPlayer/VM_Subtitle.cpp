@@ -16,8 +16,8 @@ MediaPlayer::VM_Subtitle::VM_Subtitle()
 	this->offsetX        = false;
 	this->offsetY        = false;
 	this->position       = {};
-	this->ptsEnd         = 0;
-	this->ptsStart       = 0;
+	this->pts.end        = 0;
+	this->pts.start      = 0;
 	this->rotation       = 0.0;
 	this->rotationPoint  = {};
 	this->skip           = false;
@@ -47,8 +47,8 @@ void MediaPlayer::VM_Subtitle::copy(const VM_Subtitle &subtitle)
 	this->drawRect       = subtitle.drawRect;
 	this->font           = subtitle.font;
 	this->position       = subtitle.position;
-	this->ptsStart       = subtitle.ptsStart;
-	this->ptsEnd         = subtitle.ptsEnd;
+	this->pts.start      = subtitle.pts.start;
+	this->pts.end        = subtitle.pts.end;
 	this->rotation       = subtitle.rotation;
 	this->rotationPoint  = subtitle.rotationPoint;
 	this->subRect        = subtitle.subRect;
@@ -90,8 +90,8 @@ MediaPlayer::VM_Subtitles MediaPlayer::VM_Subtitle::getDuplicateSubs(const VM_Su
 	{
 		if ((sub == NULL) ||
 			(this->id       == sub->id) ||
-			(this->ptsStart != sub->ptsStart) ||
-			(this->ptsEnd   != sub->ptsEnd) ||
+			(this->pts.start != sub->pts.start) ||
+			(this->pts.end   != sub->pts.end) ||
 			((this->text    != sub->text) && (text3 != VM_SubFontEngine::RemoveFormatting(sub->text3))) ||
 			(std::atoi(this->textSplit[0].c_str()) == std::atoi(sub->textSplit[0].c_str())))
 		{
@@ -197,32 +197,32 @@ int MediaPlayer::VM_Subtitle::setPTS(LIB_FFMPEG::AVPacket* packet, LIB_FFMPEG::A
 	if ((subFrame.num_rects == 0) && (packet->size > 0))
 	{
 		if (useFrame)
-			this->ptsEnd = (double)((double)subFrame.pts / AV_TIME_BASE_D);
+			this->pts.end = (double)((double)subFrame.pts / AV_TIME_BASE_D);
 		else
-			this->ptsEnd = (double)((double)packet->pts * LIB_FFMPEG::av_q2d(subStream->time_base));
+			this->pts.end = (double)((double)packet->pts * LIB_FFMPEG::av_q2d(subStream->time_base));
 	}
 	else
 	{
 		// SET START PTS
 		if (useFrame) {
-			this->ptsStart = (double)((double)(subFrame.pts - subStream->start_time) / AV_TIME_BASE_D);
+			this->pts.start = (double)((double)(subFrame.pts - subStream->start_time) / AV_TIME_BASE_D);
 		} else {
-			this->ptsStart = (double)((double)(packet->pts  - subStream->start_time) * LIB_FFMPEG::av_q2d(subStream->time_base));
+			this->pts.start = (double)((double)(packet->pts  - subStream->start_time) * LIB_FFMPEG::av_q2d(subStream->time_base));
 
-			if (this->ptsStart < VM_Player::ProgressTime)
-				this->ptsStart += (double)((double)subStream->start_time * LIB_FFMPEG::av_q2d(subStream->time_base));
+			if (this->pts.start < VM_Player::ProgressTime)
+				this->pts.start += (double)((double)subStream->start_time * LIB_FFMPEG::av_q2d(subStream->time_base));
 		}
 
 		if (subFrame.start_display_time > 0)
-			this->ptsStart += (double)((double)subFrame.start_display_time / (double)ONE_SECOND_MS);
+			this->pts.start += (double)((double)subFrame.start_display_time / (double)ONE_SECOND_MS);
 
 		// SET END PTS
 		if (subFrame.end_display_time > 0)
-			this->ptsEnd = (double)(this->ptsStart + (double)((double)subFrame.end_display_time / (double)ONE_SECOND_MS));
+			this->pts.end = (double)(this->pts.start + (double)((double)subFrame.end_display_time / (double)ONE_SECOND_MS));
 		else if (packet->duration > 0)
-			this->ptsEnd = (double)(this->ptsStart + (double)((double)packet->duration * LIB_FFMPEG::av_q2d(subStream->time_base)));
+			this->pts.end = (double)(this->pts.start + (double)((double)packet->duration * LIB_FFMPEG::av_q2d(subStream->time_base)));
 		else
-			this->ptsEnd = (this->ptsStart + SUB_MAX_DURATION);
+			this->pts.end = (this->pts.start + SUB_MAX_DURATION);
 	}
 
 	return RESULT_OK;
