@@ -470,7 +470,7 @@ namespace VoyaMedia
 	const int    DELAY_TIME_DEFAULT    = 15;
 	const int    DELAY_TIME_GUI_RENDER = 300;
 	const int    DELAY_TIME_ONE_MS     = 1;
-	const double DELAY_TIME_SUB_RENDER = 0.100;
+	const double DELAY_TIME_SUB_RENDER = 0.1;
 
 	const float FLOAT_MAX_ONE  = 1.01f;
 	const float FLOAT_MIN_ONE  = 0.99f;

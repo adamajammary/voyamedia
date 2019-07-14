@@ -1282,9 +1282,15 @@ int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
 	// REMOVE EXPIRED SUBS
 	for (auto sub = VM_Player::subContext.subs.begin(); sub != VM_Player::subContext.subs.end();)
 	{
-		if (((*sub)->pts.end  <= VM_Player::ProgressTime)) //|| // Expired
+		if ((VM_Player::ProgressTime > ((*sub)->pts.end - DELAY_TIME_SUB_RENDER))) //|| // Expired
 			//((*sub)->pts.start > VM_Player::ProgressTime))   // Should not be displayed yet
 		{
+			#if defined _DEBUG
+				auto delay = (VM_Player::ProgressTime - (*sub)->pts.end);
+				if (delay > 0)
+					LOG("REMOVE_DELAY: %.3fs (%.3f - %.3f)", delay, VM_Player::ProgressTime, (*sub)->pts.end);
+			#endif
+
 			bool bottom = (*sub)->isAlignedBottom();
 
 			VM_SubFontEngine::RemoveSubs((*sub)->id);
@@ -1474,7 +1480,7 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 		#if defined _DEBUG
 			auto delay = (VM_Player::ProgressTime - VM_Player::subContext.pts.start);
 			if (delay > 0)
-				LOG("DELAY: %.3fs (%.3f - %.3f)", delay, VM_Player::ProgressTime, VM_Player::subContext.pts.start);
+				LOG("RENDER_DELAY: %.3fs (%.3f - %.3f)", delay, VM_Player::ProgressTime, VM_Player::subContext.pts.start);
 		#endif
 	}
 
