@@ -304,20 +304,39 @@ int System::VM_Window::Reset(const char* guiXML, const char* title)
 
 void System::VM_Window::resize()
 {
-	VM_Window::Dimensions = VM_Window::Display.getDimensions();
-
-	if ((VM_Window::Dimensions.w < MIN_WINDOW_SIZE) || (VM_Window::Dimensions.h < MIN_WINDOW_SIZE))
-	{
-		VM_Window::Dimensions.w = max(MIN_WINDOW_SIZE, VM_Window::Dimensions.w);
-		VM_Window::Dimensions.h = max(MIN_WINDOW_SIZE, VM_Window::Dimensions.h);
-
-		SDL_SetWindowSize(VM_Window::MainWindow, VM_Window::Dimensions.w, VM_Window::Dimensions.h);
-	}
-
+	VM_Window::Dimensions  = VM_Window::Display.getDimensions();
 	bool windowIsMaximized = ((SDL_GetWindowFlags(VM_Window::MainWindow) & SDL_WINDOW_MAXIMIZED) != 0);
 
 	if (!windowIsMaximized && !VM_Window::FullScreenMaximized)
+	{
+		bool setMinSize = false;
+
+		if (VM_Window::Dimensions.w < MIN_WINDOW_SIZE) {
+			VM_Window::Dimensions.w = MIN_WINDOW_SIZE;
+			setMinSize = true;
+		}
+		if (VM_Window::Dimensions.h < MIN_WINDOW_SIZE) {
+			VM_Window::Dimensions.h = MIN_WINDOW_SIZE;
+			setMinSize = true;
+		}
+
+		int maxWidth  = (int)((float)VM_Window::Dimensions.h * MAX_ASPECT_RATIO);
+		int maxHeight = (int)((float)VM_Window::Dimensions.w * MAX_ASPECT_RATIO);
+
+		if (VM_Window::Dimensions.w > maxWidth) {
+			VM_Window::Dimensions.w = maxWidth;
+			setMinSize = true;
+		}
+		if (VM_Window::Dimensions.h > maxHeight) {
+			VM_Window::Dimensions.h = maxHeight;
+			setMinSize = true;
+		}
+
+		if (setMinSize)
+			SDL_SetWindowSize(VM_Window::MainWindow, VM_Window::Dimensions.w, VM_Window::Dimensions.h);
+
 		VM_Window::DimensionsBeforeFS = VM_Window::Display.getDimensions();
+	}
 
 	VM_Window::saveToDB();
 	VM_ThreadManager::FreeResources(false);

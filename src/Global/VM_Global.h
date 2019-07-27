@@ -499,16 +499,17 @@ namespace VoyaMedia
 		#define INT64_MAX 9223372036854775807
 	#endif
 
-	const int  MAX_AUDIO_FRAMES      = 10;
-	const long MAX_CURL_REDIRS       = 10L;
-	const long MAX_CURL_TIMEOUT      = 20000L;
-	const int  MAX_DB_RESULT         = 100000;
-	const int  MAX_DECODE_THREADS    = 16;
-	const int  MAX_ERRORS            = 100;
-	const int  MAX_FILE_PATH         = 260;
-	const int  MAX_PACKET_QUEUE_SIZE = 100;
-	const int  MAX_WINDOW_SIZE       = 16384;
-	const int  MAX_THUMB_SIZE        = 512;
+	const float MAX_ASPECT_RATIO      = 1.6f; // 16:10
+	const int   MAX_AUDIO_FRAMES      = 10;
+	const long  MAX_CURL_REDIRS       = 10L;
+	const long  MAX_CURL_TIMEOUT      = 20000L;
+	const int   MAX_DB_RESULT         = 100000;
+	const int   MAX_DECODE_THREADS    = 16;
+	const int   MAX_ERRORS            = 100;
+	const int   MAX_FILE_PATH         = 260;
+	const int   MAX_PACKET_QUEUE_SIZE = 100;
+	const int   MAX_WINDOW_SIZE       = 16384;
+	const int   MAX_THUMB_SIZE        = 512;
 
 	const int MIN_OUTLINE           = 3;
 	const int MIN_PACKET_QUEUE_SIZE = 25;
