@@ -1369,9 +1369,11 @@ void MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 					SDL_Rect     sub2Rect = { sub2->subRect->x, sub2->subRect->y, sub2->subRect->w, sub2->subRect->h };
 					SDL_Rect     subRect  = { sub->subRect->x,  sub->subRect->y,  sub->subRect->w,  sub->subRect->h };
 
-					if ((subIter2 != subIter) && SDL_IntersectRect(&sub2Rect, &subRect, &collRect)) {
-						skipSub     = true;
+					if ((subIter2 != subIter) && SDL_IntersectRect(&sub2Rect, &subRect, &collRect))
+					{
+						skipSub      = true;
 						sub->pts.end = VM_Player::ProgressTime;
+
 						break;
 					}
 				}
@@ -1421,15 +1423,15 @@ void MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 			}
 
 			SDL_SetRenderTarget(VM_Window::Renderer, NULL);
-		
-			//VM_Player::refreshSub = false;
 		}
 	}
 
-	if (!VM_Player::subContext.subs.empty() && (VM_Player::subContext.texture != NULL) && (VM_Player::subContext.texture->data != NULL))
-		SDL_RenderCopy(VM_Window::Renderer, VM_Player::subContext.texture->data, NULL, &location); 
-
-	//return RESULT_OK;
+	if (!VM_Player::subContext.subs.empty() &&
+		(VM_Player::subContext.texture != NULL) &&
+		(VM_Player::subContext.texture->data != NULL))
+	{
+		SDL_RenderCopy(VM_Window::Renderer, VM_Player::subContext.texture->data, NULL, &location);
+	}
 }
 
 void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
@@ -1468,42 +1470,30 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 			SDL_SetRenderTarget(VM_Window::Renderer, NULL);
 		}
 
-		//VM_Player::refreshSub = false;
-
-		VM_Player::subContext.pts.start = 0;
-
-		for (auto sub : VM_Player::subContext.subs) {
-			if ((sub->pts.start < VM_Player::subContext.pts.start) || (VM_Player::subContext.pts.start == 0))
-				VM_Player::subContext.pts.start = sub->pts.start;
-		}
-
 		#if defined _DEBUG
-			auto delay = (VM_Player::ProgressTime - VM_Player::subContext.pts.start);
+		for (auto sub : VM_Player::subContext.subs) {
+			auto delay = (VM_Player::ProgressTime - sub->pts.start);
 			if (delay > 0)
 				LOG("RENDER_DELAY: %.3fs (%.3f - %.3f)", delay, VM_Player::ProgressTime, VM_Player::subContext.pts.start);
+		}
 		#endif
 	}
 
 	SDL_SetRenderDrawBlendMode(VM_Window::Renderer, SDL_BLENDMODE_BLEND);
 
 	if (!VM_Player::subContext.subs.empty() &&
-		(VM_Player::subContext.texture != NULL) && (VM_Player::subContext.texture->data != NULL) &&
-		(VM_Player::ProgressTime >= VM_Player::subContext.pts.start))
+		(VM_Player::subContext.texture != NULL) && 
+		(VM_Player::subContext.texture->data != NULL))
 	{
 		SDL_RenderCopy(
 			VM_Window::Renderer, VM_Player::subContext.texture->data,
 			NULL, &VM_Player::videoContext.renderLocation
 		);
 	}
-
-	//return RESULT_OK;
 }
 
 void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 {
-	//if ((VM_Player::videoContext.stream == NULL) || (VM_Player::videoContext.stream->codec == NULL) || VM_Player::State.quit)
-	//	return ERROR_INVALID_ARGUMENTS; 
-
 	// UPDATE THE VIDEO TEXTURE WITH THE NEWLY DECODED VIDEO FRAME
 	if (VM_Player::refreshVideo && !VM_Player::State.isStopped && !VM_Player::State.quit)
 	{
@@ -1605,8 +1595,6 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 						);
 					}
 				}
-
-				//VM_Player::refreshVideo = false;
 			}
 		}
 	}
@@ -1625,8 +1613,6 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 			NULL, &VM_Player::videoContext.renderLocation
 		);
 	}
-
-	//return RESULT_OK;
 }
 
 void MediaPlayer::VM_Player::reset()
@@ -2386,8 +2372,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		}
 
 		// WAIT BEFORE MAKING THE SUB AVAILABLE
-		//while ((VM_Player::ProgressTime < subtitle.pts.start) &&
-		while ((VM_Player::ProgressTime < (subtitle.pts.start - DELAY_TIME_SUB_RENDER)) &&
+		while (((subtitle.pts.start - VM_Player::ProgressTime) > DELAY_TIME_SUB_RENDER) &&
 			(VM_Player::subContext.index >= 0) && (VM_Player::audioContext.index >= 0) &&
 			!VM_Player::seekRequested && !VM_Player::State.quit)
 		{
