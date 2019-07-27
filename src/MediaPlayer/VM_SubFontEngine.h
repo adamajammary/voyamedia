@@ -24,6 +24,7 @@ namespace VoyaMedia
 
 		public:
 			static String       RemoveFormatting(const String &subtitleString);
+			static void         RemoveSubs();
 			static void         RemoveSubs(size_t id);
 			static void         RemoveSubsBottom();
 			static int          RenderSubText(const VM_Subtitles &subs, TTF_Font* fontMerged, TTF_Font* fontCJK);
@@ -46,6 +47,7 @@ namespace VoyaMedia
 			static int            getDialoguePropOffset(const Strings &dialogueSplit);
 			static SDL_Rect       getDrawRect(const String &subLine, VM_SubStyle* style);
 			static VM_SubStyle*   getSubStyle(const VM_SubStyles &subStyles, const Strings &subSplit);
+			static void           removeSubs(VM_SubTexturesId &subs);
 			static void           removeSubs(VM_SubTexturesId &subs, size_t id);
 			static int            renderSub(VM_SubTexture* subTexture);
 			static int            renderSubBorderShadow(VM_SubTexture* subTexture);

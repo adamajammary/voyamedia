@@ -832,6 +832,32 @@ String MediaPlayer::VM_SubFontEngine::RemoveFormatting(const String &subString)
 	return newSubString;
 }
 
+void MediaPlayer::VM_SubFontEngine::RemoveSubs()
+{
+	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsBottom);
+	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsMiddle);
+	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsPosition);
+	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsTop);
+}
+
+void MediaPlayer::VM_SubFontEngine::removeSubs(VM_SubTexturesId &subs)
+{
+	for (auto &subsId : subs) {
+		for (auto &sub : subsId.second)
+			DELETE_POINTER(sub);
+	}
+
+	subs.clear();
+}
+
+void MediaPlayer::VM_SubFontEngine::RemoveSubs(size_t id)
+{
+	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsBottom,   id);
+	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsMiddle,   id);
+	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsPosition, id);
+	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsTop,      id);
+}
+
 void MediaPlayer::VM_SubFontEngine::removeSubs(VM_SubTexturesId &subs, size_t id)
 {
 	if (subs.find(id) != subs.end())
@@ -841,14 +867,6 @@ void MediaPlayer::VM_SubFontEngine::removeSubs(VM_SubTexturesId &subs, size_t id
 
 		subs.erase(id);
 	}
-}
-
-void MediaPlayer::VM_SubFontEngine::RemoveSubs(size_t id)
-{
-	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsBottom,   id);
-	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsMiddle,   id);
-	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsPosition, id);
-	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsTop,      id);
 }
 
 void MediaPlayer::VM_SubFontEngine::RemoveSubsBottom()
@@ -1071,7 +1089,7 @@ int MediaPlayer::VM_SubFontEngine::RenderSubText(const VM_Subtitles &subs, TTF_F
 	#if defined _DEBUG
 		auto time = (SDL_GetTicks() - start);
 		if (time > 0)
-			LOG(String("RENDER_SUB: " + std::to_string(time) + " ms").c_str());
+			LOG(String("VM_SubFontEngine::RenderSubText: " + std::to_string(time) + " ms").c_str());
 	#endif
 
 	return RESULT_OK;
@@ -1600,7 +1618,7 @@ MediaPlayer::VM_Subtitles MediaPlayer::VM_SubFontEngine::SplitAndFormatSub(const
 			continue;
 
 		#ifdef _DEBUG
-			LOG("%s", subText.c_str());
+			LOG("VM_SubFontEngine::SplitAndFormatSub: %s", subText.c_str());
 			Uint32 start = SDL_GetTicks();
 		#endif
 
@@ -1719,7 +1737,7 @@ MediaPlayer::VM_Subtitles MediaPlayer::VM_SubFontEngine::SplitAndFormatSub(const
 		#if defined _DEBUG
 			auto time = (SDL_GetTicks() - start);
 			if (time > 0)
-				LOG(String("CREATE_SUB: " + std::to_string(time) + " ms").c_str());
+				LOG(String("VM_SubFontEngine::SplitAndFormatSub: " + std::to_string(time) + " ms").c_str());
 		#endif
 	}
 

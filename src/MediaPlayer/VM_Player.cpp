@@ -673,8 +673,8 @@ int MediaPlayer::VM_Player::openAudio()
 	wantedSpecs.samples  = 4096;
 
 	#if defined _DEBUG
-		String msg = "[VM_Player::openAudio]";
-		msg.append("\n\tCurrentAudioDriver: ").append(SDL_GetCurrentAudioDriver());
+		String msg = "VM_Player::openAudio:\n";
+		msg.append("\tCurrentAudioDriver: ").append(SDL_GetCurrentAudioDriver());
 		for (int i = 0; i < SDL_GetNumAudioDrivers(); i++)
 			msg.append("\n\t[" + std::to_string(i) + "] Driver: ").append(SDL_GetAudioDriver(i));
 		for (int i = 0; i < SDL_GetNumAudioDevices(0); i++)
@@ -691,7 +691,7 @@ int MediaPlayer::VM_Player::openAudio()
 		if (VM_Player::audioContext.deviceID < 2)
 		{
 			#if defined _DEBUG
-				LOG("[VM_Player::openAudio] SDL_Error: %s\n", SDL_GetError());
+				LOG("VM_Player::openAudio: SDL_Error: %s\n", SDL_GetError());
 			#endif
 
 			SDL_CloseAudioDevice(VM_Player::audioContext.deviceID);
@@ -878,7 +878,7 @@ int MediaPlayer::VM_Player::openSub()
 		String subHeader = String(reinterpret_cast<char*>(VM_Player::subContext.stream->codec->subtitle_header));
 
 		#if defined _DEBUG
-			LOG("\n%s\n", subHeader.c_str());
+			LOG("VM_Player::openSub:\n%s\n", subHeader.c_str());
 		#endif
 
 		// STREAM SIZES
@@ -1195,8 +1195,6 @@ int MediaPlayer::VM_Player::PlaylistLoopTypeToggle()
 
 void MediaPlayer::VM_Player::Refresh()
 {
-	DELETE_POINTER(VM_Player::subContext.texture);
-
 	auto snapshot = VM_GUI::Components["bottom_player_snapshot"];
 
 	VM_Player::subContext.scale = {
@@ -1210,9 +1208,10 @@ void MediaPlayer::VM_Player::Refresh()
 
 		if ((sub->style != NULL) && !sub->style->fontName.empty())
 			sub->style->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale, sub);
-
-		VM_SubFontEngine::RemoveSubs(sub->id);
 	}
+
+	VM_SubFontEngine::RemoveSubs();
+	DELETE_POINTER(VM_Player::subContext.texture);
 
 	VM_Player::refreshSub   = true;
 	VM_Player::refreshVideo = true;
@@ -1287,8 +1286,11 @@ int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
 		{
 			#if defined _DEBUG
 				auto delay = (VM_Player::ProgressTime - (*sub)->pts.end);
-				if (delay > 0)
-					LOG("REMOVE_DELAY: %.3fs (%.3f - %.3f)", delay, VM_Player::ProgressTime, (*sub)->pts.end);
+				if (delay > 0) {
+					LOG("VM_Player::renderSub:\n");
+					LOG("\tREMOVE_SUB: %s\n", (*sub)->text.c_str());
+					LOG("\tREMOVE_DELAY: %.3fs (%.3f - %.3f)\n", delay, VM_Player::ProgressTime, (*sub)->pts.end);
+				}
 			#endif
 
 			bool bottom = (*sub)->isAlignedBottom();
@@ -1474,7 +1476,7 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 		for (auto sub : VM_Player::subContext.subs) {
 			auto delay = (VM_Player::ProgressTime - sub->pts.start);
 			if (delay > 0)
-				LOG("RENDER_DELAY: %.3fs (%.3f - %.3f)", delay, VM_Player::ProgressTime, VM_Player::subContext.pts.start);
+				LOG("VM_Player::renderSubText: %.3fs (%.3f - %.3f)\n", delay, VM_Player::ProgressTime, VM_Player::subContext.pts.start);
 		}
 		#endif
 	}
@@ -2127,7 +2129,7 @@ int MediaPlayer::VM_Player::threadPackets(void* userData)
 		packet = (LIB_FFMPEG::AVPacket*)LIB_FFMPEG::av_mallocz(sizeof(LIB_FFMPEG::AVPacket));
 
 		if (packet == NULL) {
-			VM_Player::Stop(VM_Text::Format("[MP-P-%d] %s '%s'", __LINE__, VM_Window::Labels["error.play"].c_str(), VM_Player::State.filePath.c_str()));
+			VM_Player::Stop(VM_Text::Format("VM_Player::threadPackets: %s '%s'\n", VM_Window::Labels["error.play"].c_str(), VM_Player::State.filePath.c_str()));
 			return ERROR_UNKNOWN;
 		}
 
@@ -2145,7 +2147,7 @@ int MediaPlayer::VM_Player::threadPackets(void* userData)
 			#if defined _DEBUG
 				char strerror[AV_ERROR_MAX_STRING_SIZE];
 				LIB_FFMPEG::av_strerror(result, strerror, AV_ERROR_MAX_STRING_SIZE);
-				LOG(VM_Text::Format("[MP-P:%d] %s", __LINE__, strerror).c_str());
+				LOG(VM_Text::Format("VM_Player::threadPackets: %s\n", strerror).c_str());
 			#endif
 
 			if ((result == AVERROR_EOF) || ((VM_Player::FormatContext->pb != NULL) && VM_Player::FormatContext->pb->eof_reached))
@@ -2361,13 +2363,6 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 			textSubs = VM_SubFontEngine::SplitAndFormatSub(
 				subtitle, subTexts, VM_Player::subContext.styles, VM_Player::subContext.subs
 			);
-
-			// OPEN THE SUB STYLE FONTS
-			for (auto textSub : textSubs) {
-				if ((textSub->style != NULL) && !textSub->style->fontName.empty())
-					textSub->style->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale, textSub);
-			}
-
 			break;
 		}
 
@@ -2397,7 +2392,13 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 
 		// TEXT SUBS
 		for (auto textSub : textSubs)
+		{
+			// OPEN THE SUB STYLE FONTS
+			if ((textSub->style != NULL) && !textSub->style->fontName.empty())
+				textSub->style->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale, textSub);
+
 			VM_Player::subContext.subs.push_back(textSub);
+		}
 
 		VM_Player::subContext.available = true;
 		SDL_CondSignal(VM_Player::subContext.subsCondition);
