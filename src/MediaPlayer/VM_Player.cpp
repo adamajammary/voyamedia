@@ -2350,7 +2350,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 				break;
 			case LIB_FFMPEG::SUBTITLE_BITMAP:
 				bitmapSub          = new VM_Subtitle();
-				bitmapSub->pts     = pts;
+				bitmapSub->pts     = VM_PTS(pts.start, pts.end);
 				bitmapSub->subRect = new VM_SubRect(*subFrame.rects[i]);
 				break;
 			}
@@ -2367,25 +2367,30 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 			);
 
 			for (auto textSub : textSubs)
-				textSub->pts = pts;
+				textSub->pts = VM_PTS(pts.start, pts.end);
 
 			break;
 		}
 
 		// WAIT BEFORE MAKING THE SUB AVAILABLE
-		while (((pts.start - VM_Player::ProgressTime) > DELAY_TIME_SUB_RENDER) &&
-			(VM_Player::subContext.index >= 0) && (VM_Player::audioContext.index >= 0) &&
-			!VM_Player::seekRequested && !VM_Player::State.quit)
-		{
+		double timeLeft;
+
+		do {
+			timeLeft = (pts.start - VM_Player::ProgressTime);
 			SDL_Delay(DELAY_TIME_ONE_MS);
-		}
+		} while (
+			((timeLeft < 0) || (timeLeft > DELAY_TIME_SUB_RENDER)) &&
+			(VM_Player::subContext.index   >= 0) &&
+			(VM_Player::audioContext.index >= 0) &&
+			!VM_Player::seekRequested && 
+			!VM_Player::State.quit
+		);
 
 		// TODO: DEBUG
-		if (pts.start - VM_Player::ProgressTime < 0) {
-			String msg = VM_Text::Format("VM_Player::threadSub: MAKE_AVAIL: %.3f (%.3f - %.3f)", (pts.start - VM_Player::ProgressTime), pts.start, VM_Player::ProgressTime);
+		if (timeLeft < 0) {
+			String msg = VM_Text::Format("VM_Player::threadSub: MAKE_AVAIL: %.3f (%.3f - %.3f)", timeLeft, pts.start, VM_Player::ProgressTime);
 			LOG(msg.c_str());
 			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), msg.c_str(), NULL);
-			throw std::exception(msg.c_str());
 		}
 
 		if (VM_Player::State.quit)
