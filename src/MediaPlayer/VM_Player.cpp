@@ -2300,7 +2300,9 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		if ((strcmp(codecName, "pgssub") == 0) &&
 			(subFrame.num_rects == 0) && (packet->size > 0) && !VM_Player::subContext.subs.empty())
 		{
-			VM_Player::subContext.subs.back()->setPTS(packet, subFrame, VM_Player::subContext.stream);
+			VM_Player::subContext.subs.back()->pts = VM_SubFontEngine::GetSubPTS(
+				packet, subFrame, VM_Player::subContext.stream
+			);
 		}
 
 		VM_Player::subContext.available = true;
@@ -2314,11 +2316,10 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		}
 
 		// SET PTS
-		VM_Subtitle subtitle = {};
-		subtitle.setPTS(packet, subFrame, VM_Player::subContext.stream);
+		VM_PTS pts = VM_SubFontEngine::GetSubPTS(packet, subFrame, VM_Player::subContext.stream);
 		FREE_PACKET(packet);
 
-		if ((subtitle.pts.end - subtitle.pts.start) < 0.3) {
+		if ((pts.end - pts.start) < 0.3) {
 			FREE_SUB_FRAME(subFrame);
 			continue;
 		}
@@ -2348,7 +2349,8 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 				}
 				break;
 			case LIB_FFMPEG::SUBTITLE_BITMAP:
-				bitmapSub          = new VM_Subtitle(subtitle);
+				bitmapSub          = new VM_Subtitle();
+				bitmapSub->pts     = pts;
 				bitmapSub->subRect = new VM_SubRect(*subFrame.rects[i]);
 				break;
 			}
@@ -2361,17 +2363,29 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		case LIB_FFMPEG::SUBTITLE_ASS:
 		case LIB_FFMPEG::SUBTITLE_TEXT:
 			textSubs = VM_SubFontEngine::SplitAndFormatSub(
-				subtitle, subTexts, VM_Player::subContext.styles, VM_Player::subContext.subs
+				subTexts, VM_Player::subContext.styles, VM_Player::subContext.subs
 			);
+
+			for (auto textSub : textSubs)
+				textSub->pts = pts;
+
 			break;
 		}
 
 		// WAIT BEFORE MAKING THE SUB AVAILABLE
-		while (((subtitle.pts.start - VM_Player::ProgressTime) > DELAY_TIME_SUB_RENDER) &&
+		while (((pts.start - VM_Player::ProgressTime) > DELAY_TIME_SUB_RENDER) &&
 			(VM_Player::subContext.index >= 0) && (VM_Player::audioContext.index >= 0) &&
 			!VM_Player::seekRequested && !VM_Player::State.quit)
 		{
 			SDL_Delay(DELAY_TIME_ONE_MS);
+		}
+
+		// TODO: DEBUG
+		if (pts.start - VM_Player::ProgressTime < 0) {
+			String msg = VM_Text::Format("VM_Player::threadSub: MAKE_AVAIL: %.3f (%.3f - %.3f)", (pts.start - VM_Player::ProgressTime), pts.start, VM_Player::ProgressTime);
+			LOG(msg.c_str());
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), msg.c_str(), NULL);
+			throw std::exception(msg.c_str());
 		}
 
 		if (VM_Player::State.quit)

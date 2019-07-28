@@ -58,7 +58,6 @@ namespace VoyaMedia
 			bool               isAlignedMiddle();
 			bool               isAlignedRight();
 			bool               isAlignedTop();
-			int                setPTS(LIB_FFMPEG::AVPacket* packet, LIB_FFMPEG::AVSubtitle &subFrame, LIB_FFMPEG::AVStream* subStream);
 
 		private:
 			VM_SubAlignment getAlignment();

@@ -236,7 +236,7 @@ String MediaPlayer::VM_SubFontEngine::formatDialogue(const String &dialogueText,
 }
 
 void MediaPlayer::VM_SubFontEngine::formatDrawCommand(
-	const String &subText, const Strings &subSplit, const VM_Subtitle &subtitle, size_t subID,
+	const String &subText, const Strings &subSplit, size_t subID,
 	const VM_SubStyles &subStyles, VM_Subtitles &subs
 )
 {
@@ -248,7 +248,7 @@ void MediaPlayer::VM_SubFontEngine::formatDrawCommand(
 
 		if (!SDL_RectEmpty(&drawRect))
 		{
-			VM_Subtitle* sub = new VM_Subtitle(subtitle);
+			VM_Subtitle* sub = new VM_Subtitle();
 
 			sub->id       = subID;
 			sub->drawRect = drawRect;
@@ -796,6 +796,52 @@ SDL_Rect MediaPlayer::VM_SubFontEngine::getDrawRect(const String &subLine, VM_Su
 
 	return drawRect;
 }
+
+
+MediaPlayer::VM_PTS MediaPlayer::VM_SubFontEngine::GetSubPTS(LIB_FFMPEG::AVPacket* packet, LIB_FFMPEG::AVSubtitle &subFrame, LIB_FFMPEG::AVStream* subStream)
+{
+	VM_PTS pts = {};
+
+	if ((packet == NULL) || (subStream == NULL))
+		return pts;
+
+	bool useFrame = (packet->dts < subStream->cur_dts);
+
+	// NO DURATION - UPDATE END PTS
+	if ((subFrame.num_rects == 0) && (packet->size > 0))
+	{
+		if (useFrame)
+			pts.end = (double)((double)subFrame.pts / AV_TIME_BASE_D);
+		else
+			pts.end = (double)((double)packet->pts * LIB_FFMPEG::av_q2d(subStream->time_base));
+	}
+	else
+	{
+		// SET START PTS
+		if (useFrame) {
+			pts.start = (double)((double)(subFrame.pts - subStream->start_time) / AV_TIME_BASE_D);
+		} else {
+			pts.start = (double)((double)(packet->pts  - subStream->start_time) * LIB_FFMPEG::av_q2d(subStream->time_base));
+
+			if (pts.start < VM_Player::ProgressTime)
+				pts.start += (double)((double)subStream->start_time * LIB_FFMPEG::av_q2d(subStream->time_base));
+		}
+
+		if (subFrame.start_display_time > 0)
+			pts.start += (double)((double)subFrame.start_display_time / (double)ONE_SECOND_MS);
+
+		// SET END PTS
+		if (subFrame.end_display_time > 0)
+			pts.end = (double)(pts.start + (double)((double)subFrame.end_display_time / (double)ONE_SECOND_MS));
+		else if (packet->duration > 0)
+			pts.end = (double)(pts.start + (double)((double)packet->duration * LIB_FFMPEG::av_q2d(subStream->time_base)));
+		else
+			pts.end = (pts.start + SUB_MAX_DURATION);
+	}
+
+	return pts;
+}
+
 
 MediaPlayer::VM_SubStyle* MediaPlayer::VM_SubFontEngine::getSubStyle(const VM_SubStyles &subStyles, const Strings &dialogueSplit)
 {
@@ -1603,7 +1649,9 @@ int MediaPlayer::VM_SubFontEngine::splitSub(uint16_t* subStringUTF16, VM_Subtitl
 
 // http://docs.aegisub.org/3.2/ASS_Tags/
 // https://en.wikipedia.org/wiki/SubStation_Alpha
-MediaPlayer::VM_Subtitles MediaPlayer::VM_SubFontEngine::SplitAndFormatSub(const VM_Subtitle &subtitle, const Strings &subTexts, const VM_SubStyles &subStyles, const VM_Subtitles &playerSubs)
+MediaPlayer::VM_Subtitles MediaPlayer::VM_SubFontEngine::SplitAndFormatSub(
+	const Strings &subTexts, const VM_SubStyles &subStyles, const VM_Subtitles &playerSubs
+)
 {
 	VM_Subtitles  subs;
 	static size_t id = 0;
@@ -1638,13 +1686,13 @@ MediaPlayer::VM_Subtitles MediaPlayer::VM_SubFontEngine::SplitAndFormatSub(const
 		for (auto &subLine : subLines)
 		{
 			// Custom draw operation (fill rect)
-			VM_SubFontEngine::formatDrawCommand(subLine, dialogueSplit, subtitle, id, subStyles, subs);
+			VM_SubFontEngine::formatDrawCommand(subLine, dialogueSplit, id, subStyles, subs);
 
 			// Skip unsupported draw operations
 			if (!VM_Text::IsValidSubtitle(subLine))
 				continue;
 
-			VM_Subtitle* sub = new VM_Subtitle(subtitle);
+			VM_Subtitle* sub = new VM_Subtitle();
 
 			sub->id = id;
 

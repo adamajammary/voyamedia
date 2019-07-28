@@ -23,12 +23,13 @@ namespace VoyaMedia
 			static VM_SubTexturesId   subsTop;
 
 		public:
+			static VM_PTS       GetSubPTS(LIB_FFMPEG::AVPacket* packet, LIB_FFMPEG::AVSubtitle &subFrame, LIB_FFMPEG::AVStream* subStream);
 			static String       RemoveFormatting(const String &subtitleString);
 			static void         RemoveSubs();
 			static void         RemoveSubs(size_t id);
 			static void         RemoveSubsBottom();
 			static int          RenderSubText(const VM_Subtitles &subs, TTF_Font* fontMerged, TTF_Font* fontCJK);
-			static VM_Subtitles SplitAndFormatSub(const VM_Subtitle &subtitle, const Strings &subTexts, const VM_SubStyles &subStyles, const VM_Subtitles &playerSubs);
+			static VM_Subtitles SplitAndFormatSub(const Strings &subTexts, const VM_SubStyles &subStyles, const VM_Subtitles &playerSubs);
 
 		private:
 			static VM_SubTexture* createSubFill(uint16_t* subString16, VM_Subtitle* sub);
@@ -36,7 +37,7 @@ namespace VoyaMedia
 			static VM_SubTexture* createSubShadow(VM_SubTexture* subFill);
 			static bool           formatAnimationsContain(const Strings &animations, const String &string);
 			static String         formatDialogue(const String &dialogueText, Strings &dialogueSplit);
-			static void           formatDrawCommand(const String &subText, const Strings &subSplit, const VM_Subtitle &subtitle, size_t subID, const VM_SubStyles &subStyles, VM_Subtitles &subs);
+			static void           formatDrawCommand(const String &subText, const Strings &subSplit, size_t subID, const VM_SubStyles &subStyles, VM_Subtitles &subs);
 			static Strings        formatGetAnimations(const String &subString);
 			static void           formatOverrideMargins(VM_Subtitle* sub);
 			static void           formatOverrideStyleCat1(const Strings &animations, VM_Subtitle* sub);
