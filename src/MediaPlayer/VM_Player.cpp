@@ -1904,8 +1904,7 @@ int MediaPlayer::VM_Player::Stop(const String &errorMessage)
 
 void MediaPlayer::VM_Player::threadAudio(void* userData, Uint8* stream, int streamSize)
 {
-	int64_t framePTS;
-	int     decodeSize, frameDecoded, samplesResampled, outSamples, outSamplesBytes, writeSize;
+	int decodeSize, frameDecoded, samplesResampled, outSamples, outSamplesBytes, writeSize;
 
 	auto inSampleFormat = VM_Player::GetAudioSampleFormat(VM_Player::audioContext.device.format);
 	int  inSamplesBytes = (VM_Player::audioContext.device.channels * LIB_FFMPEG::av_get_bytes_per_sample(inSampleFormat));
@@ -1967,25 +1966,26 @@ void MediaPlayer::VM_Player::threadAudio(void* userData, Uint8* stream, int stre
 					VM_Player::progressTimeLast = VM_Player::ProgressTime;
 
 				// SET PROGRESS TIME
-				framePTS = av_frame_get_best_effort_timestamp(VM_Player::audioContext.frame);
-				VM_Player::ProgressTime = (double)framePTS;
+				double framePTS = (double)av_frame_get_best_effort_timestamp(VM_Player::audioContext.frame);
 
 				if (AV_START_FLAGS(VM_Player::FormatContext->iformat))
-					VM_Player::ProgressTime -= (double)VM_Player::audioContext.stream->start_time;
+					framePTS -= (double)VM_Player::audioContext.stream->start_time;
 
-				VM_Player::ProgressTime *= LIB_FFMPEG::av_q2d(VM_Player::audioContext.stream->time_base);
+				framePTS *= LIB_FFMPEG::av_q2d(VM_Player::audioContext.stream->time_base);
 
-				if (VM_Player::ProgressTime < 0)
-					VM_Player::ProgressTime = (VM_Player::progressTimeLast + VM_Player::audioContext.frameDuration);
+				if (framePTS < 0)
+					framePTS = (VM_Player::progressTimeLast + VM_Player::audioContext.frameDuration);
 
 				if ((VM_Player::audioContext.frameDuration <= 0) &&
-					(VM_Player::ProgressTime > 0) &&
+					(framePTS > 0) &&
 					(VM_Player::progressTimeLast > 0) &&
-					(VM_Player::ProgressTime != VM_Player::progressTimeLast)) 
+					(framePTS != VM_Player::progressTimeLast))
 				{
-					VM_Player::audioContext.frameDuration = (VM_Player::ProgressTime - VM_Player::progressTimeLast);
-					VM_Player::progressTimeLast           = VM_Player::ProgressTime;
+					VM_Player::audioContext.frameDuration = (framePTS - VM_Player::progressTimeLast);
+					VM_Player::progressTimeLast           = framePTS;
 				}
+
+				VM_Player::ProgressTime = (double)framePTS;
 
 				// SET RESAMPLE SETTINGS
 				VM_Player::resampleContext = swr_alloc_set_opts(
@@ -2373,22 +2373,18 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		}
 
 		// WAIT BEFORE MAKING THE SUB AVAILABLE
-		double timeLeft;
-
-		do {
-			timeLeft = (pts.start - VM_Player::ProgressTime);
-			SDL_Delay(DELAY_TIME_ONE_MS);
-		} while (
-			(timeLeft > DELAY_TIME_SUB_RENDER) &&
-			(VM_Player::subContext.index   >= 0) &&
+		while (((pts.start - VM_Player::ProgressTime) > DELAY_TIME_SUB_RENDER) &&
+			(VM_Player::subContext.index >= 0) &&
 			(VM_Player::audioContext.index >= 0) &&
-			!VM_Player::seekRequested && 
-			!VM_Player::State.quit
-		);
+			!VM_Player::seekRequested &&
+			!VM_Player::State.quit)
+		{
+			SDL_Delay(DELAY_TIME_ONE_MS);
+		}
 
 		// TODO: DEBUG
-		if (timeLeft < 0) {
-			String msg = VM_Text::Format("VM_Player::threadSub: MAKE_AVAIL: %.3f (%.3f - %.3f)", timeLeft, pts.start, VM_Player::ProgressTime);
+		if ((pts.start - VM_Player::ProgressTime) < 0) {
+			String msg = VM_Text::Format("VM_Player::threadSub: MAKE_AVAIL: %.3f (%.3f - %.3f)", (pts.start - VM_Player::ProgressTime), pts.start, VM_Player::ProgressTime);
 			LOG(msg.c_str());
 			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), msg.c_str(), NULL);
 		}
