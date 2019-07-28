@@ -2379,7 +2379,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 			timeLeft = (pts.start - VM_Player::ProgressTime);
 			SDL_Delay(DELAY_TIME_ONE_MS);
 		} while (
-			((timeLeft < 0) || (timeLeft > DELAY_TIME_SUB_RENDER)) &&
+			(timeLeft > DELAY_TIME_SUB_RENDER) &&
 			(VM_Player::subContext.index   >= 0) &&
 			(VM_Player::audioContext.index >= 0) &&
 			!VM_Player::seekRequested && 
