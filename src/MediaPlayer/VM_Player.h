@@ -82,7 +82,6 @@ namespace VoyaMedia
 			SDL_mutex*                 mutex;
 			VM_Packets                 packets;
 			bool                       packetsAvailable;
-			VM_PTS                     pts;
 			Graphics::VM_PointF        scale;
 			SDL_Point                  size;
 			LIB_FFMPEG::AVStream*      stream;

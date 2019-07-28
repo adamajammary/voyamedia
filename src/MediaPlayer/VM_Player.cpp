@@ -1476,7 +1476,7 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 		for (auto sub : VM_Player::subContext.subs) {
 			auto delay = (VM_Player::ProgressTime - sub->pts.start);
 			if (delay > 0)
-				LOG("VM_Player::renderSubText: %.3fs (%.3f - %.3f)\n", delay, VM_Player::ProgressTime, VM_Player::subContext.pts.start);
+				LOG("VM_Player::renderSubText: DELAY: %.3fs (%.3f - %.3f)\n", delay, VM_Player::ProgressTime, sub->pts.start);
 		}
 		#endif
 	}
