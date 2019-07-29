@@ -2382,12 +2382,10 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 			SDL_Delay(DELAY_TIME_ONE_MS);
 		}
 
-		// TODO: DEBUG
-		if ((pts.start - VM_Player::ProgressTime) < 0) {
-			String msg = VM_Text::Format("VM_Player::threadSub: MAKE_AVAIL: %.3f (%.3f - %.3f)", (pts.start - VM_Player::ProgressTime), pts.start, VM_Player::ProgressTime);
-			LOG(msg.c_str());
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), msg.c_str(), NULL);
-		}
+		#if defined _DEBUG
+		if ((pts.start - VM_Player::ProgressTime) < 0)
+			LOG("VM_Player::threadSub: MAKE_SUB_AVAIL_NEGATIVE: %.3f (%.3f - %.3f)", (pts.start - VM_Player::ProgressTime), pts.start, VM_Player::ProgressTime);
+		#endif
 
 		if (VM_Player::State.quit)
 			break;

@@ -1135,7 +1135,7 @@ int MediaPlayer::VM_SubFontEngine::RenderSubText(const VM_Subtitles &subs, TTF_F
 	#if defined _DEBUG
 		auto time = (SDL_GetTicks() - start);
 		if (time > 0)
-			LOG(String("VM_SubFontEngine::RenderSubText: " + std::to_string(time) + " ms").c_str());
+			LOG(String("VM_SubFontEngine::RenderSubText: TIME: " + std::to_string(time) + " ms").c_str());
 	#endif
 
 	return RESULT_OK;
@@ -1666,7 +1666,7 @@ MediaPlayer::VM_Subtitles MediaPlayer::VM_SubFontEngine::SplitAndFormatSub(
 			continue;
 
 		#ifdef _DEBUG
-			LOG("VM_SubFontEngine::SplitAndFormatSub: %s", subText.c_str());
+			LOG("VM_SubFontEngine::SplitAndFormatSub:\n%s", subText.c_str());
 			Uint32 start = SDL_GetTicks();
 		#endif
 
@@ -1785,7 +1785,7 @@ MediaPlayer::VM_Subtitles MediaPlayer::VM_SubFontEngine::SplitAndFormatSub(
 		#if defined _DEBUG
 			auto time = (SDL_GetTicks() - start);
 			if (time > 0)
-				LOG(String("VM_SubFontEngine::SplitAndFormatSub: " + std::to_string(time) + " ms").c_str());
+				LOG(String("VM_SubFontEngine::SplitAndFormatSub: TIME: " + std::to_string(time) + " ms").c_str());
 		#endif
 	}
 
