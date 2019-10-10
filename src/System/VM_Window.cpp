@@ -385,7 +385,7 @@ void System::VM_Window::saveToDB()
 
 	DELETE_POINTER(db);
 
-	VM_Window::Display.getDisplayMode();
+	VM_Window::Display.setDisplayMode();
 
 	VM_Window::SaveToDB = false;
 }

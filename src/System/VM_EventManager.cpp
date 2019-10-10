@@ -348,9 +348,9 @@ int System::VM_EventManager::HandleHeadSetUnpluggedAndroid(JNIEnv* jniEnvironmen
 		return ERROR_UNKNOWN;
 
 	jclass    jniClass              = VM_Window::JNI->getClass();
-	jmethodID jniIsHeadSetUnplugged = jniEnvironment->GetStaticMethodID(jniClass, "isHeadSetUnplugged", "()Z");
-	jmethodID jniIsAudioModeNormal  = jniEnvironment->GetStaticMethodID(jniClass, "isAudioModeNormal",  "()Z");
-	jmethodID jniResetHeadsetState  = jniEnvironment->GetStaticMethodID(jniClass, "resetHeadsetState",  "()V");
+	jmethodID jniIsHeadSetUnplugged = jniEnvironment->GetStaticMethodID(jniClass, "IsHeadSetUnplugged", "()Z");
+	jmethodID jniIsAudioModeNormal  = jniEnvironment->GetStaticMethodID(jniClass, "IsAudioModeNormal",  "()Z");
+	jmethodID jniResetHeadsetState  = jniEnvironment->GetStaticMethodID(jniClass, "ResetHeadsetState",  "()V");
 
 	if ((jniIsHeadSetUnplugged == NULL) || (jniIsAudioModeNormal == NULL) || (jniResetHeadsetState == NULL))
 		return ERROR_UNKNOWN;

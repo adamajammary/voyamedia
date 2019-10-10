@@ -24,29 +24,6 @@ SDL_Rect Graphics::VM_Display::getDimensions()
 	return dimensions;
 }
 
-int Graphics::VM_Display::getDisplayMode()
-{
-	if (VM_Window::MainWindow == NULL)
-		return ERROR_INVALID_ARGUMENTS;
-
-	SDL_Rect windowDimensions = this->getDimensions();
-
-	this->displayIndex   = SDL_GetWindowDisplayIndex(VM_Window::MainWindow);
-	this->scaleFactorDPI = (this->getDPI() / DEFAULT_DPI);
-	this->scaleFactorRes = min((float)windowDimensions.w / (float)MIN_WINDOW_SIZE, (float)windowDimensions.h / (float)MIN_WINDOW_SIZE);
-
-	#if defined _android
-		this->scaleFactor = this->scaleFactorDPI;
-    #elif defined _macosx || defined _windows
-        this->scaleFactor = this->scaleFactorRes;
-	// TODO: iOS? Linux?
-	#else
-		this->scaleFactor = (this->scaleFactorRes * this->scaleFactorDPI);
-	#endif
-
-	return RESULT_OK;
-}
-
 float Graphics::VM_Display::getDPI()
 {
 	SDL_GetCurrentDisplayMode(this->displayIndex, &this->display);
@@ -72,4 +49,27 @@ float Graphics::VM_Display::getDPI()
 		dpi = DEFAULT_DPI;
 
 	return dpi;
+}
+
+int Graphics::VM_Display::setDisplayMode()
+{
+	if (VM_Window::MainWindow == NULL)
+		return ERROR_INVALID_ARGUMENTS;
+
+	SDL_Rect windowDimensions = this->getDimensions();
+
+	this->displayIndex   = SDL_GetWindowDisplayIndex(VM_Window::MainWindow);
+	this->scaleFactorDPI = (this->getDPI() / DEFAULT_DPI);
+	this->scaleFactorRes = min((float)windowDimensions.w / (float)MIN_WINDOW_SIZE, (float)windowDimensions.h / (float)MIN_WINDOW_SIZE);
+
+	#if defined _android
+		this->scaleFactor = this->scaleFactorDPI;
+    #elif defined _macosx || defined _windows
+        this->scaleFactor = this->scaleFactorRes;
+	// TODO: iOS? Linux?
+	#else
+		this->scaleFactor = (this->scaleFactorRes * this->scaleFactorDPI);
+	#endif
+
+	return RESULT_OK;
 }

@@ -234,7 +234,7 @@ int Graphics::VM_GUI::loadWindow(LIB_XML::xmlNode* windowNode, const char* title
 	if (windowMaximized)
 		SDL_MaximizeWindow(VM_Window::MainWindow);
 
-	VM_Window::Display.getDisplayMode();
+	VM_Window::Display.setDisplayMode();
 	VM_Window::StatusBarHeight = VM_Graphics::GetTopBarHeight();
 
 	// RENDERER

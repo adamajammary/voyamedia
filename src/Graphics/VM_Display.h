@@ -29,7 +29,7 @@ namespace VoyaMedia
 
 		public:
 			SDL_Rect getDimensions();
-			int      getDisplayMode();
+			int      setDisplayMode();
 			float    getDPI();
 
 		};
