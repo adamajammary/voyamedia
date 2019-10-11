@@ -1119,8 +1119,7 @@ int Graphics::VM_Graphics::GetTopBarHeight()
 		jmethodID jniGetHeight   = jniEnvironment->GetStaticMethodID(jniClass, "GetTopBarHeight", "()I");
 
 		if (jniGetHeight != NULL)
-			height = 0;
-			//height = (float)jniEnvironment->CallStaticIntMethod(jniClass, jniGetHeight);
+			height = (float)jniEnvironment->CallStaticIntMethod(jniClass, jniGetHeight);
 	#elif defined _ios
 		height = (int)([UIApplication sharedApplication].statusBarFrame.size.height * [UIScreen mainScreen].scale);
 	#endif
