@@ -38,10 +38,8 @@ float Graphics::VM_Display::getDPI()
 		JNIEnv*   jniEnvironment = VM_Window::JNI->getEnvironment();
 		jmethodID jniGetDPI      = jniEnvironment->GetStaticMethodID(jniClass, "GetDPI", "()I");
 
-		if (jniGetDPI == NULL)
-			return ERROR_UNKNOWN;
-
-		dpi = (float)jniEnvironment->CallStaticIntMethod(jniClass, jniGetDPI);
+		if (jniGetDPI != NULL)
+			dpi = (float)jniEnvironment->CallStaticIntMethod(jniClass, jniGetDPI);
 	}
 	#endif
 
