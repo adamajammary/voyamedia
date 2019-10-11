@@ -443,7 +443,8 @@ int Graphics::VM_GUI::refresh()
 	VM_GUI::Components["bottom_player_controls_volume_thumb"]->backgroundArea.w = 0;
 
 	VM_GUI::rootPanel->backgroundArea = {
-		0, VM_Window::StatusBarHeight, VM_Window::Dimensions.w, (VM_Window::Dimensions.h - VM_Window::StatusBarHeight)
+		//0, VM_Window::StatusBarHeight, VM_Window::Dimensions.w, (VM_Window::Dimensions.h - VM_Window::StatusBarHeight)
+		0, 0, VM_Window::Dimensions.w, VM_Window::Dimensions.h
 	};
 
 	int result = VM_GUI::LoadComponents(VM_GUI::rootPanel);

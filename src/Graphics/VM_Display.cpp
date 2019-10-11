@@ -61,8 +61,7 @@ int Graphics::VM_Display::setDisplayMode()
 	this->scaleFactorRes = min((float)windowDimensions.w / (float)MIN_WINDOW_SIZE, (float)windowDimensions.h / (float)MIN_WINDOW_SIZE);
 
 	#if defined _android
-		//this->scaleFactor = this->scaleFactorDPI;
-		this->scaleFactor = this->scaleFactorRes;
+		this->scaleFactor = this->scaleFactorDPI;
     #elif defined _macosx || defined _windows
         this->scaleFactor = this->scaleFactorRes;
 	// TODO: iOS? Linux?
