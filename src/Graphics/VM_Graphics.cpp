@@ -1124,6 +1124,8 @@ int Graphics::VM_Graphics::GetTopBarHeight()
 		height = (int)([UIApplication sharedApplication].statusBarFrame.size.height * [UIScreen mainScreen].scale);
 	#endif
 
+	VM_Modal::ShowMessage(VM_Text::Format("TOP_BAR_HEIGHT: %d", height));
+
 	return height;
 }
 
