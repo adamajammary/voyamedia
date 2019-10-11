@@ -57,12 +57,12 @@ int Graphics::VM_Display::setDisplayMode()
 	SDL_Rect windowDimensions = this->getDimensions();
 
 	this->displayIndex   = SDL_GetWindowDisplayIndex(VM_Window::MainWindow);
-	//this->scaleFactorDPI = (this->getDPI() / DEFAULT_DPI);
-	this->scaleFactorDPI = 1.0f;
+	this->scaleFactorDPI = (this->getDPI() / DEFAULT_DPI);
 	this->scaleFactorRes = min((float)windowDimensions.w / (float)MIN_WINDOW_SIZE, (float)windowDimensions.h / (float)MIN_WINDOW_SIZE);
 
 	#if defined _android
-		this->scaleFactor = this->scaleFactorDPI;
+		//this->scaleFactor = this->scaleFactorDPI;
+		this->scaleFactor = this->scaleFactorRes;
     #elif defined _macosx || defined _windows
         this->scaleFactor = this->scaleFactorRes;
 	// TODO: iOS? Linux?
