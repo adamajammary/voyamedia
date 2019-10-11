@@ -311,6 +311,7 @@ void System::VM_Window::resize()
 	{
 		bool setMinSize = false;
 
+	    #if defined _linux || defined _macosx || defined _windows
 		if (VM_Window::Dimensions.w < MIN_WINDOW_SIZE) {
 			VM_Window::Dimensions.w = MIN_WINDOW_SIZE;
 			setMinSize = true;
@@ -331,6 +332,7 @@ void System::VM_Window::resize()
 			VM_Window::Dimensions.h = maxHeight;
 			setMinSize = true;
 		}
+		#endif
 
 		if (setMinSize)
 			SDL_SetWindowSize(VM_Window::MainWindow, VM_Window::Dimensions.w, VM_Window::Dimensions.h);
