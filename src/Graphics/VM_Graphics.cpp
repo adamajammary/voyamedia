@@ -1113,17 +1113,19 @@ int Graphics::VM_Graphics::GetTopBarHeight()
 {
 	int height = 0;
 
-	/*#if defined _android
+	#if defined _android
 		jclass    jniClass       = VM_Window::JNI->getClass();
 		JNIEnv*   jniEnvironment = VM_Window::JNI->getEnvironment();
 		jmethodID jniGetHeight   = jniEnvironment->GetStaticMethodID(jniClass, "GetTopBarHeight", "()I");
 
 		if (jniGetHeight != NULL)
 			height = (float)jniEnvironment->CallStaticIntMethod(jniClass, jniGetHeight);
-	#elif defined _ios*/
-	#if defined _ios
+	#elif defined _ios
+	//#if defined _ios
 		height = (int)([UIApplication sharedApplication].statusBarFrame.size.height * [UIScreen mainScreen].scale);
 	#endif
+
+	VM_Modal::ShowMessage(VM_Text::Format("STATUS_BAR: %d", height));
 
 	return height;
 }
