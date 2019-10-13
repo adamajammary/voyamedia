@@ -1121,11 +1121,8 @@ int Graphics::VM_Graphics::GetTopBarHeight()
 		if (jniGetHeight != NULL)
 			height = (float)jniEnvironment->CallStaticIntMethod(jniClass, jniGetHeight);
 	#elif defined _ios
-	//#if defined _ios
 		height = (int)([UIApplication sharedApplication].statusBarFrame.size.height * [UIScreen mainScreen].scale);
 	#endif
-
-	VM_Modal::ShowMessage(VM_Text::Format("STATUS_BAR: %d", height));
 
 	return height;
 }
