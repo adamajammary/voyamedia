@@ -293,6 +293,7 @@ namespace VoyaMedia
 			static int                   cursorHide();
 			static bool                  isPacketQueueFull(VM_MediaType streamType);
 			static int                   openAudio();
+			static SDL_AudioDeviceID     openAudioDevice(SDL_AudioSpec& wantedSpecs);
 			static int                   openFormatContext();
 			static int                   openPlaylist(bool stop, bool next);
 			static int                   openStreams();

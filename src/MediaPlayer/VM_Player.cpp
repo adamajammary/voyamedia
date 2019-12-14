@@ -673,7 +673,7 @@ int MediaPlayer::VM_Player::openAudio()
 	wantedSpecs.samples  = 4096;
 
 	#if defined _DEBUG
-		String msg = "VM_Player::openAudio:\n";
+		String msg = "VM_Player::openAudio\n";
 		msg.append("\tCurrentAudioDriver: ").append(SDL_GetCurrentAudioDriver());
 		for (int i = 0; i < SDL_GetNumAudioDrivers(); i++)
 			msg.append("\n\t[" + std::to_string(i) + "] Driver: ").append(SDL_GetAudioDriver(i));
@@ -682,22 +682,35 @@ int MediaPlayer::VM_Player::openAudio()
 		LOG((msg + "\n").c_str());
 	#endif
 
-	do {
-		VM_Player::audioContext.deviceID = SDL_OpenAudioDevice(
-			NULL, 0, &wantedSpecs, &VM_Player::audioContext.device,
-			(SDL_AUDIO_ALLOW_FORMAT_CHANGE | SDL_AUDIO_ALLOW_CHANNELS_CHANGE)
-		);
+	// Try opening the default audio device
+	VM_Player::audioContext.deviceID = VM_Player::openAudioDevice(wantedSpecs);
 
-		if (VM_Player::audioContext.deviceID < 2)
+	// Try all available audio devices if default fails
+	if (VM_Player::audioContext.deviceID < 2)
+	{
+		for (int i = 0; i < SDL_GetNumAudioDrivers(); i++)
 		{
+			SDL_AudioQuit();
+			SDL_setenv("SDL_AUDIODRIVER", SDL_GetAudioDriver(i), 1);
+			SDL_AudioInit(SDL_GetAudioDriver(i));
+
 			#if defined _DEBUG
-				LOG("VM_Player::openAudio: SDL_Error: %s\n", SDL_GetError());
+				LOG("[%d-%s] CurrentAudioDriver: %s", i, SDL_GetAudioDriver(i), SDL_GetCurrentAudioDriver());
 			#endif
 
-			SDL_CloseAudioDevice(VM_Player::audioContext.deviceID);
-			wantedSpecs.channels--;
+			wantedSpecs.channels = VM_Player::audioContext.stream->codec->channels;
+
+			do {
+				VM_Player::audioContext.deviceID = VM_Player::openAudioDevice(wantedSpecs);
+
+				if (VM_Player::audioContext.deviceID < 2)
+					wantedSpecs.channels--;
+			} while ((VM_Player::audioContext.deviceID < 2) && (wantedSpecs.channels > 0));
+
+			if ((VM_Player::audioContext.deviceID >= 2) && (wantedSpecs.channels > 0))
+				break;
 		}
-	} while ((VM_Player::audioContext.deviceID < 2) && (wantedSpecs.channels > 0));
+	}
 
 	if (VM_Player::audioContext.deviceID < 2)
 		return ERROR_UNKNOWN;
@@ -713,6 +726,23 @@ int MediaPlayer::VM_Player::openAudio()
 		return ERROR_UNKNOWN;
 
 	return RESULT_OK;
+}
+
+SDL_AudioDeviceID MediaPlayer::VM_Player::openAudioDevice(SDL_AudioSpec &wantedSpecs)
+{
+	int  allowFlags = (SDL_AUDIO_ALLOW_FORMAT_CHANGE | SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
+	auto deviceID   = SDL_OpenAudioDevice(NULL, 0, &wantedSpecs, &VM_Player::audioContext.device, allowFlags);
+
+	if (deviceID < 2)
+	{
+		#if defined _DEBUG
+			LOG("VM_Player::openAudio: SDL_Error: %s\n", SDL_GetError());
+		#endif
+
+		SDL_CloseAudioDevice(deviceID);
+	}
+
+	return deviceID;
 }
 
 int MediaPlayer::VM_Player::openFormatContext()
