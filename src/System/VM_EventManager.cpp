@@ -1053,7 +1053,14 @@ bool System::VM_EventManager::isKeyPressedTable(SDL_Keycode key, VM_Table* table
 	case SDLK_RETURN2:
 	case SDLK_KP_ENTER:
 	case SDLK_AUDIOPLAY:
-		if (table->id == "list_table")
+		if (TMDB_MOVIE_IS_SELECTED || TMDB_TV_IS_SELECTED)
+		{
+			auto row = table->getSelectedRow();
+
+			if (!row.empty())
+				VM_Modal::Open(VM_XML::GetAttribute(row[row.size() - 1]->xmlNode, "modal"));
+		}
+		else if (table->id == "list_table")
 		{
 			#if defined _windows
 				VM_Player::OpenFilePath(VM_Text::ToUTF16(table->getSelectedMediaURL().c_str()));
