@@ -1,5 +1,5 @@
 ## Voya Media
-### Media player that easily plays all your music, pictures and videos
+### Media player that easily plays your music, pictures and videos
 #### Copyright (C) 2012 Adam A. Jammary (Jammary Consulting)
 
     This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 
 ![Voya Media screenshot](https://sourceforge.net/p/voyamedia/screenshot/VoyaMedia-8-1920.png)
 
-Voya Media is a cross-platform media player that easily plays all your music, pictures and videos.
+Voya Media is a cross-platform media player that easily plays your music, pictures and videos.
 
 - Privacy (no spyware, ads or user tracking)
 - Music (AAC, AC3, DTS, FLAC, MP3, TrueHD, Vorbis, WMA)

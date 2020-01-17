@@ -392,7 +392,7 @@ namespace VoyaMedia
 	
 	const String APP_COMPANY          = "Adam A. Jammary (Jammary Consulting)";
 	const String APP_COPYRIGHT        = ("(c) 2012 " + APP_COMPANY + ". All rights reserved.");
-	const String APP_DESCRIPTION      = "A cross-platform media player that easily plays all your music, pictures and videos.";
+	const String APP_DESCRIPTION      = "A cross-platform media player that easily plays your music, pictures and videos.";
 	const String APP_NAME             = "Voya Media";
 	const String APP_PRIVACY          = (APP_COMPANY + " does not collect any information stored on the local system.");
 	const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libcurl (MIT), libXML2 (MIT), libupnp (BSD), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Dropbox, Google Maps API, Google Noto Fonts (OFL), SHOUTcast Radio Directory API, TMDb API, YouTube Data API";
