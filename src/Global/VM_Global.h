@@ -390,14 +390,14 @@ namespace VoyaMedia
 	typedef umap<String, WString> WStringMap;
 	typedef umap<int, String>     IntStringMap;
 	
-	const String APP_COMPANY          = "Adam A. Jammary (Jammary Consulting)";
-	const String APP_COPYRIGHT        = ("(c) 2012 " + APP_COMPANY + ". All rights reserved.");
-	const String APP_DESCRIPTION      = "A cross-platform media player that easily plays your music, pictures and videos.";
-	const String APP_NAME             = "Voya Media";
+	const String APP_COMPANY          = "__APP_COMPANY__";
+	const String APP_COPYRIGHT        = "__APP_COPYRIGHT__";
+	const String APP_DESCRIPTION      = "__APP_DESCRIPTION__";
+	const String APP_NAME             = "__APP_NAME__";
 	const String APP_PRIVACY          = (APP_COMPANY + " does not collect any information stored on the local system.");
 	const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libcurl (MIT), libXML2 (MIT), libupnp (BSD), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Dropbox, Google Maps API, Google Noto Fonts (OFL), SHOUTcast Radio Directory API, TMDb API, YouTube Data API";
 	const String APP_UPDATE_V3_MSG    = ("Welcome to " + APP_NAME + " 3\n\nWhat's new:\n- Completely refactored the UI-rendering engine\n- UI is now DPI-aware and independent of screen sizes and resolutions\n- Completely restructured the database (*)\n\n(*) Settings have been reset\n(*) Media library is empty (files must to be re-added)!");
-	const String APP_URL              = "http://www.voyamedia.com";
+	const String APP_URL              = "__APP_URL__";
 	const String APP_VERSION          = "__APP_VERSION__";
 	const String APP_ABOUT_TEXT       = (APP_DESCRIPTION + "\n\n" + APP_PRIVACY + "\n\n" + APP_THIRD_PARTY_LIBS + "\n\n" + APP_COPYRIGHT);
 	const String DROPBOX_API_KEY      = "__DROPBOX_API_KEY__";
