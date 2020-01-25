@@ -1529,7 +1529,7 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 	// UPDATE THE VIDEO TEXTURE WITH THE NEWLY DECODED VIDEO FRAME
 	if (VM_Player::refreshVideo && !VM_Player::State.isStopped && !VM_Player::State.quit)
 	{
-		VM_Player::refreshVideo = false;
+		//VM_Player::refreshVideo = false;
 
 		int  maxWidth, maxHeight, scaledWidth, scaledHeight;
 		int  scaleResult = 0;
@@ -1629,6 +1629,8 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 				}
 			}
 		}
+
+		VM_Player::refreshVideo = false;
 	}
 
 	// RENDER THE VIDEO TEXTURE
@@ -1637,7 +1639,7 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 		!SDL_RectEmpty(&VM_Player::videoContext.renderLocation) &&
 		!VM_Player::State.quit)
 	{
-		VM_Color backgroundColor = { 0x00, 0x00, 0x00, 0xFF };
+		VM_Color backgroundColor = SDL_COLOR_BLACK;
 		VM_Graphics::FillArea(&backgroundColor, &location);
 
 		SDL_RenderCopy(
