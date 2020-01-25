@@ -1526,6 +1526,8 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 
 void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 {
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), "RENDER_VIDEO_0", NULL);
+
 	// UPDATE THE VIDEO TEXTURE WITH THE NEWLY DECODED VIDEO FRAME
 	if (VM_Player::refreshVideo && !VM_Player::State.isStopped && !VM_Player::State.quit)
 	{
