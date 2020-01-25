@@ -1529,7 +1529,7 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 	// UPDATE THE VIDEO TEXTURE WITH THE NEWLY DECODED VIDEO FRAME
 	if (VM_Player::refreshVideo && !VM_Player::State.isStopped && !VM_Player::State.quit)
 	{
-		//VM_Player::refreshVideo = false;
+		VM_Player::refreshVideo = false;
 
 		int  maxWidth, maxHeight, scaledWidth, scaledHeight;
 		int  scaleResult = 0;
@@ -1627,10 +1627,10 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 						);
 					}
 				}
+
+				SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), "RENDER_VIDEO_1", NULL);
 			}
 		}
-
-		VM_Player::refreshVideo = false;
 	}
 
 	// RENDER THE VIDEO TEXTURE
@@ -1646,6 +1646,8 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 			VM_Window::Renderer, VM_Player::videoContext.texture->data,
 			NULL, &VM_Player::videoContext.renderLocation
 		);
+
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), "RENDER_VIDEO_2", NULL);
 	}
 }
 
