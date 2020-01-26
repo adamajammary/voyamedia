@@ -56,7 +56,7 @@ Library | Version | License
 [FreeImage](http://freeimage.sourceforge.net/download.html) | [3.18.0](http://downloads.sourceforge.net/freeimage/FreeImage3180.zip) | [FIPL (FreeImage Public License)](http://freeimage.sourceforge.net/license.html)
 [Freetype2](https://www.freetype.org/) | [2.10.1](https://sourceforge.net/projects/freetype/files/freetype2/2.10.1/freetype-2.10.1.tar.gz) | [FTL (FreeType License)](https://www.freetype.org/license.html)
 [libCURL](https://curl.haxx.se/libcurl/) | [7.64.1](https://curl.haxx.se/download/curl-7.64.1.tar.gz) | [MIT/X derivate license](https://curl.haxx.se/docs/copyright.html)
-[libUPNP](http://pupnp.sourceforge.net/) | [1.8.5](https://sourceforge.net/projects/pupnp/files/pupnp/libupnp-1.8.5/libupnp-1.8.5.tar.bz2/download) | [BSD (Berkeley Standard Distribution)](http://pupnp.sourceforge.net/#license)
+[libUPNP](http://pupnp.sourceforge.net/) | [1.8.4](https://sourceforge.net/projects/pupnp/files/pupnp/libupnp-1.8.4/libupnp-1.8.4.tar.bz2/download) | [BSD (Berkeley Standard Distribution)](http://pupnp.sourceforge.net/#license)
 [libXML2](http://xmlsoft.org/) | [2.9.10](http://xmlsoft.org/sources/libxml2-2.9.10.tar.gz) | [MIT License](https://opensource.org/licenses/mit-license.html)
 [M's JSON parser](https://sourceforge.net/projects/mjson/) | [1.7.0](https://sourceforge.net/projects/mjson/files/mjson/mjson-1.7.0.tar.gz/download) | [LGPL v.2.1 (GNU Lesser General Public License)](https://sourceforge.net/projects/mjson/)
 [OpenSSL](https://www.openssl.org/) | [1.1.1b](https://www.openssl.org/source/openssl-1.1.1b.tar.gz) | [Dual (OpenSSL / Original SSLeay License)](https://www.openssl.org/source/license.html)
