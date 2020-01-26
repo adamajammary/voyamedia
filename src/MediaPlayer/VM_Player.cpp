@@ -1525,7 +1525,7 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 
 void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 {
-	/*bool updateTexture             = VM_Player::videoFrameAvailable;
+	bool updateTexture             = VM_Player::videoFrameAvailable;
 	VM_Player::videoFrameAvailable = false;
 
 	if ((VM_Player::videoContext.texture == NULL) || (VM_Player::videoContext.texture->data == NULL)) {
@@ -1533,7 +1533,7 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 		updateTexture = true;
 	}
 
-	VM_Player::renderVideoScaleRenderLocation(location);
+	/*VM_Player::renderVideoScaleRenderLocation(location);
 
 	if (updateTexture)
 		VM_Player::renderVideoUpdateTexture();
