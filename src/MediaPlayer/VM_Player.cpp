@@ -1535,17 +1535,19 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 
 	VM_Player::renderVideoScaleRenderLocation(location);
 
-	if (updateTexture)
-		VM_Player::renderVideoUpdateTexture();
-
-	/*if ((VM_Player::videoContext.texture != NULL) && (VM_Player::videoContext.texture->data != NULL) &&
-		!SDL_RectEmpty(&VM_Player::videoContext.renderLocation) && !VM_Player::State.quit)
+	if ((VM_Player::videoContext.texture != NULL) && (VM_Player::videoContext.texture->data != NULL))
 	{
-		VM_Color backgroundColor = SDL_COLOR_BLACK;
-		VM_Graphics::FillArea(&backgroundColor, &location);
+		if (updateTexture)
+			VM_Player::renderVideoUpdateTexture();
 
-		SDL_RenderCopy(VM_Window::Renderer, VM_Player::videoContext.texture->data, NULL, &VM_Player::videoContext.renderLocation);
-	}*/
+		if (!SDL_RectEmpty(&VM_Player::videoContext.renderLocation) && !VM_Player::State.quit)
+		{
+			VM_Color backgroundColor = SDL_COLOR_BLACK;
+			VM_Graphics::FillArea(&backgroundColor, &location);
+
+			SDL_RenderCopy(VM_Window::Renderer, VM_Player::videoContext.texture->data, NULL, &VM_Player::videoContext.renderLocation);
+		}
+	}
 }
 
 int MediaPlayer::VM_Player::renderVideoCreateTexture()
@@ -1591,7 +1593,7 @@ int MediaPlayer::VM_Player::renderVideoScaleRenderLocation(const SDL_Rect &locat
 {
 	auto videoStream = VM_Player::videoContext.stream;
 
-	if ((videoStream == NULL) || VM_Player::State.quit)
+	if ((videoStream == NULL) || (videoStream->codec == NULL) || VM_Player::State.quit)
 		return ERROR_UNKNOWN;
 
 	int scaledWidth  = location.w;
@@ -1621,7 +1623,7 @@ int MediaPlayer::VM_Player::renderVideoUpdateTexture()
 	auto videoFrame  = VM_Player::videoContext.frame;
 	auto videoStream = VM_Player::videoContext.stream;
 
-	if ((videoFrame == NULL) || (videoStream == NULL) || VM_Player::State.quit)
+	if (!VM_Player::videoContext.frameDecoded || !AVFRAME_VALID(videoFrame) || (videoStream == NULL) || (videoStream->codec == NULL) || VM_Player::State.quit)
 		return ERROR_UNKNOWN;
 
 	// FOR YUV420P VIDEOS, COPY THE FRAME DIRECTLY TO THE TEXTURE
@@ -2531,7 +2533,7 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 			break;
 
 		// Handle any errors decoding the packet
-		if (!AVFRAME_VALID(decodeResult, VM_Player::videoContext.frameDecoded, VM_Player::videoContext.frame))
+		if ((decodeResult < 0) || !VM_Player::videoContext.frameDecoded || !AVFRAME_VALID(VM_Player::videoContext.frame))
 		{
 			// Too many errors occured, exit the video thread.
 			if (errorCount > MAX_ERRORS) {
