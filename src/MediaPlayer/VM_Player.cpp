@@ -1525,7 +1525,7 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 
 void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 {
-	bool updateTexture             = VM_Player::videoFrameAvailable;
+	/*bool updateTexture             = VM_Player::videoFrameAvailable;
 	VM_Player::videoFrameAvailable = false;
 
 	if ((VM_Player::videoContext.texture == NULL) || (VM_Player::videoContext.texture->data == NULL)) {
@@ -1545,7 +1545,7 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 		VM_Graphics::FillArea(&backgroundColor, &location);
 
 		SDL_RenderCopy(VM_Window::Renderer, VM_Player::videoContext.texture->data, NULL, &VM_Player::videoContext.renderLocation);
-	}
+	}*/
 }
 
 int MediaPlayer::VM_Player::renderVideoCreateTexture()
