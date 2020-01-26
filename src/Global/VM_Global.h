@@ -183,7 +183,8 @@ namespace VoyaMedia
 		#define min(a, b) (((a) < (b)) ? (a) : (b))
 	#endif
 
-	#define ALIGN_CENTERED(offset, totalSize, size) max(0, ((offset) + (max(0, ((totalSize) - (size))) / 2)))
+	#define ALIGN_CENTER(o, ts, s) max(0, ((o) + (max(0, ((ts) - (s))) / 2)))
+	#define AVFRAME_VALID(r, d, f) ((r >= 0) && d && (f != NULL) && (f->data[0] != NULL) && (f->linesize[0] > 0) && (f->width > 0) && (f->height > 0))
 	#define BIT_AT_POS(i, p)       (((i) >> p) & 1)
 	#define CAP(x, l, h)           (min(max((x), (l)), (h)))
 	#define CLOSE_CURL(c)          if (c != NULL) { curl_easy_reset(c); curl_easy_cleanup(c); c = NULL; }

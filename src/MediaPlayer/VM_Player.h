@@ -196,8 +196,6 @@ namespace VoyaMedia
 				this->fullscreenExit  = false;
 				this->isPlaying       = false;
 				this->isPaused        = false;
-				//this->isStopped       = true;
-				//this->quit            = false;
 
 				this->urls.clear();
 			}
@@ -234,14 +232,15 @@ namespace VoyaMedia
 			static uint32_t                     pictureProgressTime;
 			static double                       progressTimeLast;
 			static bool                         refreshSub;
-			static bool                         refreshVideo;
 			static LIB_FFMPEG::SwrContext*      resampleContext;
 			static LIB_FFMPEG::SwsContext*      scaleContextSub;
 			static LIB_FFMPEG::SwsContext*      scaleContextVideo;
 			static bool                         seekRequested;
+			static bool                         pausedVideoSeekRequested;
 			static int64_t                      seekToPosition;
 			static VM_PlayerSubContext          subContext;
 			static VM_PlayerVideoContext        videoContext;
+			static bool                         videoFrameAvailable;
 
 		public:
 			static int                        Close();
@@ -305,9 +304,13 @@ namespace VoyaMedia
 			static LIB_FFMPEG::AVPacket* packetGet(VM_Packets &packetQueue, SDL_mutex* mutex, SDL_cond* condition, bool &queueAvailable);
 			static int                   packetsClear(VM_Packets &packetQueue, SDL_mutex* mutex, SDL_cond* condition, bool &queueAvailable);
 			static int                   renderSub(const SDL_Rect &location);
+			static void                  renderPicture();
 			static void                  renderSubBitmap(const SDL_Rect &location);
 			static void                  renderSubText(const SDL_Rect &location);
 			static void                  renderVideo(const SDL_Rect &location);
+			static int                   renderVideoCreateTexture();
+			static int                   renderVideoScaleRenderLocation(const SDL_Rect &location);
+			static int                   renderVideoUpdateTexture();
 			static void                  reset();
 			static void                  seek();
 			static void                  threadAudio(void* userData, Uint8* outputStream, int outputStreamSize);

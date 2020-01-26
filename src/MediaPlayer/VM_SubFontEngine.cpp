@@ -1369,7 +1369,7 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionRelativeTop(const VM_SubTextur
 				else if (subTexture->subtitle->isAlignedRight())
 					subWord->locationRender.x += (VM_Window::Dimensions.w - subTexture->total.w - margins.y);
 				else if (subTexture->subtitle->isAlignedCenter())
-					subWord->locationRender.x += ALIGN_CENTERED(0, VM_Window::Dimensions.w, subTexture->total.w);
+					subWord->locationRender.x += ALIGN_CENTER(0, VM_Window::Dimensions.w, subTexture->total.w);
 
 				subWord->total.x = subLine[0]->locationRender.x;
 				subWord->total.w = subTexture->total.w;

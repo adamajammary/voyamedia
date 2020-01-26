@@ -22,11 +22,11 @@ time_t                             MediaPlayer::VM_Player::PlayTime;
 double                             MediaPlayer::VM_Player::ProgressTime;
 double                             MediaPlayer::VM_Player::progressTimeLast;
 bool                               MediaPlayer::VM_Player::refreshSub;
-bool                               MediaPlayer::VM_Player::refreshVideo;
 LIB_FFMPEG::SwrContext*            MediaPlayer::VM_Player::resampleContext;
 LIB_FFMPEG::SwsContext*            MediaPlayer::VM_Player::scaleContextSub;
 LIB_FFMPEG::SwsContext*            MediaPlayer::VM_Player::scaleContextVideo;
 bool                               MediaPlayer::VM_Player::seekRequested;
+bool                               MediaPlayer::VM_Player::pausedVideoSeekRequested;
 int64_t                            MediaPlayer::VM_Player::seekToPosition;
 Graphics::VM_SelectedRow           MediaPlayer::VM_Player::SelectedRow;
 MediaPlayer::VM_PlayerState        MediaPlayer::VM_Player::State;
@@ -34,6 +34,7 @@ MediaPlayer::VM_PlayerSubContext   MediaPlayer::VM_Player::subContext;
 Strings                            MediaPlayer::VM_Player::SubsExternal;
 VM_TimeOut*                        MediaPlayer::VM_Player::TimeOut;
 MediaPlayer::VM_PlayerVideoContext MediaPlayer::VM_Player::videoContext;
+bool                               MediaPlayer::VM_Player::videoFrameAvailable;
 
 void MediaPlayer::VM_Player::Init()
 {
@@ -1243,8 +1244,7 @@ void MediaPlayer::VM_Player::Refresh()
 	VM_SubFontEngine::RemoveSubs();
 	DELETE_POINTER(VM_Player::subContext.texture);
 
-	VM_Player::refreshSub   = true;
-	VM_Player::refreshVideo = true;
+	VM_Player::refreshSub = true;
 }
 
 int MediaPlayer::VM_Player::Render(const SDL_Rect &location)
@@ -1256,38 +1256,12 @@ int MediaPlayer::VM_Player::Render(const SDL_Rect &location)
 
 	if (PICTURE_IS_SELECTED)
 	{
-		if (VM_Player::seekRequested)
-		{
-			VM_Player::ProgressTime        = ((double)VM_Player::seekToPosition / AV_TIME_BASE_D);
-			VM_Player::pictureProgressTime = (uint32_t)(VM_Player::ProgressTime * (double)ONE_SECOND_MS);
-			VM_Player::seekRequested       = false;
-
-			VM_PlayerControls::Refresh();
-		}
-
-		if (VM_Player::State.isPlaying)
-		{
-			if ((SDL_GetTicks() - VM_Player::pictureProgressTime) >= ONE_SECOND_MS) {
-				VM_Player::ProgressTime++;
-				VM_Player::pictureProgressTime = SDL_GetTicks();
-			}
-
-			if (VM_Player::ProgressTime >= VM_Player::DurationTime) {
-				VM_Player::mediaCompleted = true;
-				VM_Player::Stop();
-			}
-		}
+		VM_Player::renderPicture();
 	}
 	else if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
 	{
-		if (VM_Player::State.isPaused)
-		{
-			if (VM_Player::videoContext.texture == NULL)
-				VM_Player::refreshVideo = true;
-
-			if (VM_Player::subContext.texture == NULL)
-				VM_Player::refreshSub = true;
-		}
+		if (VM_Player::State.isPaused && (VM_Player::subContext.texture == NULL))
+			VM_Player::refreshSub = true;
 
 		if (!VM_Player::State.isStopped) {
 			VM_Player::renderVideo(location);
@@ -1296,6 +1270,31 @@ int MediaPlayer::VM_Player::Render(const SDL_Rect &location)
 	}
 
 	return RESULT_OK;
+}
+
+void MediaPlayer::VM_Player::renderPicture()
+{
+	if (VM_Player::seekRequested)
+	{
+		VM_Player::ProgressTime        = ((double)VM_Player::seekToPosition / AV_TIME_BASE_D);
+		VM_Player::pictureProgressTime = (uint32_t)(VM_Player::ProgressTime * (double)ONE_SECOND_MS);
+		VM_Player::seekRequested       = false;
+
+		VM_PlayerControls::Refresh();
+	}
+
+	if (VM_Player::State.isPlaying)
+	{
+		if ((SDL_GetTicks() - VM_Player::pictureProgressTime) >= ONE_SECOND_MS) {
+			VM_Player::ProgressTime++;
+			VM_Player::pictureProgressTime = SDL_GetTicks();
+		}
+
+		if (VM_Player::ProgressTime >= VM_Player::DurationTime) {
+			VM_Player::mediaCompleted = true;
+			VM_Player::Stop();
+		}
+	}
 }
 
 int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
@@ -1526,135 +1525,135 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 
 void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 {
-	auto msg = VM_Text::Format(
-		"refreshVideo: %d, isStopped: %d, quit: %d",
-		VM_Player::refreshVideo, VM_Player::State.isStopped, VM_Player::State.quit
-	);
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), msg.c_str(), NULL);
+	bool updateTexture             = VM_Player::videoFrameAvailable;
+	VM_Player::videoFrameAvailable = false;
 
-	// UPDATE THE VIDEO TEXTURE WITH THE NEWLY DECODED VIDEO FRAME
-	if (VM_Player::refreshVideo && !VM_Player::State.isStopped && !VM_Player::State.quit)
-	{
-		VM_Player::refreshVideo = false;
-
-		int  maxWidth, maxHeight, scaledWidth, scaledHeight;
-		int  scaleResult = 0;
-		auto videoFrame  = VM_Player::videoContext.frame;
-		auto videoStream = VM_Player::videoContext.stream;
-
-		// CALCULATE THE OUTPUT SIZE RELATIVE TO THE ASPECT RATIO
-		if (VM_Player::State.keepAspectRatio)
-		{
-			maxWidth     = (int)((float)videoStream->codec->width  / (float)videoStream->codec->height * (float)location.h);
-			maxHeight    = (int)((float)videoStream->codec->height / (float)videoStream->codec->width  * (float)location.w);
-			scaledWidth  = (maxWidth  <= location.w ? maxWidth  : location.w);
-			scaledHeight = (maxHeight <= location.h ? maxHeight : location.h);
-		} else {
-			scaledWidth  = location.w;
-			scaledHeight = location.h;
-		}
-
-		// CALCULATE THE RENDER LOCATION
-		VM_Player::videoContext.renderLocation.x = (location.x + ((location.w - scaledWidth)  / 2));
-		VM_Player::videoContext.renderLocation.y = (location.y + ((location.h - scaledHeight) / 2));
-		VM_Player::videoContext.renderLocation.w = scaledWidth;
-		VM_Player::videoContext.renderLocation.h = scaledHeight;
-
-		if (VM_Player::videoContext.frameDecoded && !VM_Player::State.quit &&
-			(videoFrame->data[0] != NULL) && (videoFrame->linesize[0] > 0) &&
-			(videoFrame->width > 0) && (videoFrame->height > 0))
-		{
-			// CREATE THE VIDEO TEXTURE IF NOT ALREADY CREATED
-			if (((VM_Player::videoContext.texture == NULL) || (VM_Player::videoContext.texture->data == NULL) || 
-				(VM_Player::videoContext.texture->width  != videoFrame->width) ||
-				(VM_Player::videoContext.texture->height != videoFrame->height)) &&
-				!VM_Player::State.quit)
-			{
-				DELETE_POINTER(VM_Player::videoContext.texture);
-
-				uint32_t sdlPixelFormat = VM_Player::GetVideoPixelFormat(videoStream->codec->pix_fmt);
-
-				VM_Player::videoContext.texture = new VM_Texture(
-					sdlPixelFormat, SDL_TEXTUREACCESS_STREAMING, videoFrame->width, videoFrame->height
-				);
-
-				// CREATE A SCALING CONTEXT FOR NON-YUV420P VIDEOS
-				if ((VM_Player::videoContext.texture->data != NULL) &&
-					(videoStream->codec->pix_fmt != LIB_FFMPEG::AV_PIX_FMT_YUV420P))
-				{
-					LIB_FFMPEG::AVPixelFormat ffmpegPixelFormat = VM_Player::GetVideoPixelFormat(sdlPixelFormat);
-
-					if (avpicture_alloc(&VM_Player::videoContext.frameEncoded, ffmpegPixelFormat, videoFrame->width, videoFrame->height) < 0)
-						DELETE_POINTER(VM_Player::videoContext.texture);
-
-					VM_Player::scaleContextVideo = sws_getCachedContext(
-						VM_Player::scaleContextVideo,
-						videoFrame->width, videoFrame->height, videoStream->codec->pix_fmt,
-						videoFrame->width, videoFrame->height, ffmpegPixelFormat,
-						DEFAULT_SCALE_FILTER, NULL, NULL, NULL
-					);
-					
-					if (VM_Player::scaleContextVideo == NULL) {
-						FREE_AVPICTURE(VM_Player::videoContext.frameEncoded);
-						DELETE_POINTER(VM_Player::videoContext.texture);
-					}
-				}
-			}
-
-			if ((VM_Player::videoContext.texture != NULL) &&
-				(VM_Player::videoContext.texture->data != NULL) &&
-				!VM_Player::State.quit)
-			{
-				// FOR YUV420P VIDEOS, COPY THE FRAME DIRECTLY TO THE TEXTURE
-				if (VM_Player::IsYUV(videoStream->codec->pix_fmt))
-				{
-					SDL_UpdateYUVTexture(
-						VM_Player::videoContext.texture->data, NULL,
-						videoFrame->data[0], videoFrame->linesize[0],
-						videoFrame->data[1], videoFrame->linesize[1],
-						videoFrame->data[2], videoFrame->linesize[2]
-					);
-				}
-				// FOR NON-YUV420P VIDEOS, CONVERT THE PIXEL FORMAT TO YUV420P
-				else
-				{
-					scaleResult = sws_scale(
-						VM_Player::scaleContextVideo, videoFrame->data, videoFrame->linesize, 0, videoFrame->height,
-						VM_Player::videoContext.frameEncoded.data, VM_Player::videoContext.frameEncoded.linesize
-					);
-
-					// COPY THE CONVERTED FRAME TO THE TEXTURE
-					if ((scaleResult > 0) && !VM_Player::State.quit) {
-						SDL_UpdateYUVTexture(
-							VM_Player::videoContext.texture->data, NULL, 
-							VM_Player::videoContext.frameEncoded.data[0], VM_Player::videoContext.frameEncoded.linesize[0],
-							VM_Player::videoContext.frameEncoded.data[1], VM_Player::videoContext.frameEncoded.linesize[1],
-							VM_Player::videoContext.frameEncoded.data[2], VM_Player::videoContext.frameEncoded.linesize[2]
-						);
-					}
-				}
-
-				SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), "RENDER_VIDEO_1", NULL);
-			}
-		}
+	if ((VM_Player::videoContext.texture == NULL) || (VM_Player::videoContext.texture->data == NULL)) {
+		VM_Player::renderVideoCreateTexture();
+		updateTexture = true;
 	}
 
-	// RENDER THE VIDEO TEXTURE
-	if ((VM_Player::videoContext.texture != NULL) &&
-		(VM_Player::videoContext.texture->data != NULL) &&
-		!SDL_RectEmpty(&VM_Player::videoContext.renderLocation) &&
-		!VM_Player::State.quit)
+	VM_Player::renderVideoScaleRenderLocation(location);
+
+	if (updateTexture)
+		VM_Player::renderVideoUpdateTexture();
+
+	if ((VM_Player::videoContext.texture != NULL) && (VM_Player::videoContext.texture->data != NULL) &&
+		!SDL_RectEmpty(&VM_Player::videoContext.renderLocation) && !VM_Player::State.quit)
 	{
 		VM_Color backgroundColor = SDL_COLOR_BLACK;
 		VM_Graphics::FillArea(&backgroundColor, &location);
 
-		SDL_RenderCopy(
-			VM_Window::Renderer, VM_Player::videoContext.texture->data,
-			NULL, &VM_Player::videoContext.renderLocation
+		SDL_RenderCopy(VM_Window::Renderer, VM_Player::videoContext.texture->data, NULL, &VM_Player::videoContext.renderLocation);
+	}
+}
+
+int MediaPlayer::VM_Player::renderVideoCreateTexture()
+{
+	auto videoFrame  = VM_Player::videoContext.frame;
+	auto videoStream = VM_Player::videoContext.stream;
+
+	if (!VM_Player::videoContext.frameDecoded || (videoFrame == NULL) || (videoStream == NULL) || VM_Player::State.quit)
+		return ERROR_UNKNOWN;
+
+	auto sdlPixelFormat    = VM_Player::GetVideoPixelFormat(videoStream->codec->pix_fmt);
+	auto ffmpegPixelFormat = VM_Player::GetVideoPixelFormat(sdlPixelFormat);
+
+	DELETE_POINTER(VM_Player::videoContext.texture);
+
+	VM_Player::videoContext.texture = new VM_Texture(
+		sdlPixelFormat, SDL_TEXTUREACCESS_STREAMING, videoFrame->width, videoFrame->height
+	);
+
+	// CREATE A SCALING CONTEXT FOR NON-YUV420P VIDEOS
+	if ((videoStream->codec->pix_fmt != LIB_FFMPEG::AV_PIX_FMT_YUV420P) && (VM_Player::videoContext.texture->data != NULL))
+	{
+		if (avpicture_alloc(&VM_Player::videoContext.frameEncoded, ffmpegPixelFormat, videoFrame->width, videoFrame->height) < 0)
+			DELETE_POINTER(VM_Player::videoContext.texture);
+
+		VM_Player::scaleContextVideo = sws_getCachedContext(
+			VM_Player::scaleContextVideo,
+			videoFrame->width, videoFrame->height, videoStream->codec->pix_fmt,
+			videoFrame->width, videoFrame->height, ffmpegPixelFormat,
+			DEFAULT_SCALE_FILTER, NULL, NULL, NULL
+		);
+					
+		if (VM_Player::scaleContextVideo == NULL) {
+			FREE_AVPICTURE(VM_Player::videoContext.frameEncoded);
+			DELETE_POINTER(VM_Player::videoContext.texture);
+		}
+	}
+
+	return RESULT_OK;
+}
+
+int MediaPlayer::VM_Player::renderVideoScaleRenderLocation(const SDL_Rect &location)
+{
+	auto videoStream = VM_Player::videoContext.stream;
+
+	if ((videoStream == NULL) || VM_Player::State.quit)
+		return ERROR_UNKNOWN;
+
+	int scaledWidth  = location.w;
+	int scaledHeight = location.h;
+
+	// CALCULATE THE OUTPUT SIZE RELATIVE TO THE ASPECT RATIO
+	if (VM_Player::State.keepAspectRatio)
+	{
+		int maxWidth  = (int)((float)videoStream->codec->width  / (float)videoStream->codec->height * (float)location.h);
+		int maxHeight = (int)((float)videoStream->codec->height / (float)videoStream->codec->width  * (float)location.w);
+
+		scaledWidth  = (maxWidth  <= location.w ? maxWidth  : location.w);
+		scaledHeight = (maxHeight <= location.h ? maxHeight : location.h);
+	}
+
+	// CALCULATE THE RENDER LOCATION
+	VM_Player::videoContext.renderLocation.x = (location.x + ((location.w - scaledWidth)  / 2));
+	VM_Player::videoContext.renderLocation.y = (location.y + ((location.h - scaledHeight) / 2));
+	VM_Player::videoContext.renderLocation.w = scaledWidth;
+	VM_Player::videoContext.renderLocation.h = scaledHeight;
+
+	return RESULT_OK;
+}
+
+int MediaPlayer::VM_Player::renderVideoUpdateTexture()
+{
+	auto videoFrame  = VM_Player::videoContext.frame;
+	auto videoStream = VM_Player::videoContext.stream;
+
+	if ((videoFrame == NULL) || (videoStream == NULL) || VM_Player::State.quit)
+		return ERROR_UNKNOWN;
+
+	// FOR YUV420P VIDEOS, COPY THE FRAME DIRECTLY TO THE TEXTURE
+	if (VM_Player::IsYUV(videoStream->codec->pix_fmt))
+	{
+		SDL_UpdateYUVTexture(
+			VM_Player::videoContext.texture->data, NULL,
+			videoFrame->data[0], videoFrame->linesize[0],
+			videoFrame->data[1], videoFrame->linesize[1],
+			videoFrame->data[2], videoFrame->linesize[2]
+		);
+	}
+	// FOR NON-YUV420P VIDEOS, CONVERT THE PIXEL FORMAT TO YUV420P
+	else
+	{
+		int scaleResult = sws_scale(
+			VM_Player::scaleContextVideo, videoFrame->data, videoFrame->linesize, 0, videoFrame->height,
+			VM_Player::videoContext.frameEncoded.data, VM_Player::videoContext.frameEncoded.linesize
 		);
 
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), "RENDER_VIDEO_2", NULL);
+		// COPY THE CONVERTED FRAME TO THE TEXTURE
+		if (scaleResult > 0) {
+			SDL_UpdateYUVTexture(
+				VM_Player::videoContext.texture->data, NULL, 
+				VM_Player::videoContext.frameEncoded.data[0], VM_Player::videoContext.frameEncoded.linesize[0],
+				VM_Player::videoContext.frameEncoded.data[1], VM_Player::videoContext.frameEncoded.linesize[1],
+				VM_Player::videoContext.frameEncoded.data[2], VM_Player::videoContext.frameEncoded.linesize[2]
+			);
+		}
 	}
+
+	return RESULT_OK;
 }
 
 void MediaPlayer::VM_Player::reset()
@@ -1666,7 +1665,6 @@ void MediaPlayer::VM_Player::reset()
 	VM_Player::formatContextExternal    = NULL;
 	VM_Player::fullscreenEnterWindowed  = false;
 	VM_Player::fullscreenExitStop       = false;
-	//VM_Player::isStopping               = false;
 	VM_Player::nrOfStreams              = 0;
 	VM_Player::packetsThread            = NULL;
 	VM_Player::PauseTime                = 0;
@@ -1675,14 +1673,15 @@ void MediaPlayer::VM_Player::reset()
 	VM_Player::ProgressTime             = 0.0;
 	VM_Player::progressTimeLast         = 0.0;
 	VM_Player::refreshSub               = false;
-	VM_Player::refreshVideo             = false;
 	VM_Player::resampleContext          = NULL;
 	VM_Player::scaleContextSub          = NULL;
 	VM_Player::scaleContextVideo        = NULL;
 	VM_Player::seekRequested            = false;
+	VM_Player::pausedVideoSeekRequested = false;
 	VM_Player::seekToPosition           = 0;
 	VM_Player::SelectedRow              = {};
 	VM_Player::TimeOut                  = NULL;
+	VM_Player::videoFrameAvailable      = false;
 
 	VM_Player::audioContext.reset();
 	VM_Player::subContext.reset();
@@ -1754,6 +1753,9 @@ int MediaPlayer::VM_Player::Seek(int64_t seekTime)
 {
 	VM_Player::seekToPosition = seekTime;
 	VM_Player::seekRequested  = true;
+
+	if (VIDEO_IS_SELECTED && VM_Player::State.isPaused)
+		VM_Player::pausedVideoSeekRequested = true;
 
 	return RESULT_OK;
 }
@@ -2229,6 +2231,9 @@ int MediaPlayer::VM_Player::threadPackets(void* userData)
 		while ((VM_Player::isPacketQueueFull(MEDIA_TYPE_AUDIO) || VM_Player::isPacketQueueFull(MEDIA_TYPE_VIDEO)) &&
 			!VM_Player::seekRequested && !VM_Player::State.quit)
 		{
+			if (VIDEO_IS_SELECTED && VM_Player::videoContext.packets.empty())
+				break;
+
 			SDL_Delay(DELAY_TIME_ONE_MS);
 		}
 
@@ -2483,23 +2488,15 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 
 int MediaPlayer::VM_Player::threadVideo(void* userData)
 {
-	double                delayTime     = 0;
-	uint32_t              startWaitTime = 0;
-	int                   decodeResult  = -1;
-	int                   errorCount    = 0;
-	double                frameRate     = VM_FileSystem::GetMediaFrameRate(VM_Player::videoContext.stream);
-	int64_t               framePTS      = 0;
-	LIB_FFMPEG::AVPacket* packet        = NULL;
-	bool                  seekPaused    = false;
-	bool                  seekRefresh   = false;
+	int  errorCount = 0;
+	auto frameRate  = VM_FileSystem::GetMediaFrameRate(VM_Player::videoContext.stream);
 
 	if (frameRate <= 0) {
 		VM_Player::Stop(VM_Text::Format("[MP-P-%d] %s '%s'", __LINE__, VM_Window::Labels["error.play"].c_str(), VM_Player::State.filePath.c_str()));
 		return ERROR_UNKNOWN;
 	}
 	
-	double frameDuration                  = (1.0 / frameRate);
-	VM_Player::videoContext.frameDuration = (int)(frameDuration * (double)ONE_SECOND_MS);
+	VM_Player::videoContext.frameDuration = (int)((1.0 / frameRate) * (double)ONE_SECOND_MS);
 
 	// Wait until audio resources are ready
 	while ((VM_Player::audioContext.frame->linesize[0] <= 0) && !VM_Player::State.quit)
@@ -2512,11 +2509,6 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 
 	while (!VM_Player::State.quit)
 	{
-		if (VM_Player::seekRequested && VM_Player::State.isPaused) {
-			FREE_PACKET(packet);
-			seekPaused = true;
-		}
-
 		while ((VM_Player::videoContext.packets.empty() || VM_Player::seekRequested) && !VM_Player::State.quit)
 			SDL_Delay(DELAY_TIME_DEFAULT);
 
@@ -2524,25 +2516,22 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 			break;
 
 		// Try to get a new video packet from the queue (re-use packet if paused)
-		if (VM_Player::State.isPlaying || (packet == NULL))
-			packet = VM_Player::packetGet(VM_Player::videoContext.packets, VM_Player::videoContext.mutex, VM_Player::videoContext.condition, VM_Player::videoContext.packetsAvailable);
+		auto packet = VM_Player::packetGet(VM_Player::videoContext.packets, VM_Player::videoContext.mutex, VM_Player::videoContext.condition, VM_Player::videoContext.packetsAvailable);
 
 		if ((packet == NULL) || VM_Player::State.quit)
 			continue;
 
 		// Try to decode the video packet to the video frame
-		if (VM_Player::State.isPlaying || (seekPaused && !seekRefresh))
-			decodeResult = avcodec_decode_video2(VM_Player::videoContext.stream->codec, VM_Player::videoContext.frame, &VM_Player::videoContext.frameDecoded, packet);
+		auto decodeResult = avcodec_decode_video2(VM_Player::videoContext.stream->codec, VM_Player::videoContext.frame, &VM_Player::videoContext.frameDecoded, packet);
 
 		// Release the resources allocated for the packet
-		if (VM_Player::State.isPlaying)
-			FREE_PACKET(packet);
+		FREE_PACKET(packet);
 
 		if (VM_Player::State.quit)
 			break;
 
 		// Handle any errors decoding the packet
-		if (VM_Player::State.isPlaying && ((decodeResult < 0) || !VM_Player::videoContext.frameDecoded))
+		if (!AVFRAME_VALID(decodeResult, VM_Player::videoContext.frameDecoded, VM_Player::videoContext.frame))
 		{
 			// Too many errors occured, exit the video thread.
 			if (errorCount > MAX_ERRORS) {
@@ -2564,44 +2553,34 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 		errorCount = 0;
 
 		// Calculate video display time and any delay time
-		framePTS = av_frame_get_best_effort_timestamp(VM_Player::videoContext.frame);
-		VM_Player::videoContext.pts = (double)framePTS;
+		VM_Player::videoContext.pts = (double)av_frame_get_best_effort_timestamp(VM_Player::videoContext.frame);
 
 		if (AV_START_FLAGS(VM_Player::FormatContext->iformat))
 			VM_Player::videoContext.pts -= (double)VM_Player::videoContext.stream->start_time;
 
 		VM_Player::videoContext.pts *= LIB_FFMPEG::av_q2d(VM_Player::videoContext.stream->time_base);
 
-		delayTime = (VM_Player::ProgressTime - VM_Player::videoContext.pts);
-
-		// Handle seeking while video is paused
-		if (seekPaused)
+		if (VM_Player::pausedVideoSeekRequested)
 		{
-			// Notify the render thread if we have a valid video frame
-			if (VM_Player::videoContext.frameDecoded && !seekRefresh && (fabs(delayTime) < 1.0)) {
-				VM_Player::Refresh();
-				seekRefresh = true;
-			}
-
-			// If the video frame is invalid, delete the packet so we can try to decode a new packet.
-			if (!seekRefresh)
-				FREE_PACKET(packet);
-
-			// Stop seeking when the new video frame has been successfully rendered
-			if (seekRefresh && !VM_Player::refreshVideo) {
-				seekPaused  = false;
-				seekRefresh = false;
-			// Otherwise, try to decode a new packet.
-			} else {
-				continue;
+			if (fabs(VM_Player::ProgressTime - VM_Player::videoContext.pts) < 1.0) {
+				VM_Player::pausedVideoSeekRequested = false;
+				VM_Player::videoFrameAvailable      = true;
 			}
 		}
 
 		// Sleep while paused unless a seek is requested
-		while (VM_Player::State.isPaused && !VM_Player::seekRequested && !VM_Player::State.quit)
+		while (VM_Player::State.isPaused && !VM_Player::seekRequested && !VM_Player::pausedVideoSeekRequested && !VM_Player::State.quit)
 			SDL_Delay(DELAY_TIME_DEFAULT);
 
+		if (VM_Player::State.quit)
+			break;
+
+		if (VM_Player::pausedVideoSeekRequested)
+			continue;
+
 		// Video delay (audio is ahead of video)
+		double delayTime = (VM_Player::ProgressTime - VM_Player::videoContext.pts);
+
 		if ((delayTime > ((VM_Player::videoContext.frameDuration / (double)ONE_SECOND_MS) * 2.0)) &&
 			(VM_Player::audioContext.frameDuration > 0) &&
 			(delayTime > (VM_Player::audioContext.frameDuration * 2.0)))
@@ -2610,11 +2589,10 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 			continue;
 		}
 
-		startWaitTime = SDL_GetTicks();
+		auto startWaitTime = SDL_GetTicks();
 
 		// Wait until it's time to render the video frame
-		while ((VM_Player::ProgressTime < VM_Player::videoContext.pts) &&
-			!VM_Player::seekRequested && !VM_Player::State.quit)
+		while ((VM_Player::ProgressTime < VM_Player::videoContext.pts) && !VM_Player::seekRequested && !VM_Player::State.quit)
 		{
 			// Don't wait too long if the video display times are incorrect or updates infrequently
 			if ((int)(SDL_GetTicks() - startWaitTime) > (VM_Player::videoContext.frameDuration * 2))
@@ -2623,123 +2601,11 @@ int MediaPlayer::VM_Player::threadVideo(void* userData)
 			SDL_Delay(DELAY_TIME_ONE_MS);
 		}
 
-		// Notify the render thread to render the new video frame
-		if (VM_Player::State.isPlaying)
-			VM_Player::refreshVideo = true;
-
-		
-		
-		/*
-		if (VM_Player::seekRequested && VM_Player::State.isPaused) {
-			FREE_PACKET(packet);
-			seekPaused = true;
-		}
-
-		while ((VM_Player::videoContext.packets.empty() || VM_Player::seekRequested) && !VM_Player::State.quit)
-			SDL_Delay(DELAY_TIME_DEFAULT);
-
 		if (VM_Player::State.quit)
 			break;
 
-		// Try to get a new video packet from the queue (re-use packet if paused)
-		if (VM_Player::State.isPlaying || (packet == NULL))
-			packet = VM_Player::packetGet(VM_Player::videoContext.packets, VM_Player::videoContext.mutex, VM_Player::videoContext.condition, VM_Player::videoContext.packetsAvailable);
-
-		if (packet == NULL)
-			continue;
-
-		// Try to decode the video packet to the video frame
-		if (VM_Player::State.isPlaying || (seekPaused && !seekRefresh))
-			decodeResult = avcodec_decode_video2(VM_Player::videoContext.stream->codec, VM_Player::videoContext.frame, &VM_Player::videoContext.frameDecoded, packet);
-
-		// Release the resources allocated for the packet
-		if (VM_Player::State.isPlaying)
-			FREE_PACKET(packet);
-
-		// Handle any errors decoding the packet
-		if (VM_Player::State.isPlaying && ((decodeResult < 0) || !VM_Player::videoContext.frameDecoded))
-		{
-			// Too many errors occured, exit the video thread.
-			if (errorCount > MAX_ERRORS) {
-				VM_Player::Stop(VM_Text::Format("[MP-P-%d] %s '%s'", __LINE__, VM_Window::Labels["error.play"].c_str(), VM_Player::State.filePath.c_str()));
-				break;
-			}
-			
-			errorCount++;
-			VM_Player::videoContext.frameDecoded = 0;
-
-			if (VM_Player::ProgressTime > 1.0) {
-				av_frame_unref(VM_Player::videoContext.frame);
-				VM_Player::videoContext.frame = LIB_FFMPEG::av_frame_alloc();
-			}
-
-			continue;
-		}
-
-		// Calculate video display time and any delay time
-		errorCount = 0;
-
-		VM_Player::videoContext.pts = (double)(
-			av_frame_get_best_effort_timestamp(VM_Player::videoContext.frame) - VM_Player::videoContext.stream->start_time
-		);
-		VM_Player::videoContext.pts *= LIB_FFMPEG::av_q2d(VM_Player::videoContext.stream->time_base);
-
-		delayTime = (VM_Player::ProgressTime - VM_Player::videoContext.pts);
-
-		// Handle seeking while video is paused
-		if (seekPaused)
-		{
-			// Notify the render thread if we have a valid video frame
-			if (VM_Player::videoContext.frameDecoded && !seekRefresh && (fabs(delayTime) < 1.0)) {
-				VM_Player::Refresh();
-				seekRefresh = true;
-			}
-			
-			// If the video frame is invalid, delete the packet so we can try to decode a new packet.
-			if (!seekRefresh)
-				FREE_PACKET(packet);
-
-			// Stop seeking when the new video frame has been successfully rendered
-			if (seekRefresh && !VM_Player::refreshVideo) {
-				seekPaused  = false;
-				seekRefresh = false;
-			// Otherwise, try to decode a new packet.
-			} else {
-				continue;
-			}
-		}
-
-		// Sleep while paused unless a seek is requested
-		while (VM_Player::State.isPaused && !VM_Player::seekRequested && !VM_Player::State.quit)
-			SDL_Delay(DELAY_TIME_DEFAULT);
-
-		// Video delay (audio is ahead of video)
-		if ((delayTime > ((VM_Player::videoContext.frameDuration / (double)ONE_SECOND_MS) * 2.0)) &&
-			(VM_Player::audioContext.frameDuration > 0) &&
-			(delayTime > (VM_Player::audioContext.frameDuration * 2.0)))
-		{
-			VM_Player::videoContext.frameDecoded = 0;
-			continue;
-		}
-
 		// Notify the render thread to render the new video frame
-		if (VM_Player::State.isPlaying)
-			VM_Player::refreshVideo = true;
-
-		startWaitTime = SDL_GetTicks();
-
-		// Wait until it's time to get the next packet (we have passed the video display time)
-		while ((VM_Player::ProgressTime < VM_Player::videoContext.pts) &&
-			!VM_Player::seekRequested &&
-			!VM_Player::State.quit)
-		{
-			// Don't wait too long if the video display times are incorrect or updates infrequently
-			if ((int)(SDL_GetTicks() - startWaitTime) > (VM_Player::videoContext.frameDuration * 2))
-				break;
-
-			SDL_Delay(DELAY_TIME_DEFAULT);
-		}
-		*/
+		VM_Player::videoFrameAvailable = true;
 	}
 
 	return RESULT_OK;
