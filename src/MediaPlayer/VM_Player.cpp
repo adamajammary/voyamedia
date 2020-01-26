@@ -1533,12 +1533,12 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 		updateTexture = true;
 	}
 
-	/*VM_Player::renderVideoScaleRenderLocation(location);
+	VM_Player::renderVideoScaleRenderLocation(location);
 
 	if (updateTexture)
 		VM_Player::renderVideoUpdateTexture();
 
-	if ((VM_Player::videoContext.texture != NULL) && (VM_Player::videoContext.texture->data != NULL) &&
+	/*if ((VM_Player::videoContext.texture != NULL) && (VM_Player::videoContext.texture->data != NULL) &&
 		!SDL_RectEmpty(&VM_Player::videoContext.renderLocation) && !VM_Player::State.quit)
 	{
 		VM_Color backgroundColor = SDL_COLOR_BLACK;
