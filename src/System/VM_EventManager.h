@@ -28,7 +28,6 @@ namespace VoyaMedia
 
 		public:
 			static int HandleEvents();
-			static int HandleEventsMobile(void* userdata, SDL_Event* deviceEvent);
 			static int HandleMediaPlayer();
 
 			#if defined _android
@@ -37,6 +36,10 @@ namespace VoyaMedia
 				static void WakeLockStop();
 			#elif defined _ios
 				static int ConfigureAudioSessionIOS();
+			#endif
+
+			#if defined _android || defined _ios
+				static int HandleEventsMobile(void* userdata, SDL_Event* deviceEvent);
 			#endif
 
 		private:

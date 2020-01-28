@@ -35,7 +35,9 @@ int main(const int argc, char* argv[])
 	}
 
 	// Handle special mobile events (Android/iOS)
-	SDL_SetEventFilter(VM_EventManager::HandleEventsMobile, NULL);
+	#if defined _android || defined _ios
+		SDL_SetEventFilter(VM_EventManager::HandleEventsMobile, NULL);
+	#endif
 
 	// Main loop: Handles events and UI rendering
 	while (!VM_Window::Quit)

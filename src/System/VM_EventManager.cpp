@@ -200,6 +200,7 @@ int System::VM_EventManager::HandleEvents()
 			case SDL_WINDOWEVENT_CLOSE:
 				VM_Window::Quit = true;
 				break;
+			#if defined _linux || defined _macosx || defined _windows
 			case SDL_WINDOWEVENT_MINIMIZED:
 				VM_Window::PauseRendering = true;
 
@@ -209,16 +210,16 @@ int System::VM_EventManager::HandleEvents()
 				VM_Window::Refresh();
 
 				break;
-			case SDL_WINDOWEVENT_MOVED:
-				VM_Window::SaveToDB = true;
-				break;
 			case SDL_WINDOWEVENT_RESTORED:
 				VM_Player::CursorShow();
 
 				VM_Window::PauseRendering = false;
 				VM_Window::ResetRenderer  = true;
-				SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), "SDL_WINDOWEVENT_RESTORED", NULL);
 
+				break;
+			#endif
+			case SDL_WINDOWEVENT_MOVED:
+				VM_Window::SaveToDB = true;
 				break;
 			case SDL_WINDOWEVENT_SIZE_CHANGED:
 				VM_Window::ResetRenderer   = true;
@@ -295,6 +296,7 @@ int System::VM_EventManager::HandleEvents()
 	return RESULT_OK;
 }
 
+#if defined _android || defined _ios
 int System::VM_EventManager::HandleEventsMobile(void* userdata, SDL_Event* event)
 {
 	switch (event->type) {
@@ -329,7 +331,7 @@ int System::VM_EventManager::HandleEventsMobile(void* userdata, SDL_Event* event
 
 		VM_Window::PauseRendering = false;
 		VM_Window::ResetRenderer  = true;
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), "SDL_APP_DIDENTERFOREGROUND", NULL);
+
 		VM_Player::CursorShow();
 
 		return RESULT_OK;
@@ -339,6 +341,7 @@ int System::VM_EventManager::HandleEventsMobile(void* userdata, SDL_Event* event
 
 	return 1;
 }
+#endif
 
 #if defined _android
 int System::VM_EventManager::HandleHeadSetUnpluggedAndroid(JNIEnv* jniEnvironment)
