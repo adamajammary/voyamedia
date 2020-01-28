@@ -776,19 +776,19 @@ int Graphics::VM_Table::refresh()
 
 	if (this->shouldRefreshSelected)
 	{
-		VM_Button* fileButton = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_file"]);
-		VM_Button* snapshot   = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_snapshot"]);
+		//VM_Button* fileButton = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_file"]);
+		//VM_Button* snapshot   = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_snapshot"]);
 
-		// SNAPSHOT IMAGE
-		if (snapshot != NULL)
-			snapshot->removeImage();
+		//// SNAPSHOT IMAGE
+		//if (snapshot != NULL)
+		//	snapshot->removeImage();
 
-		// SELECTED FILE TEXT
-		if (fileButton != NULL)
-			fileButton->setText("");
+		//// SELECTED FILE TEXT
+		//if (fileButton != NULL)
+		//	fileButton->setText("");
 
-		// SELECTED PLAY ICON
-		DELETE_POINTER(this->playIcon);
+		//// SELECTED PLAY ICON
+		//DELETE_POINTER(this->playIcon);
 
 		this->shouldRefreshSelected = false;
 	}
