@@ -255,9 +255,9 @@ int System::VM_Window::Render()
 
 int System::VM_Window::Reset(const char* guiXML, const char* title)
 {
-	SDL_SetRenderDrawColor(VM_Window::Renderer, 0, 0, 0, 0xFF);
-	SDL_RenderClear(VM_Window::Renderer);
-	SDL_RenderPresent(VM_Window::Renderer);
+	//SDL_SetRenderDrawColor(VM_Window::Renderer, 0, 0, 0, 0xFF);
+	//SDL_RenderClear(VM_Window::Renderer);
+	//SDL_RenderPresent(VM_Window::Renderer);
 
 	VM_TableState tableState = {};
 
