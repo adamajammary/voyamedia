@@ -461,32 +461,32 @@ int System::VM_EventManager::handleMouseClick(SDL_Event* mouseEvent)
 {
 	int result = ERROR_UNKNOWN;
 
-	if (VM_Modal::IsVisible())
-	{
-		if (VM_EventManager::isClickedTextInput(mouseEvent, VM_Modal::TextInput))
+	//if (VM_Modal::IsVisible())
+	//{
+	//	if (VM_EventManager::isClickedTextInput(mouseEvent, VM_Modal::TextInput))
+	//		result = RESULT_OK;
+	//	else if (VM_EventManager::isClickedModal(mouseEvent))
+	//		result = RESULT_OK;
+	//	else if (VM_EventManager::isClickedTableBottom(mouseEvent, VM_Modal::Components["list_table_bottom"], VM_Modal::ListTable))
+	//		result = RESULT_OK;
+	//	else if (VM_EventManager::isClickedTable(mouseEvent, VM_Modal::ListTable, VM_Modal::Components["list_table_scrollbar"]))
+	//		result = RESULT_OK;
+	//}
+	//else
+	//{
+	//	if (VM_EventManager::isClickedTextInput(mouseEvent, VM_GUI::TextInput))
+	//		result = RESULT_OK;
+	//	else if (VM_EventManager::isClickedTopBar(mouseEvent))
+	//		result = RESULT_OK;
+		/*else*/ if (VM_EventManager::isClickedBottom(mouseEvent))
 			result = RESULT_OK;
-		else if (VM_EventManager::isClickedModal(mouseEvent))
-			result = RESULT_OK;
-		else if (VM_EventManager::isClickedTableBottom(mouseEvent, VM_Modal::Components["list_table_bottom"], VM_Modal::ListTable))
-			result = RESULT_OK;
-		else if (VM_EventManager::isClickedTable(mouseEvent, VM_Modal::ListTable, VM_Modal::Components["list_table_scrollbar"]))
-			result = RESULT_OK;
-	}
-	else
-	{
-		if (VM_EventManager::isClickedTextInput(mouseEvent, VM_GUI::TextInput))
-			result = RESULT_OK;
-		else if (VM_EventManager::isClickedTopBar(mouseEvent))
-			result = RESULT_OK;
-		else if (VM_EventManager::isClickedBottom(mouseEvent))
-			result = RESULT_OK;
-		else if (VM_EventManager::isClickedTop(mouseEvent))
-			result = RESULT_OK;
-		else if (VM_EventManager::isClickedTableBottom(mouseEvent, VM_GUI::Components["list_table_bottom"], VM_GUI::ListTable))
-			result = RESULT_OK;
-		else if (VM_EventManager::isClickedTable(mouseEvent, VM_GUI::ListTable, VM_GUI::Components["list_table_scrollbar"]))
-			result = RESULT_OK;
-	}
+	//	else if (VM_EventManager::isClickedTop(mouseEvent))
+	//		result = RESULT_OK;
+	//	else if (VM_EventManager::isClickedTableBottom(mouseEvent, VM_GUI::Components["list_table_bottom"], VM_GUI::ListTable))
+	//		result = RESULT_OK;
+	//	else if (VM_EventManager::isClickedTable(mouseEvent, VM_GUI::ListTable, VM_GUI::Components["list_table_scrollbar"]))
+	//		result = RESULT_OK;
+	//}
 
 	return result;
 }
@@ -812,51 +812,51 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 	if ((mouseEvent == NULL) || (table == NULL) || (table->scrollBar == NULL) || (scrollBar == NULL))
 		return false;
 
-	//// SCROLL TABLE
-	//for (auto button : table->scrollBar->buttons)
-	//{
-	//	if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
-	//		continue;
+	// SCROLL TABLE
+	for (auto button : table->scrollBar->buttons)
+	{
+		if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
+			continue;
 
-	//	int scrollAmount = 0;
+		int scrollAmount = 0;
 
-	//	if (button->id.find("_scrollbar_next") != String::npos)
-	//		scrollAmount = 1;
-	//	else if (button->id.find("_scrollbar_prev") != String::npos)
-	//		scrollAmount = -1;
+		if (button->id.find("_scrollbar_next") != String::npos)
+			scrollAmount = 1;
+		else if (button->id.find("_scrollbar_prev") != String::npos)
+			scrollAmount = -1;
 
-	//	if (scrollAmount != 0)
-	//	{
-	//		table->selectRow(table->getSelectedRowIndex() + scrollAmount);
+		if (scrollAmount != 0)
+		{
+			table->selectRow(table->getSelectedRowIndex() + scrollAmount);
 
-	//		if (!table->isRowVisible())
-	//			table->scroll(scrollAmount);
-	//	}
+			if (!table->isRowVisible())
+				table->scroll(scrollAmount);
+		}
 
-	//	return true;
-	//}
+		return true;
+	}
 
-	//// SORT TABLE BY COLUMN
-	//if ((table->id == "list_table") || (table->id == "modal_playlists_list_table"))
-	//{
-	//	for (int i = 1; i < (int)table->buttons.size() - 1; i++)
-	//	{
-	//		if (!VM_Graphics::ButtonPressed(mouseEvent, table->buttons[i]->backgroundArea))
-	//			continue;
+	// SORT TABLE BY COLUMN
+	if ((table->id == "list_table") || (table->id == "modal_playlists_list_table"))
+	{
+		for (int i = 1; i < (int)table->buttons.size() - 1; i++)
+		{
+			if (!VM_Graphics::ButtonPressed(mouseEvent, table->buttons[i]->backgroundArea))
+				continue;
 
-	//		table->sort(table->buttons[i]->id);
+			table->sort(table->buttons[i]->id);
 
-	//		return true;
-	//	}
-	//}
+			return true;
+		}
+	}
 
-	//// SELECT TABLE ROW
-	//table->selectRow(mouseEvent);
+	// SELECT TABLE ROW
+	table->selectRow(mouseEvent);
 
-	//if (VM_Graphics::ButtonPressed(mouseEvent, table->backgroundArea)) {
-	//	VM_TextInput::SetActive(false);
-	//	return true;
-	//}
+	if (VM_Graphics::ButtonPressed(mouseEvent, table->backgroundArea)) {
+		VM_TextInput::SetActive(false);
+		return true;
+	}
 
 	return false;
 }
