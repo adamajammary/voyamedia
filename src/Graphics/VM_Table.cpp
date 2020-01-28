@@ -769,7 +769,7 @@ int Graphics::VM_Table::refresh()
 	if (this->shouldRefreshRows)
 	{
 		VM_ThreadManager::FreeThumbnails();
-		//this->setRows();
+		this->setRows();
 
 		this->shouldRefreshRows = false;
 	}
