@@ -768,7 +768,7 @@ int Graphics::VM_Table::refresh()
 {
 	if (this->shouldRefreshRows)
 	{
-		VM_ThreadManager::FreeThumbnails();
+		//VM_ThreadManager::FreeThumbnails();
 		this->setRows();
 
 		this->shouldRefreshRows = false;
@@ -798,10 +798,10 @@ int Graphics::VM_Table::refresh()
 
 	if (this->shouldRefreshThumbs)
 	{
-		for (const auto &row : this->rows) {
-			if (!row.empty())
-				row[0]->setThumb(this->id);
-		}
+		//for (const auto &row : this->rows) {
+		//	if (!row.empty())
+		//		row[0]->setThumb(this->id);
+		//}
 
 		this->shouldRefreshThumbs = false;
 	}
