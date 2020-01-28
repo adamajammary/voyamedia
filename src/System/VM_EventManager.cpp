@@ -217,6 +217,7 @@ int System::VM_EventManager::HandleEvents()
 
 				VM_Window::PauseRendering = false;
 				VM_Window::ResetRenderer  = true;
+				SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), "SDL_WINDOWEVENT_RESTORED", NULL);
 
 				break;
 			case SDL_WINDOWEVENT_SIZE_CHANGED:
@@ -328,6 +329,7 @@ int System::VM_EventManager::HandleEventsMobile(void* userdata, SDL_Event* event
 
 		VM_Window::PauseRendering = false;
 		VM_Window::ResetRenderer  = true;
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), "SDL_APP_DIDENTERFOREGROUND", NULL);
 		VM_Player::CursorShow();
 
 		return RESULT_OK;
@@ -461,32 +463,32 @@ int System::VM_EventManager::handleMouseClick(SDL_Event* mouseEvent)
 {
 	int result = ERROR_UNKNOWN;
 
-	//if (VM_Modal::IsVisible())
-	//{
-	//	if (VM_EventManager::isClickedTextInput(mouseEvent, VM_Modal::TextInput))
-	//		result = RESULT_OK;
-	//	else if (VM_EventManager::isClickedModal(mouseEvent))
-	//		result = RESULT_OK;
-	//	else if (VM_EventManager::isClickedTableBottom(mouseEvent, VM_Modal::Components["list_table_bottom"], VM_Modal::ListTable))
-	//		result = RESULT_OK;
-	//	else if (VM_EventManager::isClickedTable(mouseEvent, VM_Modal::ListTable, VM_Modal::Components["list_table_scrollbar"]))
-	//		result = RESULT_OK;
-	//}
-	//else
-	//{
-	//	if (VM_EventManager::isClickedTextInput(mouseEvent, VM_GUI::TextInput))
-	//		result = RESULT_OK;
-	//	else if (VM_EventManager::isClickedTopBar(mouseEvent))
-	//		result = RESULT_OK;
-		/*else*/ if (VM_EventManager::isClickedBottom(mouseEvent))
+	if (VM_Modal::IsVisible())
+	{
+		if (VM_EventManager::isClickedTextInput(mouseEvent, VM_Modal::TextInput))
 			result = RESULT_OK;
-	//	else if (VM_EventManager::isClickedTop(mouseEvent))
-	//		result = RESULT_OK;
-	//	else if (VM_EventManager::isClickedTableBottom(mouseEvent, VM_GUI::Components["list_table_bottom"], VM_GUI::ListTable))
-	//		result = RESULT_OK;
-	//	else if (VM_EventManager::isClickedTable(mouseEvent, VM_GUI::ListTable, VM_GUI::Components["list_table_scrollbar"]))
-	//		result = RESULT_OK;
-	//}
+		else if (VM_EventManager::isClickedModal(mouseEvent))
+			result = RESULT_OK;
+		else if (VM_EventManager::isClickedTableBottom(mouseEvent, VM_Modal::Components["list_table_bottom"], VM_Modal::ListTable))
+			result = RESULT_OK;
+		else if (VM_EventManager::isClickedTable(mouseEvent, VM_Modal::ListTable, VM_Modal::Components["list_table_scrollbar"]))
+			result = RESULT_OK;
+	}
+	else
+	{
+		if (VM_EventManager::isClickedTextInput(mouseEvent, VM_GUI::TextInput))
+			result = RESULT_OK;
+		else if (VM_EventManager::isClickedTopBar(mouseEvent))
+			result = RESULT_OK;
+		else if (VM_EventManager::isClickedBottom(mouseEvent))
+			result = RESULT_OK;
+		else if (VM_EventManager::isClickedTop(mouseEvent))
+			result = RESULT_OK;
+		else if (VM_EventManager::isClickedTableBottom(mouseEvent, VM_GUI::Components["list_table_bottom"], VM_GUI::ListTable))
+			result = RESULT_OK;
+		else if (VM_EventManager::isClickedTable(mouseEvent, VM_GUI::ListTable, VM_GUI::Components["list_table_scrollbar"]))
+			result = RESULT_OK;
+	}
 
 	return result;
 }
