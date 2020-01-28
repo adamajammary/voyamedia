@@ -79,15 +79,19 @@ int main(const int argc, char* argv[])
 			VM_EventManager::WakeLockStop();
 		#endif
 
+		// Reset the graphics renderer and reload the GUI XML if requested by main UI thread (window resized etc.)
+		if (VM_Window::ResetRenderer && !VM_Window::PauseRendering)
+			VM_Window::Reset(mainXML, (APP_NAME + " " + APP_VERSION).c_str());
+
 		// Manage threads: Check if registered threads need to be recreated or freed etc.
 		VM_ThreadManager::HandleThreads();
 
 		// Manage images: Create and rescale images in background thread if requested by main UI thread
 		VM_ThreadManager::HandleImages();
 
-		// Reset the graphics renderer and reload the GUI XML if requested by main UI thread (window resized etc.)
-		if (VM_Window::ResetRenderer && !VM_Window::PauseRendering)
-			VM_Window::Reset(mainXML, (APP_NAME + " " + APP_VERSION).c_str());
+		//// Reset the graphics renderer and reload the GUI XML if requested by main UI thread (window resized etc.)
+		//if (VM_Window::ResetRenderer && !VM_Window::PauseRendering)
+		//	VM_Window::Reset(mainXML, (APP_NAME + " " + APP_VERSION).c_str());
 
 		// Enter fullscreen mode in main UI thread (can be requested from other threads)
 		if (VM_Player::State.fullscreenEnter)
