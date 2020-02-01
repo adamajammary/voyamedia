@@ -41,7 +41,7 @@ Voya Media is a cross-platform media player that easily plays your music, pictur
 
 Platform | Minimum Version | CPU Architecture
 -------- | --------------- | ----------------
-[Android](https://play.google.com/store/apps/details?id=com.voyamedia.android) | 8.0 (Oreo) | ARMv8/ARM64
+[Android](https://play.google.com/store/apps/details?id=com.voyamedia.android) | 9.0 (Pie) | ARMv8/ARM64
 [iOS](https://itunes.apple.com/us/app/voya-media/id1009917954) | 10.0 | ARMv8/ARM64
 [Linux](https://sourceforge.net/projects/voyamedia/files/VoyaMedia/3.x/Linux/) | Fedora 20, Ubuntu 14.04 | x86_64
 [Mac OS X](https://itunes.apple.com/us/app/voya-media/id1009333985) | 10.11 (El Capitan) | x86_64
