@@ -5,8 +5,8 @@ using namespace VoyaMedia::MediaPlayer;
 using namespace VoyaMedia::XML;
 
 #if defined _android || defined _ios
-float             System::VM_EventManager::swipeDistanceX     = 0.0f;
-float             System::VM_EventManager::swipeDistanceY     = 0.0f;
+//float             System::VM_EventManager::swipeDistanceX     = 0.0f;
+//float             System::VM_EventManager::swipeDistanceY     = 0.0f;
 uint32_t          System::VM_EventManager::touchDownTimestamp = 0;
 uint32_t          System::VM_EventManager::touchUpTimestamp   = 0;
 VM_TouchEventType System::VM_EventManager::TouchEvent         = TOUCH_EVENT_UNKNOWN;
@@ -71,8 +71,8 @@ int System::VM_EventManager::HandleEvents()
 			if (!VM_Player::State.isStopped)
 				break;
 
-			VM_EventManager::swipeDistanceX += event.tfinger.dx;
-			VM_EventManager::swipeDistanceY += event.tfinger.dy;
+			//VM_EventManager::swipeDistanceX += event.tfinger.dx;
+			//VM_EventManager::swipeDistanceY += event.tfinger.dy;
 
 			break;
 		case SDL_FINGERDOWN:
@@ -91,69 +91,69 @@ int System::VM_EventManager::HandleEvents()
 
 			VM_EventManager::TouchEvent = TOUCH_EVENT_UNKNOWN;
 
-			if (VM_Player::State.isStopped)
-			{
-				// SWIPE_RIGHT
-				if (VM_EventManager::swipeDistanceX > 0.3f) {
-					VM_EventManager::TouchEvent     = TOUCH_EVENT_SWIPE_RIGHT;
-					VM_EventManager::swipeDistanceX = 0.0f;
-				// SWIPE_LEFT
-				} else if (VM_EventManager::swipeDistanceX < -0.3f) {
-					VM_EventManager::TouchEvent     = TOUCH_EVENT_SWIPE_LEFT;
-					VM_EventManager::swipeDistanceX = 0.0f;
-				// SWIPE_DOWN
-				} else if (VM_EventManager::swipeDistanceY > 0.3f) {
-					VM_EventManager::TouchEvent     = TOUCH_EVENT_SWIPE_DOWN;
-					VM_EventManager::swipeDistanceY = 0.0f;
-				// SWIPE_UP
-				} else if (VM_EventManager::swipeDistanceY < -0.3f) {
-					VM_EventManager::TouchEvent     = TOUCH_EVENT_SWIPE_UP;
-					VM_EventManager::swipeDistanceY = 0.0f;
-				}
-			}
+			//if (VM_Player::State.isStopped)
+			//{
+			//	// SWIPE_RIGHT
+			//	if (VM_EventManager::swipeDistanceX > 0.3f) {
+			//		VM_EventManager::TouchEvent     = TOUCH_EVENT_SWIPE_RIGHT;
+			//		VM_EventManager::swipeDistanceX = 0.0f;
+			//	// SWIPE_LEFT
+			//	} else if (VM_EventManager::swipeDistanceX < -0.3f) {
+			//		VM_EventManager::TouchEvent     = TOUCH_EVENT_SWIPE_LEFT;
+			//		VM_EventManager::swipeDistanceX = 0.0f;
+			//	// SWIPE_DOWN
+			//	} else if (VM_EventManager::swipeDistanceY > 0.3f) {
+			//		VM_EventManager::TouchEvent     = TOUCH_EVENT_SWIPE_DOWN;
+			//		VM_EventManager::swipeDistanceY = 0.0f;
+			//	// SWIPE_UP
+			//	} else if (VM_EventManager::swipeDistanceY < -0.3f) {
+			//		VM_EventManager::TouchEvent     = TOUCH_EVENT_SWIPE_UP;
+			//		VM_EventManager::swipeDistanceY = 0.0f;
+			//	}
+			//}
 
-			if (VM_EventManager::TouchEvent == TOUCH_EVENT_UNKNOWN)
-			{
-				// RIGHT-CLICK / LONG PRESS
-				if ((event.tfinger.timestamp - VM_EventManager::touchDownTimestamp) > 500) {
-					VM_EventManager::TouchEvent = TOUCH_EVENT_LONG_PRESS;
-				// DOUBLE-CLICK
-				} else if ((event.tfinger.timestamp - VM_EventManager::touchUpTimestamp) < 300) {
-					VM_EventManager::TouchEvent = TOUCH_EVENT_DOUBLE_TAP;
-				// NORMAL
-				} else {
-					VM_EventManager::TouchEvent = TOUCH_EVENT_NORMAL;
-				}
+			//if (VM_EventManager::TouchEvent == TOUCH_EVENT_UNKNOWN)
+			//{
+			// RIGHT-CLICK / LONG PRESS
+			if ((event.tfinger.timestamp - VM_EventManager::touchDownTimestamp) > 500) {
+				VM_EventManager::TouchEvent = TOUCH_EVENT_LONG_PRESS;
+			// DOUBLE-CLICK
+			} else if ((event.tfinger.timestamp - VM_EventManager::touchUpTimestamp) < 300) {
+				VM_EventManager::TouchEvent = TOUCH_EVENT_DOUBLE_TAP;
+			// NORMAL
+			} else {
+				VM_EventManager::TouchEvent = TOUCH_EVENT_NORMAL;
 			}
+			//}
 
 			VM_EventManager::touchDownTimestamp = 0;
 			VM_EventManager::touchUpTimestamp   = event.tfinger.timestamp;
 
-			switch (VM_EventManager::TouchEvent) {
-				case TOUCH_EVENT_SWIPE_UP:
-					listTable->selectRow(listTable->getSelectedRowIndex() + 1);
+			//switch (VM_EventManager::TouchEvent) {
+			//	case TOUCH_EVENT_SWIPE_UP:
+			//		listTable->selectRow(listTable->getSelectedRowIndex() + 1);
 
-					if (!listTable->isRowVisible())
-						listTable->scroll(1);
+			//		if (!listTable->isRowVisible())
+			//			listTable->scroll(1);
 
-					break;
-				case TOUCH_EVENT_SWIPE_DOWN:
-					listTable->selectRow(listTable->getSelectedRowIndex() - 1);
+			//		break;
+			//	case TOUCH_EVENT_SWIPE_DOWN:
+			//		listTable->selectRow(listTable->getSelectedRowIndex() - 1);
 
-					if (!listTable->isRowVisible())
-						listTable->scroll(-1);
+			//		if (!listTable->isRowVisible())
+			//			listTable->scroll(-1);
 
-					break;
-				case TOUCH_EVENT_SWIPE_LEFT:
-					listTable->offsetNext();
-					break;
-				case TOUCH_EVENT_SWIPE_RIGHT:
-					listTable->offsetPrev();
-					break;
-				default:
-					VM_EventManager::handleMouseClick(&event);
-					break;
-			}
+			//		break;
+			//	case TOUCH_EVENT_SWIPE_LEFT:
+			//		listTable->offsetNext();
+			//		break;
+			//	case TOUCH_EVENT_SWIPE_RIGHT:
+			//		listTable->offsetPrev();
+			//		break;
+			//	default:
+			VM_EventManager::handleMouseClick(&event);
+			//		break;
+			//}
 
 			break;
 		#else
