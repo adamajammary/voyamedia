@@ -1197,6 +1197,8 @@ void System::VM_EventManager::WakeLockStart()
 		jniEnvironment->CallStaticVoidMethod(jniClass, jniWakeLockStart);
 
 	VM_Window::StartWakeLock = false;
+
+	SDL_Delay(DELAY_TIME_BACKGROUND);
 }
 
 void System::VM_EventManager::WakeLockStop()
@@ -1209,5 +1211,7 @@ void System::VM_EventManager::WakeLockStop()
 		jniEnvironment->CallStaticVoidMethod(jniClass, jniWakeLockStop);
 
 	VM_Window::StopWakeLock = false;
+
+	SDL_Delay(DELAY_TIME_BACKGROUND);
 }
 #endif
