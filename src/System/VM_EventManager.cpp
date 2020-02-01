@@ -64,17 +64,17 @@ int System::VM_EventManager::HandleEvents()
 	{
 		switch (event.type) {
 		#if defined _android || defined _ios
-		case SDL_FINGERMOTION:
-			VM_Player::CursorLastVisible = SDL_GetTicks();
-			VM_PlayerControls::Show();
+		//case SDL_FINGERMOTION:
+		//	VM_Player::CursorLastVisible = SDL_GetTicks();
+		//	VM_PlayerControls::Show();
 
-			if (!VM_Player::State.isStopped)
-				break;
+		//	if (!VM_Player::State.isStopped)
+		//		break;
 
-			//VM_EventManager::swipeDistanceX += event.tfinger.dx;
-			//VM_EventManager::swipeDistanceY += event.tfinger.dy;
+		//	VM_EventManager::swipeDistanceX += event.tfinger.dx;
+		//	VM_EventManager::swipeDistanceY += event.tfinger.dy;
 
-			break;
+		//	break;
 		case SDL_FINGERDOWN:
 			VM_Player::CursorLastVisible = SDL_GetTicks();
 			VM_PlayerControls::Show();
@@ -117,12 +117,12 @@ int System::VM_EventManager::HandleEvents()
 			// RIGHT-CLICK / LONG PRESS
 			if ((event.tfinger.timestamp - VM_EventManager::touchDownTimestamp) > 500) {
 				VM_EventManager::TouchEvent = TOUCH_EVENT_LONG_PRESS;
-			// DOUBLE-CLICK
-			} else if ((event.tfinger.timestamp - VM_EventManager::touchUpTimestamp) < 300) {
-				VM_EventManager::TouchEvent = TOUCH_EVENT_DOUBLE_TAP;
+			//// DOUBLE-CLICK
+			//} else if ((event.tfinger.timestamp - VM_EventManager::touchUpTimestamp) < 300) {
+			//	VM_EventManager::TouchEvent = TOUCH_EVENT_DOUBLE_TAP;
 			// NORMAL
 			} else {
-				VM_EventManager::TouchEvent = TOUCH_EVENT_NORMAL;
+				VM_EventManager::TouchEvent = TOUCH_EVENT_TAP;
 			}
 			//}
 

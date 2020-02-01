@@ -144,12 +144,13 @@ bool Graphics::VM_Graphics::ButtonPressed(const SDL_Event* mouseEvent, const SDL
 	int positionY = -1;
 
 	if (doubleClicked) {
-		#if defined _android || defined _ios
-			if (VM_EventManager::TouchEvent != TOUCH_EVENT_DOUBLE_TAP)
-				return false;
-		#else
-			if (mouseEvent->button.clicks < 2)
-				return false;
+		//#if defined _android || defined _ios
+		//	if (VM_EventManager::TouchEvent != TOUCH_EVENT_DOUBLE_TAP)
+		//		return false;
+		//#else
+		#if defined _linux || defined _macosx || defined _windows
+		if (mouseEvent->button.clicks < 2)
+			return false;
 		#endif
 	}
 	
