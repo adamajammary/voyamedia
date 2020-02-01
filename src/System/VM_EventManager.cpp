@@ -590,11 +590,9 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 				continue;
 
 			// MUTE
-			if (button->id == "bottom_player_controls_mute") {
+			if (button->id == "bottom_player_controls_mute")
+			{
 				VM_Player::MuteToggle();
-			// VOLUME
-			} else if (button->id == "bottom_player_controls_volume_bar") {
-				VM_PlayerControls::SetVolume(mouseEvent);
 			}
 			else if (!VM_Player::State.isStopped)
 			{
@@ -618,6 +616,23 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 				else if (button->id == "bottom_player_controls_playlist")
 					VM_Player::PlaylistLoopTypeToggle();
 			}
+
+			VM_PlayerControls::Refresh();
+
+			return true;
+		}
+	}
+
+	if ((VM_GUI::Components["bottom_player_controls_volume"] != NULL))
+	{
+		for (auto button : VM_GUI::Components["bottom_player_controls_volume"]->buttons)
+		{
+			if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
+				continue;
+
+			// VOLUME
+			if (button->id == "bottom_player_controls_volume_bar")
+				VM_PlayerControls::SetVolume(mouseEvent);
 
 			VM_PlayerControls::Refresh();
 
