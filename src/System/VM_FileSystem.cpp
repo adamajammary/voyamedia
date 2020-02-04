@@ -304,9 +304,9 @@ int System::VM_FileSystem::CleanThumbs(void* userData)
 		String thumbsDir = VM_FileSystem::GetPathThumbnailsDir();
 	#endif
 	
-	/*Strings thumbFiles = VM_FileSystem::GetDirectoryFiles(thumbsDir);
+	Strings thumbFiles = VM_FileSystem::GetDirectoryFiles(thumbsDir);
 	
-	for (int i = 0; i < (int)thumbFiles.size(); i++)
+	/*for (int i = 0; i < (int)thumbFiles.size(); i++)
 	{
 		if (VM_Window::Quit)
 			break;
