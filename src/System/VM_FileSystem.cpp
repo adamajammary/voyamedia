@@ -306,7 +306,7 @@ int System::VM_FileSystem::CleanThumbs(void* userData)
 	
 	Strings thumbFiles = VM_FileSystem::GetDirectoryFiles(thumbsDir);
 	
-	/*for (int i = 0; i < (int)thumbFiles.size(); i++)
+	for (int i = 0; i < (int)thumbFiles.size(); i++)
 	{
 		if (VM_Window::Quit)
 			break;
@@ -316,7 +316,7 @@ int System::VM_FileSystem::CleanThumbs(void* userData)
 		remove(String(thumbsDir + PATH_SEPERATOR + thumbFiles[i]).c_str());
 	}
 	
-	if (!VM_Window::Quit)
+	/*if (!VM_Window::Quit)
 	{
 		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.clean.thumbs.finished"].c_str());
 
