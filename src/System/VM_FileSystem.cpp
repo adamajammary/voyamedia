@@ -316,13 +316,13 @@ int System::VM_FileSystem::CleanThumbs(void* userData)
 		remove(String(thumbsDir + PATH_SEPERATOR + thumbFiles[i]).c_str());
 	}
 	
-	/*if (!VM_Window::Quit)
-	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.clean.thumbs.finished"].c_str());
+	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.clean.thumbs.finished"].c_str());
 
+	if (!thumbFiles.empty() && !VM_Window::Quit)
+	{
 		VM_GUI::ListTable->refreshRows();
 		VM_FileSystem::RefreshMetaData();
-	}*/
+	}
 
 	if (VM_ThreadManager::Threads[THREAD_CLEAN_THUMBS] != NULL) {
 		VM_ThreadManager::Threads[THREAD_CLEAN_THUMBS]->start     = false;
