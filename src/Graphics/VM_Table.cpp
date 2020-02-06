@@ -1154,7 +1154,18 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 	{
 		VM_Modal::Open(VM_XML::GetAttribute(info->xmlNode, "modal"));
 	}
-	else if (!TMDB_MOVIE_IS_SELECTED && !TMDB_TV_IS_SELECTED)
+	else if (TMDB_MOVIE_IS_SELECTED || TMDB_TV_IS_SELECTED)
+	{
+		for (auto button : this->rows[row])
+		{
+			SDL_Rect area = SDL_Rect(button->backgroundArea);
+			area.y -= offsetY;
+
+			if (VM_Graphics::ButtonPressed(mouseEvent, area, false, true))
+				VM_Modal::Open(VM_XML::GetAttribute(info->xmlNode, "modal"));
+		}
+	}
+	else
 	{
 		// SINGLE-CLICKED PLAY ICON
 		if (thumb->selected && VM_Graphics::ButtonPressed(mouseEvent, areaThumb))
