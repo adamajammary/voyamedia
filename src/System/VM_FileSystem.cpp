@@ -1843,7 +1843,7 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 		#ifdef _ios
 			LIB_UPNP::ifaddrs* addresses = NULL, *address;
 		#else
-			ifaddrs*       addresses = NULL, *address;
+			ifaddrs* addresses = NULL, *address;
 		#endif
 
 		if (getifaddrs(&addresses) == 0)
@@ -1861,10 +1861,8 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 
 				ipAddress = String([ip UTF8String]);
 
-				if ((ipAddress == "127.0.0.1") || (ipAddress == "0.0.0.0") || (ipAddress.substr(0, 8) == "169.254."))
-					continue;
-
-				interfaces.push_back(ipAddress);
+				if ((ipAddress != "127.0.0.1") && (ipAddress != "0.0.0.0") && (ipAddress.substr(0, 8) != "169.254."))
+					interfaces.push_back(ipAddress);
 			}
 		}
 
@@ -1877,35 +1875,34 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 			return interfaces;
 		#endif
 
-		char      hostName[DEFAULT_CHAR_BUFFER_SIZE];
-		addrinfo* addresses = NULL;
-		addrinfo* address   = NULL;
-		addrinfo  hints     = {};
+		const ULONG MAX_ITERATIONS = 3;
 
-		hints.ai_family   = AF_INET;
-		hints.ai_socktype = SOCK_STREAM;
-		hints.ai_protocol = IPPROTO_TCP;
+		ULONG                 flags      = (GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_UNICAST);
+		PIP_ADAPTER_ADDRESSES addresses  = NULL;
+		ULONG                 bufferSize = 15 * KILO_BYTE;
+		ULONG                 iteration  = 0;
+		DWORD                 result     = 0;
 
-		if (gethostname(hostName, DEFAULT_CHAR_BUFFER_SIZE) == 0)
-		{
-			if (getaddrinfo(hostName, "", &hints, &addresses) == 0)
-			{
-				for (address = addresses; address != NULL; address = address->ai_next)
-				{
-					if (address->ai_family != AF_INET)
-						continue;
+		do {
+			addresses = (IP_ADAPTER_ADDRESSES*)malloc(bufferSize);
+			result    = GetAdaptersAddresses(AF_INET, flags, NULL, addresses, &bufferSize);
 
-					ipAddress = String(inet_ntoa(((sockaddr_in*)address->ai_addr)->sin_addr));
+			iteration++;
 
-					if ((ipAddress == "127.0.0.1") || (ipAddress == "0.0.0.0") || (ipAddress.substr(0, 8) == "169.254."))
-						continue;
-
-					interfaces.push_back(ipAddress);
-				}
+			if (result == ERROR_BUFFER_OVERFLOW) {
+				FREE_POINTER(addresses);
+				continue;
 			}
 
-			freeaddrinfo(addresses);
-		}
+			for (PIP_ADAPTER_ADDRESSES address = addresses; address != NULL; address = address->Next) {
+				if ((address->OperStatus == IfOperStatusUp) && (address->IfType != IF_TYPE_SOFTWARE_LOOPBACK))
+					interfaces.push_back(VM_Text::ToUTF8(address->FriendlyName));
+			}
+
+			break;
+		} while ((result == ERROR_BUFFER_OVERFLOW) && (iteration < MAX_ITERATIONS));
+
+		FREE_POINTER(addresses);
 
 		#if defined _windows
 			WSACleanup();

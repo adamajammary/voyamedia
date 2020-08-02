@@ -102,7 +102,7 @@ VM_DBResult Graphics::VM_Table::getNICs()
 	Strings     nics = VM_FileSystem::GetNetworkInterfaces();
 
 	for (const auto &nic : nics) {
-		VM_DBRow row = { { "name", (nic + "/24") }, { "id", "0" }, { "full_path", nic } };
+		VM_DBRow row = { { "name", nic }, { "id", "0" }, { "full_path", nic } };
 		result.push_back(row);
 	}
 
@@ -116,6 +116,12 @@ VM_DBResult Graphics::VM_Table::getResult()
 	if (this->id == "modal_upnp_list_table")
 	{
 		result = this->getNICs();
+
+		// NO NICS
+		if (result.empty()) {
+			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_nics"].c_str());
+			VM_Modal::ShowMessage(VM_Window::StatusString);
+		}
 
 		this->states[VM_Top::Selected].dataIsReady   = true;
 		this->states[VM_Top::Selected].dataRequested = false;

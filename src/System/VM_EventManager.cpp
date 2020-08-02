@@ -546,10 +546,6 @@ bool System::VM_EventManager::isClickedBottomControls(SDL_Event* mouseEvent)
 			if (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE) {
 				snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.share_invalid"].c_str());
 				VM_Modal::ShowMessage(VM_Window::StatusString);
-			// NO NICS
-			} else if (VM_FileSystem::GetNetworkInterfaces().empty()) {
-				snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_nics"].c_str());
-				VM_Modal::ShowMessage(VM_Window::StatusString);
 			// VALID
 			} else {
 				VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));

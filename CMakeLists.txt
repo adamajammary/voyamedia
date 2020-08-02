@@ -38,7 +38,7 @@ elseif (WIN32)
     set(OS     "_windows")
     set(DEFS   "UPNP_INLINE=_inline")
     set(DIRENT "C:/BUILD_TOOLS/dirent")
-    set(LIBS   ${LIBS_LIB} Ws2_32.lib)
+    set(LIBS   ${LIBS_LIB} IPHLPAPI.lib Ws2_32.lib)
     set(RES    "build/windows/VoyaMedia.rc")
 
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT VoyaMedia)

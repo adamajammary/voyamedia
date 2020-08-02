@@ -80,6 +80,7 @@ extern "C"
 	#include <Commdlg.h>							// GetOpenFileNameA(x)
 	#include <direct.h>								// mkdir(x)
 	#include <dirent.h>								// opendir(x)
+	#include <iphlpapi.h>                           // GetAdaptersAddresses
 	#include <Shellapi.h>							// ShellExecuteA(x)
 	#include <Shlobj.h>								// SHBrowseForFolder(), SHGetPathFromIDListA
 #endif

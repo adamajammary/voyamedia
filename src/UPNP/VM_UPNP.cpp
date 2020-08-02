@@ -891,7 +891,7 @@ int UPNP::VM_UPNP::ScanDevices(void* userData)
 	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.upnp"].c_str());
 
 	// INITIALIZE THE VM_UPNP LIBRARY
-	int result = LIB_UPNP::UpnpInit(VM_UPNP::ClientIP.c_str(), 0);
+	int result = LIB_UPNP::UpnpInit2(VM_UPNP::ClientIP.c_str(), 0);
 
 	if ((result != UPNP_E_SUCCESS) && (result != UPNP_E_INIT)) {
 		VM_UPNP::stopClient(result);
@@ -1127,7 +1127,7 @@ int UPNP::VM_UPNP::Start(void* userData)
 	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s UPnP Server [%s] ...", VM_Window::Labels["upnp.starting"].c_str(), VM_UPNP::ServerIP.c_str());
 
 	// INITIALIZE THE UPNP LIBRARY
-	int result = LIB_UPNP::UpnpInit(VM_UPNP::ServerIP.c_str(), 0);
+	int result = LIB_UPNP::UpnpInit2(VM_UPNP::ServerIP.c_str(), 0);
 
 	if ((result != UPNP_E_SUCCESS) && (result != UPNP_E_INIT)) {
 		VM_UPNP::stopServer(result);
@@ -1263,7 +1263,7 @@ int UPNP::VM_UPNP::stopServer(int result)
 	return UPNP_E_SUCCESS;
 }
 
-int UPNP::VM_UPNP::webServerClose(void* fileHandle, const void* cookie)
+int UPNP::VM_UPNP::webServerClose(void* fileHandle, const void* cookie, const void* request_cookie)
 {
 	VM_UpnpFile* file = static_cast<VM_UpnpFile*>(fileHandle);
 
@@ -1282,7 +1282,7 @@ int UPNP::VM_UPNP::webServerClose(void* fileHandle, const void* cookie)
 	return UPNP_E_SUCCESS;
 }
 
-int UPNP::VM_UPNP::webServerGetInfo(const char* filename, LIB_UPNP::UpnpFileInfo* info, const void* cookie)
+int UPNP::VM_UPNP::webServerGetInfo(const char* filename, LIB_UPNP::UpnpFileInfo* info, const void* cookie, const void** request_cookie)
 { 
 	if ((filename == NULL) || (info == NULL) || VM_UPNP::files.empty())
 		return ERROR_INVALID_ARGUMENTS;
@@ -1315,7 +1315,7 @@ int UPNP::VM_UPNP::webServerGetInfo(const char* filename, LIB_UPNP::UpnpFileInfo
 	return UPNP_E_SUCCESS;
 }
 
-void* UPNP::VM_UPNP::webServerOpen(const char* filename, LIB_UPNP::UpnpOpenFileMode mode, const void* cookie)
+void* UPNP::VM_UPNP::webServerOpen(const char* filename, LIB_UPNP::UpnpOpenFileMode mode, const void* cookie, const void* request_cookie)
 { 
 	if ((filename == NULL) || (mode != LIB_UPNP::UPNP_READ))
 		return NULL;
@@ -1341,7 +1341,7 @@ void* UPNP::VM_UPNP::webServerOpen(const char* filename, LIB_UPNP::UpnpOpenFileM
 	return NULL;
 }
 
-int UPNP::VM_UPNP::webServerRead(void* fileHandle, char* buffer, size_t bufferSize, const void* cookie)
+int UPNP::VM_UPNP::webServerRead(void* fileHandle, char* buffer, size_t bufferSize, const void* cookie, const void* request_cookie)
 {
 	if ((fileHandle == NULL) || (buffer == NULL))
 		return 0;
@@ -1364,9 +1364,9 @@ int UPNP::VM_UPNP::webServerRead(void* fileHandle, char* buffer, size_t bufferSi
 }
 
 #if defined _windows
-int UPNP::VM_UPNP::webServerSeek(void* fileHandle, int64_t offset, int origin, const void* cookie)
+int UPNP::VM_UPNP::webServerSeek(void* fileHandle, int64_t offset, int origin, const void* cookie, const void* request_cookie)
 #else
-int UPNP::VM_UPNP::webServerSeek(void* fileHandle, off_t offset, int origin, const void* cookie)
+int UPNP::VM_UPNP::webServerSeek(void* fileHandle, off_t offset, int origin, const void* cookie, const void* request_cookie)
 #endif
 {
 	if (fileHandle == NULL)
@@ -1396,7 +1396,7 @@ int UPNP::VM_UPNP::webServerSeek(void* fileHandle, off_t offset, int origin, con
 	return UPNP_E_SUCCESS;
 }
 
-int UPNP::VM_UPNP::webServerWrite(void* fileHandle, char* buffer, size_t bufferSize, const void* cookie)
+int UPNP::VM_UPNP::webServerWrite(void* fileHandle, char* buffer, size_t bufferSize, const void* cookie, const void* request_cookie)
 {
 	return ERROR_UNKNOWN;
 }
