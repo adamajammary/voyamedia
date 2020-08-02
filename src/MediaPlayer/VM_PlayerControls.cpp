@@ -295,7 +295,7 @@ int MediaPlayer::VM_PlayerControls::Seek(SDL_Event* mouseEvent)
 	bool    seekBinary;
 
 	if (!PICTURE_IS_SELECTED && (VM_Player::FormatContext != NULL))
-		seekBinary = (SEEK_FLAGS(VM_Player::FormatContext->iformat) == AVSEEK_FLAG_BYTE);
+		seekBinary = (AV_SEEK_FLAGS(VM_Player::FormatContext->iformat) == AVSEEK_FLAG_BYTE);
 	else
 		seekBinary = false;
 

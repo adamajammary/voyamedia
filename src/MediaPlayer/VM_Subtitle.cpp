@@ -16,8 +16,8 @@ MediaPlayer::VM_Subtitle::VM_Subtitle()
 	this->offsetX        = false;
 	this->offsetY        = false;
 	this->position       = {};
-	this->ptsEnd         = 0;
-	this->ptsStart       = 0;
+	this->pts.end        = 0;
+	this->pts.start      = 0;
 	this->rotation       = 0.0;
 	this->rotationPoint  = {};
 	this->skip           = false;
@@ -47,8 +47,8 @@ void MediaPlayer::VM_Subtitle::copy(const VM_Subtitle &subtitle)
 	this->drawRect       = subtitle.drawRect;
 	this->font           = subtitle.font;
 	this->position       = subtitle.position;
-	this->ptsStart       = subtitle.ptsStart;
-	this->ptsEnd         = subtitle.ptsEnd;
+	this->pts.start      = subtitle.pts.start;
+	this->pts.end        = subtitle.pts.end;
 	this->rotation       = subtitle.rotation;
 	this->rotationPoint  = subtitle.rotationPoint;
 	this->subRect        = subtitle.subRect;
@@ -90,8 +90,8 @@ MediaPlayer::VM_Subtitles MediaPlayer::VM_Subtitle::getDuplicateSubs(const VM_Su
 	{
 		if ((sub == NULL) ||
 			(this->id       == sub->id) ||
-			(this->ptsStart != sub->ptsStart) ||
-			(this->ptsEnd   != sub->ptsEnd) ||
+			(this->pts.start != sub->pts.start) ||
+			(this->pts.end   != sub->pts.end) ||
 			((this->text    != sub->text) && (text3 != VM_SubFontEngine::RemoveFormatting(sub->text3))) ||
 			(std::atoi(this->textSplit[0].c_str()) == std::atoi(sub->textSplit[0].c_str())))
 		{
@@ -150,43 +150,38 @@ SDL_Point MediaPlayer::VM_Subtitle::getShadow()
 	return {};
 }
 
-int MediaPlayer::VM_Subtitle::setPTS(LIB_FFMPEG::AVPacket* packet, LIB_FFMPEG::AVSubtitle &subFrame, LIB_FFMPEG::AVStream* subStream)
+bool MediaPlayer::VM_Subtitle::isAlignedBottom()
 {
-	if ((packet == NULL) || (subStream == NULL))
-		return ERROR_INVALID_ARGUMENTS;
+	VM_SubAlignment a = this->getAlignment();
+	return ((a == SUB_ALIGN_BOTTOM_LEFT) || (a == SUB_ALIGN_BOTTOM_RIGHT) || (a == SUB_ALIGN_BOTTOM_CENTER));
+}
 
-	bool useFrame = (packet->dts < subStream->cur_dts);
+bool MediaPlayer::VM_Subtitle::isAlignedCenter()
+{
+	VM_SubAlignment a = this->getAlignment();
+	return ((a == SUB_ALIGN_BOTTOM_CENTER) || (a == SUB_ALIGN_TOP_CENTER) || (a == SUB_ALIGN_MIDDLE_CENTER));
+}
 
-	// NO DURATION - UPDATE END PTS
-	if ((packet->duration == 0) && (packet->size < 100))
-	{
-		if (useFrame)
-			this->ptsEnd = (double)((double)subFrame.pts / AV_TIME_BASE_D);
-		else
-			this->ptsEnd = (double)((double)packet->pts * LIB_FFMPEG::av_q2d(subStream->time_base));
+bool MediaPlayer::VM_Subtitle::isAlignedLeft()
+{
+	VM_SubAlignment a = this->getAlignment();
+	return ((a == SUB_ALIGN_BOTTOM_LEFT) || (a == SUB_ALIGN_TOP_LEFT) || (a == SUB_ALIGN_MIDDLE_LEFT));
+}
 
-		return RESULT_OK;
-	}
+bool MediaPlayer::VM_Subtitle::isAlignedMiddle()
+{
+	VM_SubAlignment a = this->getAlignment();
+	return ((a == SUB_ALIGN_MIDDLE_LEFT) || (a == SUB_ALIGN_MIDDLE_RIGHT) || (a == SUB_ALIGN_MIDDLE_CENTER));
+}
 
-	// SET START PTS
-	if (useFrame) {
-		this->ptsStart = (double)((double)(subFrame.pts - subStream->start_time) / AV_TIME_BASE_D);
-	} else {
-		this->ptsStart = (double)((double)(packet->pts  - subStream->start_time) * LIB_FFMPEG::av_q2d(subStream->time_base));
+bool MediaPlayer::VM_Subtitle::isAlignedRight()
+{
+	VM_SubAlignment a = this->getAlignment();
+	return ((a == SUB_ALIGN_BOTTOM_RIGHT) || (a == SUB_ALIGN_TOP_RIGHT) || (a == SUB_ALIGN_MIDDLE_RIGHT));
+}
 
-		if (this->ptsStart < VM_Player::ProgressTime)
-			this->ptsStart += (double)((double)subStream->start_time * LIB_FFMPEG::av_q2d(subStream->time_base));
-	}
-
-	if (subFrame.start_display_time > 0)
-		this->ptsStart += (double)((double)subFrame.start_display_time / (double)ONE_SECOND_MS);
-
-	// SET END PTS
-	if ((packet->duration > 0) && (subFrame.end_display_time > 0))
-		this->ptsEnd = (double)(this->ptsStart + (double)((double)subFrame.end_display_time / (double)ONE_SECOND_MS));
-	// NO DURATION - SET DEFAULT END PTS BASED ON PACKET SIZE
-	else
-		this->ptsEnd = (this->ptsStart + SUB_MAX_DURATION);
-
-	return RESULT_OK;
+bool MediaPlayer::VM_Subtitle::isAlignedTop()
+{
+	VM_SubAlignment a = this->getAlignment();
+	return ((a == SUB_ALIGN_TOP_LEFT) || (a == SUB_ALIGN_TOP_RIGHT) || (a == SUB_ALIGN_TOP_CENTER));
 }

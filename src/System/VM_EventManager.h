@@ -20,15 +20,14 @@ namespace VoyaMedia
 
 		private:
 			#if defined _android || defined _ios
-				static float    swipeDistanceX;
-				static float    swipeDistanceY;
+				//static float    swipeDistanceX;
+				//static float    swipeDistanceY;
 				static uint32_t touchDownTimestamp;
 				static uint32_t touchUpTimestamp;
 			#endif
 
 		public:
 			static int HandleEvents();
-			static int HandleEventsMobile(void* userdata, SDL_Event* deviceEvent);
 			static int HandleMediaPlayer();
 
 			#if defined _android
@@ -37,6 +36,10 @@ namespace VoyaMedia
 				static void WakeLockStop();
 			#elif defined _ios
 				static int ConfigureAudioSessionIOS();
+			#endif
+
+			#if defined _android || defined _ios
+				static int HandleEventsMobile(void* userdata, SDL_Event* deviceEvent);
 			#endif
 
 		private:
@@ -53,7 +56,6 @@ namespace VoyaMedia
 			static bool isKeyPressedPlayer(SDL_Keycode key, uint16_t mod);
 			static bool isKeyPressedTable(SDL_Keycode key, Graphics::VM_Table* table);
 			static bool isKeyPressedTextInput(SDL_Keycode key, uint16_t mod);
-			static bool isScrollDragged(SDL_Event* mouseEvent, Graphics::VM_Table* table);
 
 			#if defined _ios
 				static int handleHeadSetUnpluggedIOS(NSNotification* notification);

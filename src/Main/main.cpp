@@ -35,7 +35,9 @@ int main(const int argc, char* argv[])
 	}
 
 	// Handle special mobile events (Android/iOS)
-	SDL_SetEventFilter(VM_EventManager::HandleEventsMobile, NULL);
+	#if defined _android || defined _ios
+		SDL_SetEventFilter(VM_EventManager::HandleEventsMobile, NULL);
+	#endif
 
 	// Main loop: Handles events and UI rendering
 	while (!VM_Window::Quit)
@@ -64,7 +66,7 @@ int main(const int argc, char* argv[])
 				VM_GUI::ListTable->refresh();
 
 			// Release allocated resources for the graphics renderer
-			FREE_RENDERER(VM_Window::Renderer);
+			//FREE_RENDERER(VM_Window::Renderer);
 
 			// Sleep to save system resource usage
 			SDL_Delay(DELAY_TIME_BACKGROUND);
@@ -94,6 +96,10 @@ int main(const int argc, char* argv[])
 		// Exit fullscreen mode in main UI thread (can be requested from other threads)
 		if (VM_Player::State.fullscreenExit)
 			VM_Player::FullScreenExit();
+
+		// Save window dimension and location to DB
+		if (VM_Window::SaveToDB)
+			VM_Window::Save();
 
 		// Open media file if requested via command line arguments
 		if (openFile)

@@ -28,18 +28,15 @@ list_table.text-color=#FFFFFFFF
 list_table_file.text-color=#FFFFFFFF
 
 list_table_scrollbar.background-color=#101010FF
-list_table_scrollbar_bar.background-color=#FFFFFFFF
-list_table_scrollbar_thumb.background-color=#101010FF
-list_table_scrollbar_thumb.border-color=#FFFFFFFF
+list_table_scrollbar_bar.background-color=#202020FF
 
-list_table_bottom.background-color=#202020FF
+list_table_bottom.background-color=#101010FF
 list_table_bottom.border-color=#101010FF
+list_details_text.background-color=#202020FF
 
 bottom.background-color=#101010FF
 
 bottom_player.background-color=#000000FF
-
-#bottom_player_pause.background-color=#00000000
 
 bottom_player_controls_middle_bar.background-color=#303030FF
 bottom_player_controls_middle_thumb.background-color=#1482FFFF
@@ -65,7 +62,6 @@ modal_message_text.text-color=#FFFFFFFF
 # MODAL - DETAILS
 
 modal_details_thumb.background-color=#000000FF
-#modal_details_thumb.border-color=#303030FF
 
 modal_details_text.text-color=#FFFFFFFF
 modal_details_text_details.text-color=#FFFFFFFF

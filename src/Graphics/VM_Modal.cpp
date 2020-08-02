@@ -157,12 +157,12 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 	{
 		if (buttonID == "modal_right_click_remove_file")
 		{
-			String name = "";
-			int    mediaID   = 0;
+			String name    = "";
+			int    mediaID = 0;
 
 			if (!selectedGuiRow.empty()) {
-				mediaID = selectedGuiRow[0]->mediaID;
-				name    = selectedGuiRow[0]->getText();
+				mediaID = selectedGuiRow[1]->mediaID;
+				name    = selectedGuiRow[1]->getText();
 			}
 
 			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.removing"].c_str(), name.c_str());
@@ -250,8 +250,8 @@ int Graphics::VM_Modal::open()
 	VM_Modal::dimensions.h = (int)(std::atof(VM_XML::GetAttribute(VM_Modal::node, "height").c_str()) * VM_Window::Display.scaleFactor);
 
 	if (VM_Modal::centered) {
-		VM_Modal::dimensions.x = ALIGN_CENTERED(0, VM_Window::Dimensions.w, VM_Modal::dimensions.w);
-		VM_Modal::dimensions.y = ALIGN_CENTERED(0, VM_Window::Dimensions.h, VM_Modal::dimensions.h);
+		VM_Modal::dimensions.x = ALIGN_CENTER(0, VM_Window::Dimensions.w, VM_Modal::dimensions.w);
+		VM_Modal::dimensions.y = ALIGN_CENTER(0, VM_Window::Dimensions.h, VM_Modal::dimensions.h);
 	} else {
 		VM_Modal::dimensions.x = std::atoi(VM_XML::GetAttribute(VM_Modal::node, "x").c_str());
 		VM_Modal::dimensions.y = std::atoi(VM_XML::GetAttribute(VM_Modal::node, "y").c_str());
@@ -294,12 +294,9 @@ int Graphics::VM_Modal::Refresh()
 	VM_Modal::dimensions.h = (int)(std::atof(VM_XML::GetAttribute(VM_Modal::node, "height").c_str()) * VM_Window::Display.scaleFactor);
 
 	if (VM_Modal::centered) {
-		VM_Modal::dimensions.x = ALIGN_CENTERED(0, VM_Window::Dimensions.w, VM_Modal::dimensions.w);
-		VM_Modal::dimensions.y = ALIGN_CENTERED(0, VM_Window::Dimensions.h, VM_Modal::dimensions.h);
+		VM_Modal::dimensions.x = ALIGN_CENTER(0, VM_Window::Dimensions.w, VM_Modal::dimensions.w);
+		VM_Modal::dimensions.y = ALIGN_CENTER(0, VM_Window::Dimensions.h, VM_Modal::dimensions.h);
 	}
-
-	if (VM_Modal::Components["list_table_scrollbar_thumb"] != NULL)
-		VM_Modal::Components["list_table_scrollbar_thumb"]->backgroundArea.h = 0;
 
 	VM_Modal::rootPanel->backgroundArea = VM_Modal::dimensions;
 

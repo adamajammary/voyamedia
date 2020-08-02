@@ -19,15 +19,15 @@ namespace VoyaMedia
 
 		struct VM_TableState
 		{
-			bool   dataIsReady;
-			bool   dataRequested;
-			int    offset;
-			String pageToken;
-			int    scrollOffset;
-			String searchString;
-			int    selectedRow;
-			String sortColumn;
-			String sortDirection;
+			bool   dataIsReady   = false;
+			bool   dataRequested = false;
+			int    offset        = 0;
+			String pageToken     = "";
+			int    scrollOffset  = 0;
+			String searchString  = "";
+			int    selectedRow   = 0;
+			String sortColumn    = "";
+			String sortDirection = "ASC";
 
 			bool isValidSelectedRow(const std::vector<VM_Buttons> &rows)
 			{
@@ -71,10 +71,9 @@ namespace VoyaMedia
 			VM_Button*              playIcon;
 			std::vector<VM_Buttons> rows;
 			VM_Component*           scrollBar;
-			bool                    scrollDrag;
 
 		private:
-			int                   limit;
+			const int             limit = 10;
 			int                   maxRows;
 			String                pageTokenPrev;
 			String                pageTokenNext;
@@ -96,9 +95,11 @@ namespace VoyaMedia
 			String        getSelectedShoutCast();
 			String        getSelectedYouTube();
 			VM_Buttons    getSelectedRow();
+			int           getSelectedRowIndex();
 			String        getSort();
 			String        getSQL();
 			VM_TableState getState();
+			bool          isRowVisible();
 			bool          offsetNext();
 			bool          offsetPrev();
 			int           refresh();
@@ -111,18 +112,12 @@ namespace VoyaMedia
 			void          restoreState(const VM_TableState &state);
 			void          setData();
 			void          setHeader();
-			void          scrollHome();
-			void          scrollEnd();
-			void          scrollNext();
-			void          scrollPrev();
-			void          scrollPageNext();
-			void          scrollPagePrev();
-			bool          scrollPage(SDL_Event* mouseEvent);
+			int           scroll(int offset);
 			void          scrollTo(int row);
-			bool          scrollThumb(SDL_Event* mouseEvent);
 			void          selectNext(bool loop = false);
 			void          selectPrev(bool loop = false);
 			void          selectRandom();
+			void          selectRow(int row);
 			bool          selectRow(SDL_Event* mouseEvent);
 			void          setSearch(const String &searchString, bool saveDB = false);
 			int           setRows(bool temp);
@@ -133,6 +128,8 @@ namespace VoyaMedia
 			void                  init(const String &id);
 			Database::VM_DBResult getNICs();
 			Database::VM_DBResult getResult();
+			Database::VM_DBResult getResultLimited(const Database::VM_DBResult &result);
+			int                   getRowHeight();
 			int                   getRowsPerPage();
 			Database::VM_DBResult getShoutCast();
 			Database::VM_DBResult getTMDB(VM_MediaType mediaType);
@@ -141,9 +138,6 @@ namespace VoyaMedia
 			Database::VM_DBResult getYouTube();
 			void                  resetRows();
 			void                  resetScrollPane();
-			int                   scroll(int offset);
-			int                   scroll(SDL_Event* mouseEvent);
-			bool                  selectRow(int row);
 			void                  setRows();
 
 		};

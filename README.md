@@ -41,7 +41,7 @@ Voya Media is a cross-platform media player that easily plays your music, pictur
 
 Platform | Minimum Version | CPU Architecture
 -------- | --------------- | ----------------
-[Android](https://play.google.com/store/apps/details?id=com.voyamedia.android) | 8.0 (Oreo) | ARMv8/ARM64
+[Android](https://play.google.com/store/apps/details?id=com.voyamedia.android) | 9.0 (Pie) | ARMv8/ARM64
 [iOS](https://itunes.apple.com/us/app/voya-media/id1009917954) | 10.0 | ARMv8/ARM64
 [Linux](https://sourceforge.net/projects/voyamedia/files/VoyaMedia/3.x/Linux/) | Fedora 20, Ubuntu 14.04 | x86_64
 [Mac OS X](https://itunes.apple.com/us/app/voya-media/id1009333985) | 10.11 (El Capitan) | x86_64
@@ -52,17 +52,17 @@ Platform | Minimum Version | CPU Architecture
 
 Library | Version | License
 ------- | ------- | -------
-[FFmpeg](https://ffmpeg.org/) | [4.1.3](https://www.ffmpeg.org/releases/ffmpeg-4.1.3.tar.gz) | [LGPL v.2.1 (GNU Lesser General Public License)](https://ffmpeg.org/legal.html)
+[FFmpeg](https://ffmpeg.org/) | [4.2.2](https://www.ffmpeg.org/releases/ffmpeg-4.2.2.tar.bz2) | [LGPL v.2.1 (GNU Lesser General Public License)](https://ffmpeg.org/legal.html)
 [FreeImage](http://freeimage.sourceforge.net/download.html) | [3.18.0](http://downloads.sourceforge.net/freeimage/FreeImage3180.zip) | [FIPL (FreeImage Public License)](http://freeimage.sourceforge.net/license.html)
-[Freetype2](https://www.freetype.org/) | [2.4.12](https://sourceforge.net/projects/freetype/files/freetype2/2.10.0/freetype-2.10.0.tar.bz2) | [FTL (FreeType License)](https://www.freetype.org/license.html)
+[Freetype2](https://www.freetype.org/) | [2.10.1](https://sourceforge.net/projects/freetype/files/freetype2/2.10.1/freetype-2.10.1.tar.gz) | [FTL (FreeType License)](https://www.freetype.org/license.html)
 [libCURL](https://curl.haxx.se/libcurl/) | [7.64.1](https://curl.haxx.se/download/curl-7.64.1.tar.gz) | [MIT/X derivate license](https://curl.haxx.se/docs/copyright.html)
 [libUPNP](http://pupnp.sourceforge.net/) | [1.8.4](https://sourceforge.net/projects/pupnp/files/pupnp/libupnp-1.8.4/libupnp-1.8.4.tar.bz2/download) | [BSD (Berkeley Standard Distribution)](http://pupnp.sourceforge.net/#license)
-[libXML2](http://xmlsoft.org/) | [2.9.9](http://xmlsoft.org/sources/libxml2-2.9.9.tar.gz) | [MIT License](https://opensource.org/licenses/mit-license.html)
+[libXML2](http://xmlsoft.org/) | [2.9.10](http://xmlsoft.org/sources/libxml2-2.9.10.tar.gz) | [MIT License](https://opensource.org/licenses/mit-license.html)
 [M's JSON parser](https://sourceforge.net/projects/mjson/) | [1.7.0](https://sourceforge.net/projects/mjson/files/mjson/mjson-1.7.0.tar.gz/download) | [LGPL v.2.1 (GNU Lesser General Public License)](https://sourceforge.net/projects/mjson/)
 [OpenSSL](https://www.openssl.org/) | [1.1.1b](https://www.openssl.org/source/openssl-1.1.1b.tar.gz) | [Dual (OpenSSL / Original SSLeay License)](https://www.openssl.org/source/license.html)
 [SDL2](https://www.libsdl.org/) | [2.0.9](https://www.libsdl.org/release/SDL2-2.0.9.tar.gz) | [zlib license](https://www.libsdl.org/license.php)
 [SDL2_ttf](https://www.libsdl.org/projects/SDL_ttf/) | [2.0.15](https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-2.0.15.tar.gz) | [zlib license](https://www.libsdl.org/license.php)
-[SQLite](https://www.sqlite.org/) | [3.28.0](https://www.sqlite.org/2019/sqlite-autoconf-3280000.tar.gz) | [Public Domain](https://www.sqlite.org/copyright.html)
+[SQLite](https://www.sqlite.org/) | [3.31.0](https://www.sqlite.org/2020/sqlite-autoconf-3310000.tar.gz) | [Public Domain](https://www.sqlite.org/copyright.html)
 [zLib](http://www.zlib.net/) | [1.2.11](https://downloads.sourceforge.net/project/libpng/zlib/1.2.11/zlib-1.2.11.tar.gz) | [zlib license](http://www.zlib.net/zlib_license.html)
 
 ## Fonts

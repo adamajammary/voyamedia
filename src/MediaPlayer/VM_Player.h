@@ -46,6 +46,11 @@ namespace VoyaMedia
 			int                   volumeBeforeMute;
 			int                   writtenToStream;
 
+			VM_PlayerAudioContext()
+			{
+				this->reset();
+			}
+
 			void reset()
 			{
 				this->bufferOffset      = 0;
@@ -94,6 +99,11 @@ namespace VoyaMedia
 				umap<String, TTF_Font*> styleFonts;
 			#endif
 
+			VM_PlayerSubContext()
+			{
+				this->reset();
+			}
+
 			void reset()
 			{
 				this->available        = true;
@@ -128,6 +138,11 @@ namespace VoyaMedia
 			LIB_FFMPEG::AVStream* stream;
 			Graphics::VM_Texture* texture;
 			SDL_Thread*           thread;
+
+			VM_PlayerVideoContext()
+			{
+				this->reset();
+			}
 
 			void reset()
 			{
@@ -164,6 +179,14 @@ namespace VoyaMedia
 			bool        quit;
 			Strings     urls;
 
+			VM_PlayerState()
+			{
+				this->isStopped = true;
+				this->quit      = false;
+
+				this->Reset();
+			}
+
 			void Reset()
 			{
 				this->openFile        = false;
@@ -173,8 +196,6 @@ namespace VoyaMedia
 				this->fullscreenExit  = false;
 				this->isPlaying       = false;
 				this->isPaused        = false;
-				this->isStopped       = true;
-				this->quit            = false;
 
 				this->urls.clear();
 			}
@@ -211,14 +232,15 @@ namespace VoyaMedia
 			static uint32_t                     pictureProgressTime;
 			static double                       progressTimeLast;
 			static bool                         refreshSub;
-			static bool                         refreshVideo;
 			static LIB_FFMPEG::SwrContext*      resampleContext;
 			static LIB_FFMPEG::SwsContext*      scaleContextSub;
 			static LIB_FFMPEG::SwsContext*      scaleContextVideo;
 			static bool                         seekRequested;
+			static bool                         pausedVideoSeekRequested;
 			static int64_t                      seekToPosition;
 			static VM_PlayerSubContext          subContext;
 			static VM_PlayerVideoContext        videoContext;
+			static bool                         videoFrameAvailable;
 
 		public:
 			static int                        Close();
@@ -268,7 +290,9 @@ namespace VoyaMedia
 			static void                  closeThreads();
 			static int                   closeVideo();
 			static int                   cursorHide();
+			static bool                  isPacketQueueFull(VM_MediaType streamType);
 			static int                   openAudio();
+			static SDL_AudioDeviceID     openAudioDevice(SDL_AudioSpec& wantedSpecs);
 			static int                   openFormatContext();
 			static int                   openPlaylist(bool stop, bool next);
 			static int                   openStreams();
@@ -280,10 +304,15 @@ namespace VoyaMedia
 			static LIB_FFMPEG::AVPacket* packetGet(VM_Packets &packetQueue, SDL_mutex* mutex, SDL_cond* condition, bool &queueAvailable);
 			static int                   packetsClear(VM_Packets &packetQueue, SDL_mutex* mutex, SDL_cond* condition, bool &queueAvailable);
 			static int                   renderSub(const SDL_Rect &location);
-			static int                   renderSubBitmap(const SDL_Rect &location);
-			static int                   renderSubText(const SDL_Rect &location);
-			static int                   renderVideo(const SDL_Rect &location);
+			static void                  renderPicture();
+			static void                  renderSubBitmap(const SDL_Rect &location);
+			static void                  renderSubText(const SDL_Rect &location);
+			static void                  renderVideo(const SDL_Rect &location);
+			static int                   renderVideoCreateTexture();
+			static int                   renderVideoScaleRenderLocation(const SDL_Rect &location);
+			static int                   renderVideoUpdateTexture();
 			static void                  reset();
+			static void                  seek();
 			static void                  threadAudio(void* userData, Uint8* outputStream, int outputStreamSize);
 			static int                   threadPackets(void* userData);
 			static int                   threadSub(void* userData);

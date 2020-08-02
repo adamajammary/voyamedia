@@ -8,20 +8,19 @@
     <panel id="modal_middle" orientation="vertical" border-width="1">
       <panel id="list">
         <table id="modal_upnp_list_table" border-width="1">
-          <button id="modal_upnp_thumb" height="15%" width="0"></button>
-          <button id="modal_upnp_nic" height="15%" halign="center" valign="middle">%upnp.nic</button>
-          <button id="modal_upnp_details" height="15%" width="0"></button>
+          <button id="modal_upnp_thumb" height="16%" width="0"></button>
+          <button id="modal_upnp_nic" height="16%" halign="center" valign="middle">%upnp.nic</button>
+          <button id="modal_upnp_details" height="16%" width="0"></button>
         </table>
-        <panel id="list_table_scrollbar" orientation="vertical" width="30" border-width="1">
-          <button id="list_table_scrollbar_prev" halign="center" valign="middle" width="100%" height="width" image-file="triangle-1-512.png" image-width="80%" image-height="image-width"></button>
+        <panel id="list_table_scrollbar" orientation="vertical" width="25">
+          <button id="list_table_scrollbar_prev" halign="center" valign="middle" width="100%" height="width" image-file="prev-3-512.png" image-width="50%" image-height="image-width"></button>
           <button id="list_table_scrollbar_bar"></button>
-          <button id="list_table_scrollbar_thumb" height="0" border-width="1"></button>
-          <button id="list_table_scrollbar_next" halign="center" valign="middle" width="100%" height="width" image-file="triangle-2-512.png" image-width="80%" image-height="image-width"></button>
+          <button id="list_table_scrollbar_next" halign="center" valign="middle" width="100%" height="width" image-file="next-3-512.png" image-width="50%" image-height="image-width"></button>
         </panel>
       </panel>
       <panel id="list_table_bottom" height="25" valign="middle">
         <button id="list_offset_prev" halign="center" valign="middle" height="100%" width="height" image-file="prev-2-512.png" image-width="50%" image-height="image-width"></button>
-        <button id="list_details_text" halign="center" valign="middle"></button>
+        <button id="list_details_text" halign="center" valign="middle" border-width="1"></button>
         <button id="list_offset_next" halign="center" valign="middle" height="100%" width="height" image-file="next-2-512.png" image-width="50%" image-height="image-width"></button>
       </panel>
     </panel>

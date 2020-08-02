@@ -12,7 +12,7 @@ namespace VoyaMedia
 		class VM_Display
 		{
 		public:
-			VM_Display()  {}
+			VM_Display();
 			~VM_Display() {}
 
 		public:
@@ -29,7 +29,7 @@ namespace VoyaMedia
 
 		public:
 			SDL_Rect getDimensions();
-			int      getDisplayMode();
+			int      setDisplayMode();
 			float    getDPI();
 
 		};

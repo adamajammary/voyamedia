@@ -183,7 +183,8 @@ namespace VoyaMedia
 		#define min(a, b) (((a) < (b)) ? (a) : (b))
 	#endif
 
-	#define ALIGN_CENTERED(offset, totalSize, size) max(0, ((offset) + (max(0, ((totalSize) - (size))) / 2)))
+	#define ALIGN_CENTER(o, ts, s) max(0, ((o) + (max(0, ((ts) - (s))) / 2)))
+	#define AVFRAME_VALID(f)       ((f != NULL) && (f->data[0] != NULL) && (f->linesize[0] > 0) && (f->width > 0) && (f->height > 0))
 	#define BIT_AT_POS(i, p)       (((i) >> p) & 1)
 	#define CAP(x, l, h)           (min(max((x), (l)), (h)))
 	#define CLOSE_CURL(c)          if (c != NULL) { curl_easy_reset(c); curl_easy_cleanup(c); c = NULL; }
@@ -222,6 +223,8 @@ namespace VoyaMedia
 	#define FREE_WINDOW(w)         if (w != NULL) { SDL_DestroyWindow(w);  w = NULL; }
 	#define FREE_XML_DOC(d)        if (d != NULL) { LIB_XML::xmlFreeDoc(d);    d = NULL; }
 	#define MATH_ROUND_UP(a)       (int)(a + 0.5)
+	#define AV_SEEK_FLAGS(i)       (((i->flags & AVFMT_TS_DISCONT) || !i->read_seek) ? AVSEEK_FLAG_BYTE : 0)
+	#define AV_START_FLAGS(i)      ((i->flags & (AVFMT_NOBINSEARCH | AVFMT_NOGENSEARCH | AVFMT_NO_BYTE_SEEK)) && !i->read_seek)
 	#define AUDIO_IS_SELECTED      (VM_Top::Selected == MEDIA_TYPE_AUDIO)
 	#define PICTURE_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_PICTURE)
 	#define VIDEO_IS_SELECTED      (VM_Top::Selected == MEDIA_TYPE_VIDEO)
@@ -229,7 +232,6 @@ namespace VoyaMedia
 	#define SHOUTCAST_IS_SELECTED  (VM_Top::Selected == MEDIA_TYPE_SHOUTCAST)
 	#define TMDB_MOVIE_IS_SELECTED (VM_Top::Selected == MEDIA_TYPE_TMDB_MOVIE)
 	#define TMDB_TV_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_TMDB_TV)
-	#define SEEK_FLAGS(i)          (((i->flags & AVFMT_TS_DISCONT) || (i->read_seek == NULL)) ? AVSEEK_FLAG_BYTE : 0)
 
 	#if defined _windows
 		#define OPEN_FONT(f, s) TTF_OpenFontRW(VM_FileSystem::FileOpenSDLRWops(_wfopen(f, L"rb")), 1, s)
@@ -351,9 +353,9 @@ namespace VoyaMedia
 
 	enum VM_TouchEventType
 	{
-		TOUCH_EVENT_UNKNOWN = -1,
-		TOUCH_EVENT_DOUBLE_TAP, TOUCH_EVENT_LONG_PRESS, TOUCH_EVENT_NORMAL, 
-		TOUCH_EVENT_SWIPE_DOWN, TOUCH_EVENT_SWIPE_LEFT, TOUCH_EVENT_SWIPE_RIGHT, TOUCH_EVENT_SWIPE_UP
+		TOUCH_EVENT_UNKNOWN = -1, TOUCH_EVENT_TAP, TOUCH_EVENT_LONG_PRESS,
+		//TOUCH_EVENT_DOUBLE_TAP,
+		//TOUCH_EVENT_SWIPE_DOWN, TOUCH_EVENT_SWIPE_LEFT, TOUCH_EVENT_SWIPE_RIGHT, TOUCH_EVENT_SWIPE_UP
 	};
 
 	enum VM_UrlType
@@ -389,14 +391,14 @@ namespace VoyaMedia
 	typedef umap<String, WString> WStringMap;
 	typedef umap<int, String>     IntStringMap;
 	
-	const String APP_COMPANY          = "Adam A. Jammary (Jammary Consulting)";
-	const String APP_COPYRIGHT        = ("(c) 2012 " + APP_COMPANY + ". All rights reserved.");
-	const String APP_DESCRIPTION      = "A cross-platform media player that easily plays all your music, pictures and videos.";
-	const String APP_NAME             = "Voya Media";
+	const String APP_COMPANY          = "__APP_COMPANY__";
+	const String APP_COPYRIGHT        = "__APP_COPYRIGHT__";
+	const String APP_DESCRIPTION      = "__APP_DESCRIPTION__";
+	const String APP_NAME             = "__APP_NAME__";
 	const String APP_PRIVACY          = (APP_COMPANY + " does not collect any information stored on the local system.");
 	const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libcurl (MIT), libXML2 (MIT), libupnp (BSD), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Dropbox, Google Maps API, Google Noto Fonts (OFL), SHOUTcast Radio Directory API, TMDb API, YouTube Data API";
 	const String APP_UPDATE_V3_MSG    = ("Welcome to " + APP_NAME + " 3\n\nWhat's new:\n- Completely refactored the UI-rendering engine\n- UI is now DPI-aware and independent of screen sizes and resolutions\n- Completely restructured the database (*)\n\n(*) Settings have been reset\n(*) Media library is empty (files must to be re-added)!");
-	const String APP_URL              = "http://www.voyamedia.com";
+	const String APP_URL              = "__APP_URL__";
 	const String APP_VERSION          = "__APP_VERSION__";
 	const String APP_ABOUT_TEXT       = (APP_DESCRIPTION + "\n\n" + APP_PRIVACY + "\n\n" + APP_THIRD_PARTY_LIBS + "\n\n" + APP_COPYRIGHT);
 	const String DROPBOX_API_KEY      = "__DROPBOX_API_KEY__";
@@ -420,6 +422,16 @@ namespace VoyaMedia
 	const double SUB_MAX_DURATION       = 20.0;   // 20 seconds
 	const int    SUB_STREAM_EXTERNAL    = 100;
 
+	#if defined _windows
+		const wchar_t FONT_ARIAL[]    = L"Arial";
+		const wchar_t FONT_NOTO[]     = L"NotoSans-Merged.ttf";
+		const wchar_t FONT_NOTO_CJK[] = L"NotoSansCJK-Bold.ttc";
+	#else
+		const char FONT_ARIAL[]    = "Arial";
+		const char FONT_NOTO[]     = "NotoSans-Merged.ttf";
+		const char FONT_NOTO_CJK[] = "NotoSansCJK-Bold.ttc";
+	#endif
+
 	const int     AV_TIME_BASE_I32 = 1000000;
 	const int64_t AV_TIME_BASE_I64 = 1000000ll;
 	const double  AV_TIME_BASE_D   = 1000000.0;
@@ -437,8 +449,8 @@ namespace VoyaMedia
 
 	const int          DEFAULT_MARGIN            = 30;
 	const int          DEFAULT_CHAR_BUFFER_SIZE  = 1024;
-	const int          DEFAULT_WCHAR_BUFFER_SIZE = 10240;
-	const double       DEFAULT_FONT_DPI_RATIO    = 0.75; // (72.0 / 96.0)
+	const int          DEFAULT_WCHAR_BUFFER_SIZE = 4096;
+	//const double       DEFAULT_FONT_DPI_RATIO    = 0.75; // (72.0 / 96.0)
 	const int          DEFAULT_FONT_SIZE         = 11;
 	const int          DEFAULT_FONT_SIZE_SUB     = 48;
 	const VM_PlayType  DEFAULT_LOOP_TYPE         = PLAY_TYPE_NORMAL;
@@ -455,9 +467,11 @@ namespace VoyaMedia
 		const float DEFAULT_DPI = 96.0f;
 	#endif
 
-	const int DELAY_TIME_BACKGROUND = 200;
-	const int DELAY_TIME_DEFAULT    = 15;
-	const int DELAY_TIME_GUI_RENDER = 300;
+	const int    DELAY_TIME_BACKGROUND = 200;
+	const int    DELAY_TIME_DEFAULT    = 15;
+	const int    DELAY_TIME_GUI_RENDER = 300;
+	const int    DELAY_TIME_ONE_MS     = 1;
+	const double DELAY_TIME_SUB_RENDER = 0.1;
 
 	const float FLOAT_MAX_ONE  = 1.01f;
 	const float FLOAT_MIN_ONE  = 0.99f;
@@ -486,16 +500,17 @@ namespace VoyaMedia
 		#define INT64_MAX 9223372036854775807
 	#endif
 
-	const int  MAX_AUDIO_FRAMES      = 10;
-	const long MAX_CURL_REDIRS       = 10L;
-	const long MAX_CURL_TIMEOUT      = 20000L;
-	const int  MAX_DB_RESULT         = 100000;
-	const int  MAX_DECODE_THREADS    = 16;
-	const int  MAX_ERRORS            = 100;
-	const int  MAX_FILE_PATH         = 260;
-	const int  MAX_PACKET_QUEUE_SIZE = 100;
-	const int  MAX_WINDOW_SIZE       = 16384;
-	const int  MAX_THUMB_SIZE        = 512;
+	const float MAX_ASPECT_RATIO      = 1.6f; // 16:10
+	const int   MAX_AUDIO_FRAMES      = 10;
+	const long  MAX_CURL_REDIRS       = 10L;
+	const long  MAX_CURL_TIMEOUT      = 20000L;
+	const int   MAX_DB_RESULT         = 100000;
+	const int   MAX_DECODE_THREADS    = 16;
+	const int   MAX_ERRORS            = 100;
+	const int   MAX_FILE_PATH         = 260;
+	const int   MAX_PACKET_QUEUE_SIZE = 100;
+	const int   MAX_WINDOW_SIZE       = 16384;
+	const int   MAX_THUMB_SIZE        = 512;
 
 	const int MIN_OUTLINE           = 3;
 	const int MIN_PACKET_QUEUE_SIZE = 25;
@@ -580,6 +595,13 @@ namespace VoyaMedia
 		class VM_Subtitle;
 		class VM_SubStyle;
 		class VM_SubTexture;
+
+		struct VM_PTS
+		{
+			double start, end;
+			VM_PTS() { this->start = 0; this->end = 0; }
+			VM_PTS(double start, double end) { this->start = start; this->end = end; }
+		};
 
 		typedef std::queue<LIB_FFMPEG::AVPacket*> VM_Packets;
 		typedef std::list<VM_Subtitle*>           VM_Subtitles;

@@ -30,8 +30,7 @@ namespace VoyaMedia
 			SDL_Point    position;
 			double       rotation;
 			SDL_Point    rotationPoint;
-			double       ptsEnd;
-			double       ptsStart;
+			VM_PTS       pts;
 			bool         skip;
 			bool         splitStyling;
 			VM_SubStyle* style;
@@ -44,7 +43,6 @@ namespace VoyaMedia
 
 		public:
 			void               copy(const VM_Subtitle &subtitle);
-			VM_SubAlignment    getAlignment();
 			int                getBlur();
 			Graphics::VM_Color getColor();
 			Graphics::VM_Color getColorOutline();
@@ -54,7 +52,15 @@ namespace VoyaMedia
 			SDL_Rect           getMargins();
 			int                getOutline();
 			SDL_Point          getShadow();
-			int                setPTS(LIB_FFMPEG::AVPacket* packet, LIB_FFMPEG::AVSubtitle &subFrame, LIB_FFMPEG::AVStream* subStream);
+			bool               isAlignedBottom();
+			bool               isAlignedCenter();
+			bool               isAlignedLeft();
+			bool               isAlignedMiddle();
+			bool               isAlignedRight();
+			bool               isAlignedTop();
+
+		private:
+			VM_SubAlignment getAlignment();
 
 		};
 	}

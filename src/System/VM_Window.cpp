@@ -20,6 +20,7 @@ bool             System::VM_Window::Quit                = false;
 SDL_Renderer*    System::VM_Window::Renderer            = NULL;
 bool             System::VM_Window::ResetRenderer       = false;
 uint32_t         System::VM_Window::ResizeTimestamp     = 0;
+bool             System::VM_Window::SaveToDB            = false;
 int              System::VM_Window::StatusBarHeight     = 0;
 char             System::VM_Window::StatusString[DEFAULT_CHAR_BUFFER_SIZE];
 bool             System::VM_Window::SystemLocale        = false;
@@ -44,11 +45,13 @@ void System::VM_Window::Close()
 {
 	VM_Window::Quit = true;
 
-	SDL_Delay(DELAY_TIME_BACKGROUND);
+	SDL_Delay(DELAY_TIME_GUI_RENDER);
 
 	VM_ThreadManager::FreeThreads();
 
 	VM_Player::Close();
+	VM_Player::State.quit = true;
+
 	VM_GUI::Close();
 
 	#if defined _android
@@ -64,16 +67,6 @@ void System::VM_Window::Close()
 	FREE_WINDOW(VM_Window::MainWindow);
 
 	SDL_Quit();
-}
-
-void System::VM_Window::init()
-{
-	VM_ThreadManager::AddThreads();
-
-	memset(VM_Window::StatusString, 0, DEFAULT_CHAR_BUFFER_SIZE);
-
-	// Seed the random number generator
-	srand((uint32_t)time(NULL));
 }
 
 #if defined _android
@@ -96,7 +89,10 @@ int System::VM_Window::Minimize()
 
 int System::VM_Window::Open(const char* guiXML, const char* title)
 {
-	VM_Window::init();
+	VM_ThreadManager::AddThreads();
+
+	memset(VM_Window::StatusString, 0, DEFAULT_CHAR_BUFFER_SIZE);
+	srand((uint32_t)time(NULL));
 
 	if ((VM_FileSystem::SetWorkingDirectory() != RESULT_OK) || VM_Window::WorkingDirectory.empty()) {
 		VM_Modal::ShowMessage("ERROR! Failed to set the working directory.");
@@ -112,6 +108,9 @@ int System::VM_Window::Open(const char* guiXML, const char* title)
 		}
 
 		VM_Window::AndroidStoragePath = VM_FileSystem::GetAndroidStoragePath();
+	#elif defined _windows
+	//if (!IsProcessDPIAware())
+		SetProcessDPIAware();
 	#endif
 
 	if (VM_FileSystem::CreateDefaultDirectoryStructure() != RESULT_OK) {
@@ -256,9 +255,9 @@ int System::VM_Window::Render()
 
 int System::VM_Window::Reset(const char* guiXML, const char* title)
 {
-	SDL_SetRenderDrawColor(VM_Window::Renderer, 0, 0, 0, 0xFF);
-	SDL_RenderClear(VM_Window::Renderer);
-	SDL_RenderPresent(VM_Window::Renderer);
+	//SDL_SetRenderDrawColor(VM_Window::Renderer, 0, 0, 0, 0xFF);
+	//SDL_RenderClear(VM_Window::Renderer);
+	//SDL_RenderPresent(VM_Window::Renderer);
 
 	VM_TableState tableState = {};
 
@@ -305,20 +304,41 @@ int System::VM_Window::Reset(const char* guiXML, const char* title)
 
 void System::VM_Window::resize()
 {
-	VM_Window::Dimensions = VM_Window::Display.getDimensions();
-
-	if ((VM_Window::Dimensions.w < MIN_WINDOW_SIZE) || (VM_Window::Dimensions.h < MIN_WINDOW_SIZE))
-	{
-		VM_Window::Dimensions.w = max(MIN_WINDOW_SIZE, VM_Window::Dimensions.w);
-		VM_Window::Dimensions.h = max(MIN_WINDOW_SIZE, VM_Window::Dimensions.h);
-
-		SDL_SetWindowSize(VM_Window::MainWindow, VM_Window::Dimensions.w, VM_Window::Dimensions.h);
-	}
-
+	VM_Window::Dimensions  = VM_Window::Display.getDimensions();
 	bool windowIsMaximized = ((SDL_GetWindowFlags(VM_Window::MainWindow) & SDL_WINDOW_MAXIMIZED) != 0);
 
 	if (!windowIsMaximized && !VM_Window::FullScreenMaximized)
+	{
+		bool setMinSize = false;
+
+	    #if defined _linux || defined _macosx || defined _windows
+		if (VM_Window::Dimensions.w < MIN_WINDOW_SIZE) {
+			VM_Window::Dimensions.w = MIN_WINDOW_SIZE;
+			setMinSize = true;
+		}
+		if (VM_Window::Dimensions.h < MIN_WINDOW_SIZE) {
+			VM_Window::Dimensions.h = MIN_WINDOW_SIZE;
+			setMinSize = true;
+		}
+
+		int maxWidth  = (int)((float)VM_Window::Dimensions.h * MAX_ASPECT_RATIO);
+		int maxHeight = (int)((float)VM_Window::Dimensions.w * MAX_ASPECT_RATIO);
+
+		if (VM_Window::Dimensions.w > maxWidth) {
+			VM_Window::Dimensions.w = maxWidth;
+			setMinSize = true;
+		}
+		if (VM_Window::Dimensions.h > maxHeight) {
+			VM_Window::Dimensions.h = maxHeight;
+			setMinSize = true;
+		}
+		#endif
+
+		if (setMinSize)
+			SDL_SetWindowSize(VM_Window::MainWindow, VM_Window::Dimensions.w, VM_Window::Dimensions.h);
+
 		VM_Window::DimensionsBeforeFS = VM_Window::Display.getDimensions();
+	}
 
 	VM_Window::saveToDB();
 	VM_ThreadManager::FreeResources(false);
@@ -338,6 +358,12 @@ void System::VM_Window::resize()
 		VM_PlayerControls::Refresh();
 		VM_PlayerControls::RefreshControls();
 	}
+}
+
+void System::VM_Window::Save()
+{
+	VM_Window::Dimensions = VM_Window::Display.getDimensions();
+	VM_Window::saveToDB();
 }
 
 void System::VM_Window::saveToDB()
@@ -361,7 +387,9 @@ void System::VM_Window::saveToDB()
 
 	DELETE_POINTER(db);
 
-	VM_Window::Display.getDisplayMode();
+	VM_Window::Display.setDisplayMode();
+
+	VM_Window::SaveToDB = false;
 }
 
 void System::VM_Window::SetStatusProgress(uint32_t current, uint32_t total, const String &label)

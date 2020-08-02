@@ -311,17 +311,15 @@ int System::VM_FileSystem::CleanThumbs(void* userData)
 		if (VM_Window::Quit)
 			break;
 
-		VM_Window::SetStatusProgress(
-			(uint32_t)i, (uint32_t)thumbFiles.size(), VM_Window::Labels["status.clean.thumbs"]
-		);
+		VM_Window::SetStatusProgress((uint32_t)i, (uint32_t)thumbFiles.size(), VM_Window::Labels["status.clean.thumbs"]);
 
 		remove(String(thumbsDir + PATH_SEPERATOR + thumbFiles[i]).c_str());
 	}
 	
-	if (!VM_Window::Quit)
-	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.clean.thumbs.finished"].c_str());
+	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.clean.thumbs.finished"].c_str());
 
+	if (!thumbFiles.empty() && !VM_Window::Quit)
+	{
 		VM_GUI::ListTable->refreshRows();
 		VM_FileSystem::RefreshMetaData();
 	}
@@ -1333,6 +1331,11 @@ LIB_FFMPEG::AVFormatContext* System::VM_FileSystem::GetMediaFormatContext(const 
 				stream->codec->codec_id = LIB_FFMPEG::AV_CODEC_ID_MP3;
 			}
 		}
+	}
+
+	if (formatContext->nb_streams == 0) {
+		formatContext->max_analyze_duration = (15 * AV_TIME_BASE);
+		formatContext->probesize            = (10 * MEGA_BYTE);
 	}
 
 	if (avformat_find_stream_info(formatContext, NULL) < 0) {
@@ -2999,6 +3002,9 @@ void System::VM_FileSystem::InitFFMPEG()
 
 int System::VM_FileSystem::InitLibraries()
 {
+	//#if defined _android
+	//	SDL_SetHint(SDL_HINT_ANDROID_BLOCK_ON_PAUSE, "0");
+	//#elif defined _ios
 	#if defined _ios
 		SDL_SetHint(SDL_HINT_AUDIO_CATEGORY, "AVAudioSessionCategoryPlayback");
 	#elif defined _macosx

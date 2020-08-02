@@ -44,6 +44,9 @@ int Graphics::VM_Graphics::Blur(uint8_t* pixelsRGB, int width, int height, int r
 
 		for (int x = 0; x < width; x++)
 		{
+			if (pixelIndex >= pixelCount)
+				break;
+
 			r[pixelIndex] = divisor[sumR];
 			g[pixelIndex] = divisor[sumG];
 			b[pixelIndex] = divisor[sumB];
@@ -99,6 +102,9 @@ int Graphics::VM_Graphics::Blur(uint8_t* pixelsRGB, int width, int height, int r
 			int p1 = (x + maxPixel[y]);
 			int p2 = (x + minPixel[y]);
 
+			if ((p1 >= pixelCount) || (p2 >= pixelCount))
+				break;
+
 			sumR += (r[p1] - r[p2]);
 			sumG += (g[p1] - g[p2]);
 			sumB += (b[p1] - b[p2]);
@@ -117,11 +123,11 @@ int Graphics::VM_Graphics::Blur(uint8_t* pixelsRGB, int width, int height, int r
 	return RESULT_OK;
 }
 
-bool Graphics::VM_Graphics::ButtonHovered(const SDL_Rect* mouseCoordinates, const SDL_Rect* button)
+bool Graphics::VM_Graphics::ButtonHovered(const SDL_Rect* mouseCoordinates, const SDL_Rect &button)
 {
-	if ((mouseCoordinates != NULL) && (button != NULL) &&
-		(mouseCoordinates->x > button->x) && (mouseCoordinates->x < (button->x + button->w)) &&
-		(mouseCoordinates->y > button->y) && (mouseCoordinates->y < (button->y + button->h)))		
+	if ((mouseCoordinates != NULL) &&
+		(mouseCoordinates->x > button.x) && (mouseCoordinates->x < (button.x + button.w)) &&
+		(mouseCoordinates->y > button.y) && (mouseCoordinates->y < (button.y + button.h)))		
 	{
 		return true;
 	}
@@ -129,9 +135,9 @@ bool Graphics::VM_Graphics::ButtonHovered(const SDL_Rect* mouseCoordinates, cons
 	return false;
 }
 
-bool Graphics::VM_Graphics::ButtonPressed(const SDL_Event* mouseEvent, const SDL_Rect* button, const bool rightClicked, const bool doubleClicked)
+bool Graphics::VM_Graphics::ButtonPressed(const SDL_Event* mouseEvent, const SDL_Rect &button, const bool rightClicked, const bool doubleClicked)
 {
-	if ((mouseEvent == NULL) || (button == NULL))
+	if (mouseEvent == NULL)
 		return false;
 
 	int positionX = -1;
@@ -139,8 +145,8 @@ bool Graphics::VM_Graphics::ButtonPressed(const SDL_Event* mouseEvent, const SDL
 
 	if (doubleClicked) {
 		#if defined _android || defined _ios
-			if (VM_EventManager::TouchEvent != TOUCH_EVENT_DOUBLE_TAP)
-				return false;
+			//if (VM_EventManager::TouchEvent != TOUCH_EVENT_DOUBLE_TAP)
+			return false;
 		#else
 			if (mouseEvent->button.clicks < 2)
 				return false;
@@ -174,8 +180,8 @@ bool Graphics::VM_Graphics::ButtonPressed(const SDL_Event* mouseEvent, const SDL
 		positionY = mouseEvent->button.y;
 	#endif
 
-	if ((positionX < button->x) || (positionX > (button->x + button->w)) || 
-		(positionY < button->y) || (positionY > (button->y + button->h))) 
+	if ((positionX < button.x) || (positionX > (button.x + button.w)) || 
+		(positionY < button.y) || (positionY > (button.y + button.h))) 
 	{
 		return false;
 	}
@@ -335,7 +341,7 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotVideo(int mediaID,
 	{
 		double  fileSize  = 0;
 		int64_t seekPos   = 0;
-		int     seekFlags = SEEK_FLAGS(formatContext->iformat);
+		int     seekFlags = AV_SEEK_FLAGS(formatContext->iformat);
 
 		if (seekFlags == AVSEEK_FLAG_BYTE)
 		{
@@ -1112,10 +1118,8 @@ int Graphics::VM_Graphics::GetTopBarHeight()
 		JNIEnv*   jniEnvironment = VM_Window::JNI->getEnvironment();
 		jmethodID jniGetHeight   = jniEnvironment->GetStaticMethodID(jniClass, "GetTopBarHeight", "()I");
 
-		if (jniGetHeight == NULL)
-			return ERROR_UNKNOWN;
-
-		height = (float)jniEnvironment->CallStaticIntMethod(jniClass, jniGetHeight);
+		if (jniGetHeight != NULL)
+			height = (float)jniEnvironment->CallStaticIntMethod(jniClass, jniGetHeight);
 	#elif defined _ios
 		height = (int)([UIApplication sharedApplication].statusBarFrame.size.height * [UIScreen mainScreen].scale);
 	#endif

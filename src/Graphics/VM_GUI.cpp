@@ -234,7 +234,7 @@ int Graphics::VM_GUI::loadWindow(LIB_XML::xmlNode* windowNode, const char* title
 	if (windowMaximized)
 		SDL_MaximizeWindow(VM_Window::MainWindow);
 
-	VM_Window::Display.getDisplayMode();
+	VM_Window::Display.setDisplayMode();
 	VM_Window::StatusBarHeight = VM_Graphics::GetTopBarHeight();
 
 	// RENDERER
@@ -438,7 +438,6 @@ int Graphics::VM_GUI::refresh()
 	if ((VM_GUI::xmlDoc == NULL) || (VM_GUI::rootPanel == NULL))
 		return ERROR_INVALID_ARGUMENTS;
 
-	VM_GUI::Components["list_table_scrollbar_thumb"]->backgroundArea.h          = 0;
 	VM_GUI::Components["bottom_player_controls_middle_thumb"]->backgroundArea.w = 0;
 	VM_GUI::Components["bottom_player_controls_volume_thumb"]->backgroundArea.w = 0;
 

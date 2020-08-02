@@ -55,7 +55,15 @@ MediaPlayer::VM_SubStyle::VM_SubStyle(Strings data, VM_SubStyleVersion version)
 	#endif
 
 	// FONT SIZE
-	this->fontSize = (int)(std::atof(data[SUB_STYLE_V4_FONT_SIZE].c_str()) * DEFAULT_FONT_DPI_RATIO);
+	//this->fontSize = (int)(std::atof(data[SUB_STYLE_V4_FONT_SIZE].c_str()) * DEFAULT_FONT_DPI_RATIO);
+	this->fontSize = std::atoi(data[SUB_STYLE_V4_FONT_SIZE].c_str());
+
+	#if defined _windows
+	if ((this->fontName == FONT_ARIAL) && (this->name == "Default") && (this->fontSize == 16))
+	#else
+	if ((this->fontName == FONT_ARIAL) && (this->name == "Default") && (this->fontSize == 16))
+	#endif
+		this->fontSize = 22;
 
 	// FONT COLORS
 	this->colorPrimary = VM_Graphics::ToVMColor(data[SUB_STYLE_V4_COLOR_PRIMARY]);
@@ -152,34 +160,34 @@ MediaPlayer::VM_SubStyle* MediaPlayer::VM_SubStyle::getDefault(const VM_SubStyle
 	return NULL;
 }
 
-bool MediaPlayer::VM_SubStyle::IsAlignedBottom(VM_SubAlignment alignment)
+bool MediaPlayer::VM_SubStyle::IsAlignedBottom(VM_SubAlignment a)
 {
-	return ((alignment == SUB_ALIGN_BOTTOM_LEFT) || (alignment == SUB_ALIGN_BOTTOM_RIGHT) || (alignment == SUB_ALIGN_BOTTOM_CENTER));
+	return ((a == SUB_ALIGN_BOTTOM_LEFT) || (a == SUB_ALIGN_BOTTOM_RIGHT) || (a == SUB_ALIGN_BOTTOM_CENTER));
 }
 
-bool MediaPlayer::VM_SubStyle::IsAlignedCenter(VM_SubAlignment alignment)
+bool MediaPlayer::VM_SubStyle::IsAlignedCenter(VM_SubAlignment a)
 {
-	return ((alignment == SUB_ALIGN_BOTTOM_CENTER) || (alignment == SUB_ALIGN_TOP_CENTER) || (alignment == SUB_ALIGN_MIDDLE_CENTER));
+	return ((a == SUB_ALIGN_BOTTOM_CENTER) || (a == SUB_ALIGN_TOP_CENTER) || (a == SUB_ALIGN_MIDDLE_CENTER));
 }
 
-bool MediaPlayer::VM_SubStyle::IsAlignedLeft(VM_SubAlignment alignment)
+bool MediaPlayer::VM_SubStyle::IsAlignedLeft(VM_SubAlignment a)
 {
-	return ((alignment == SUB_ALIGN_BOTTOM_LEFT) || (alignment == SUB_ALIGN_TOP_LEFT) || (alignment == SUB_ALIGN_MIDDLE_LEFT));
+	return ((a == SUB_ALIGN_BOTTOM_LEFT) || (a == SUB_ALIGN_TOP_LEFT) || (a == SUB_ALIGN_MIDDLE_LEFT));
 }
 
-bool MediaPlayer::VM_SubStyle::IsAlignedMiddle(VM_SubAlignment alignment)
+bool MediaPlayer::VM_SubStyle::IsAlignedMiddle(VM_SubAlignment a)
 {
-	return ((alignment == SUB_ALIGN_MIDDLE_LEFT) || (alignment == SUB_ALIGN_MIDDLE_RIGHT) || (alignment == SUB_ALIGN_MIDDLE_CENTER));
+	return ((a == SUB_ALIGN_MIDDLE_LEFT) || (a == SUB_ALIGN_MIDDLE_RIGHT) || (a == SUB_ALIGN_MIDDLE_CENTER));
 }
 
-bool MediaPlayer::VM_SubStyle::IsAlignedRight(VM_SubAlignment alignment)
+bool MediaPlayer::VM_SubStyle::IsAlignedRight(VM_SubAlignment a)
 {
-	return ((alignment == SUB_ALIGN_BOTTOM_RIGHT) || (alignment == SUB_ALIGN_TOP_RIGHT) || (alignment == SUB_ALIGN_MIDDLE_RIGHT));
+	return ((a == SUB_ALIGN_BOTTOM_RIGHT) || (a == SUB_ALIGN_TOP_RIGHT) || (a == SUB_ALIGN_MIDDLE_RIGHT));
 }
 
-bool MediaPlayer::VM_SubStyle::IsAlignedTop(VM_SubAlignment alignment)
+bool MediaPlayer::VM_SubStyle::IsAlignedTop(VM_SubAlignment a)
 {
-	return ((alignment == SUB_ALIGN_TOP_LEFT) || (alignment == SUB_ALIGN_TOP_RIGHT) || (alignment == SUB_ALIGN_TOP_CENTER));
+	return ((a == SUB_ALIGN_TOP_LEFT) || (a == SUB_ALIGN_TOP_RIGHT) || (a == SUB_ALIGN_TOP_CENTER));
 }
 
 bool MediaPlayer::VM_SubStyle::isFontValid(TTF_Font* font)
@@ -277,9 +285,9 @@ void MediaPlayer::VM_SubStyle::openFont(umap<String, TTF_Font*> &styleFonts, con
 		!VM_Text::FontSupportsLanguage(this->font, sub->textUTF16, DEFAULT_CHAR_BUFFER_SIZE))
 	{
 		#if defined _windows
-			WStrings fonts = { L"Arial", L"NotoSansCJK-Bold.ttc", L"NotoSans-Merged.ttf" };
+			WStrings fonts = { FONT_ARIAL, FONT_NOTO_CJK, FONT_NOTO };
 		#else
-			Strings fonts = { "Arial", "NotoSansCJK-Bold.ttc", "NotoSans-Merged.ttf" };
+			Strings fonts = { FONT_ARIAL, FONT_NOTO_CJK, FONT_NOTO };
 		#endif
 
 		for (auto font : fonts)
@@ -293,12 +301,12 @@ void MediaPlayer::VM_SubStyle::openFont(umap<String, TTF_Font*> &styleFonts, con
 			if (styleFonts[fontName] == NULL)
 			{
 				#if defined _windows
-				if (font == L"Arial")
+				if (font == FONT_ARIAL)
 					styleFonts[fontName] = OPEN_FONT(VM_FileSystem::GetPathFontArialW().c_str(), this->fontSizeScaled);
 				else
 					styleFonts[fontName] = OPEN_FONT((VM_FileSystem::GetPathFontW() + font).c_str(), this->fontSizeScaled);
 				#else
-				if (font == "Arial")
+				if (font == FONT_ARIAL)
 					styleFonts[fontName] = OPEN_FONT(VM_FileSystem::GetPathFontArial().c_str(), this->fontSizeScaled);
 				else
 					styleFonts[fontName] = OPEN_FONT((VM_FileSystem::GetPathFont() + font).c_str(), this->fontSizeScaled);
