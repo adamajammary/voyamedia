@@ -231,7 +231,7 @@ int System::VM_EventManager::HandleEvents()
 			}
 			break;
 		case SDL_DROPFILE:
-			VM_FileSystem::OpenFile(event.drop.file);
+			VM_FileSystem::OpenFile(VM_Text::ToUTF16(event.drop.file));
 			SDL_free(event.drop.file);
 			break;
 		case SDL_TEXTINPUT:
