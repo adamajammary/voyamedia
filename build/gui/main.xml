@@ -6,7 +6,8 @@
       <button id="about" halign="center" valign="middle" height="100%" width="height" image-file="about-1-512.png" image-height="70%" image-width="image-height" modal="modal_about"></button>
       <button id="date_time_text" halign="right" valign="middle" font-size="8"></button>
     </panel>
-    <panel id="top" height="15%" border-width="3 0 0 0">
+
+    <panel id="top" height="15%">
       <button id="top_audio" orientation="vertical" halign="center" valign="middle" image-file="music-2-512.png" image-height="30%" image-width="image-height" font-size="9">%audio</button>
       <button id="top_picture" orientation="vertical" halign="center" valign="middle" image-file="picture-2-512.png" image-height="30%" image-width="image-height" font-size="9">%pictures</button>
       <button id="top_video" orientation="vertical" halign="center" valign="middle" image-file="video-1-512.png" image-height="30%" image-width="image-height" font-size="9">%video</button>
@@ -15,49 +16,59 @@
       <button id="top_tmdb_movie" orientation="vertical" halign="center" valign="middle" image-height="30%" image-width="image-height" font-size="9">%movies</button>
       <button id="top_tmdb_tv" orientation="vertical" halign="center" valign="middle" image-height="30%" image-width="image-height" font-size="9">TV</button>
     </panel>
+
     <panel id="middle" orientation="vertical">
-      <panel id="middle_search" height="11%" valign="middle">
+      <panel id="middle_search" height="12%" valign="middle" border-width="2 0 0 2">
         <button id="middle_search_playlist_save" halign="center" valign="middle" height="100%" width="height" image-file="playlist-save-2-512.png" image-height="70%" image-width="image-height" modal="modal_playlist_save"></button>
         <button id="middle_search_input" halign="center" valign="middle" border-width="2"></button>
         <button id="middle_search_button" halign="center" valign="middle" height="100%" width="height" image-file="search-4-512.png" image-height="50%" image-width="image-height"></button>
       </panel>
+
       <panel id="list">
-        <table id="list_table" border-width="1">
+        <table id="list_table">
           <button id="list_table_thumb" halign="center" valign="middle" height="20%" width="height"></button>
           <button id="list_table_file" valign="middle" height="20%">%file</button>
           <button id="list_table_details" halign="center" valign="middle" height="20%" width="height" image-width="50%" image-height="image-width" modal="modal_details"></button>
         </table>
-        <panel id="list_table_scrollbar" orientation="vertical" width="25">
+
+        <panel id="list_table_scrollbar" orientation="vertical" width="25" border-width="1">
           <button id="list_table_scrollbar_prev" halign="center" valign="middle" width="100%" height="width" image-file="prev-3-512.png" image-width="50%" image-height="image-width"></button>
           <button id="list_table_scrollbar_bar"></button>
           <button id="list_table_scrollbar_next" halign="center" valign="middle" width="100%" height="width" image-file="next-3-512.png" image-width="50%" image-height="image-width"></button>
         </panel>
       </panel>
+
       <panel id="list_table_bottom" height="25" valign="middle">
         <button id="list_offset_prev" halign="center" valign="middle" height="100%" width="height" image-file="prev-2-512.png" image-width="50%" image-height="image-width"></button>
-        <button id="list_details_text" halign="center" valign="middle" border-width="1"></button>
+        <button id="list_details_text" halign="center" valign="middle"></button>
         <button id="list_offset_next" halign="center" valign="middle" height="100%" width="height" image-file="next-2-512.png" image-width="50%" image-height="image-width"></button>
       </panel>
     </panel>
+
     <panel id="status" height="20" halign="center">
       <button id="status_text" valign="middle" width="95%" font-size="8"></button>
     </panel>
+
     <panel id="bottom" height="15%">
       <panel id="bottom_player" width="0" height="0" border-width="1">
         <button id="bottom_player_snapshot" halign="center" valign="middle"></button>
       </panel>
+
       <panel id="bottom_player_controls" orientation="vertical" height="0" width="0">
         <panel id="bottom_player_controls_text" orientation="vertical" height="22%">
           <button id="bottom_player_controls_file" halign="center" valign="middle" font-size="8"></button>
         </panel>
+
         <panel id="bottom_player_controls_progress_bar" height="20%">
           <panel id="bottom_player_controls_left" width="80">
             <button id="bottom_player_controls_progress" halign="center" valign="middle" font-size="8"></button>
           </panel>
+
           <panel id="bottom_player_controls_middle" valign="middle">
             <button id="bottom_player_controls_middle_bar" height="80%"></button>
             <button id="bottom_player_controls_middle_thumb" height="80%" width="0"></button>
           </panel>
+
           <panel id="bottom_player_controls_right" width="80">
             <button id="bottom_player_controls_duration" halign="center" valign="middle" font-size="8"></button>
           </panel>
@@ -69,6 +80,7 @@
             <button id="bottom_player_controls_stop" halign="center" valign="middle" height="100%" width="25" image-height="35%" image-width="image-height"></button>
             <button id="bottom_player_controls_next" halign="center" valign="middle" height="100%" width="25" image-height="35%" image-width="image-height"></button>
           </panel>
+
           <panel id="bottom_player_controls_controls_right" halign="right" valign="middle">
             <button id="bottom_player_controls_settings" halign="center" valign="middle" height="100%" width="25" image-height="35%" image-width="image-height" modal="modal_player_settings"></button>
             <button id="bottom_player_controls_fullscreen" halign="center" valign="middle" height="100%" width="25" image-height="35%" image-width="image-height"></button>
@@ -77,12 +89,14 @@
             <button id="bottom_player_controls_playlist" halign="center" valign="middle" height="100%" width="25" image-height="35%" image-width="image-height"></button>
             <button id="bottom_player_controls_mute" halign="center" valign="middle" height="100%" width="30" image-height="50%" image-width="image-height"></button>
           </panel>
+
           <panel id="bottom_player_controls_volume" valign="middle" width="45">
             <button id="bottom_player_controls_volume_bar" height="35%" width="40"></button>
             <button id="bottom_player_controls_volume_thumb" height="35%" width="0"></button>
           </panel>
         </panel>
       </panel>
+
       <panel id="bottom_controls" height="0" width="0">
         <button id="bottom_controls_playlists" orientation="vertical" halign="center" valign="middle" image-file="playlist-10-512.png" image-height="30%" image-width="image-height" font-size="9" modal="modal_playlists">%playlists</button>
         <button id="bottom_controls_browse" orientation="vertical" halign="center" valign="middle" image-file="browse-1-512.png" image-height="30%" image-width="image-height" font-size="9">%add</button>

@@ -5,16 +5,19 @@
     <panel id="modal_top" height="15%" border-width="1">
       <button id="modal_desc" halign="center" valign="middle">%save_playlist</button>
     </panel>
+
     <panel id="modal_middle" orientation="vertical" border-width="1">
       <panel id="modal_playlist_input" height="20%">
         <button id="modal_playlist_name_label" valign="middle" margin="0 10 0 0">%playlist_name</button>
         <button id="modal_playlist_name_input" valign="middle" margin="0 10 0 0" border-width="2"></button>
       </panel>
+
       <panel id="modal_playlist_search" height="20%">
         <button id="modal_playlist_search_label" valign="middle" margin="0 10 0 0">%search</button>
         <button id="modal_playlist_search_value" valign="middle" margin="0 10 0 0"></button>
       </panel>
     </panel>
+
     <panel id="modal_bottom" halign="center" valign="middle" height="20%" border-width="1" margin="10">
       <button id="modal_ok" halign="center" valign="middle" height="50%" border-width="1">%save</button>
       <button id="modal_cancel" halign="center" valign="middle" height="50%" border-width="1">%cancel</button>

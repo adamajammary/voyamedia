@@ -5,6 +5,7 @@
     <panel id="modal_top" height="15%" border-width="1">
       <button id="modal_desc" halign="center" valign="middle" wrap="true"></button>
     </panel>
+
     <panel id="modal_middle" orientation="vertical" border-width="1">
       <panel id="modal_middle_top">
         <!--<button id="modal_details_thumb" width="22%" halign="center" valign="middle" border-width="4"></button>-->
@@ -12,10 +13,12 @@
         <button id="modal_details_thumb" height="100%" width="height" halign="center" valign="middle"></button>
         <button id="modal_details_text" wrap="true" margin="0 4 0 0"></button>
       </panel>
+
       <panel id="modal_middle_bottom" border-width="0 0 0 1">
         <button id="modal_details_text_details" margin="0 4 0 0" wrap="true"></button>
       </panel>
     </panel>
+
     <panel id="modal_bottom" halign="center" valign="middle" height="20%" border-width="1">
       <button id="modal_ok" halign="center" valign="middle" width="50%" height="50%" border-width="1">OK</button>
     </panel>

@@ -898,8 +898,10 @@ int Graphics::VM_Table::render()
 		SDL_RenderCopy(VM_Window::Renderer, this->scrollPane->data, &clip, &dest);
 	}
 
-	for (auto button : this->buttons)
+	for (auto button : this->buttons) {
+		button->borderWidth = {};
 		button->render();
+	}
 
 	VM_Graphics::FillBorder(&this->borderColor, &this->backgroundArea, this->borderWidth);
 
