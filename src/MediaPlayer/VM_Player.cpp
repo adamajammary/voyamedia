@@ -138,7 +138,7 @@ int MediaPlayer::VM_Player::closeAudio()
 	if ((VM_Player::audioContext.index < 0) || (VM_Player::audioContext.stream == NULL))
 		return ERROR_UNKNOWN;
 
-	FREE_FRAME(VM_Player::audioContext.frame, false);
+	LIB_FFMPEG::av_frame_free(&VM_Player::audioContext.frame);
 	FREE_POINTER(VM_Player::audioContext.frameEncoded);
 	FREE_SWR(VM_Player::resampleContext);
 	FREE_THREAD_COND(VM_Player::audioContext.condition);
@@ -233,8 +233,8 @@ int MediaPlayer::VM_Player::closeVideo()
 	if ((VM_Player::videoContext.index < 0) || (VM_Player::videoContext.stream == NULL))
 		return ERROR_UNKNOWN;
 
-	FREE_FRAME(VM_Player::videoContext.frame, false);
-	FREE_AVPICTURE(VM_Player::videoContext.frameEncoded);
+	LIB_FFMPEG::av_frame_free(&VM_Player::videoContext.frame);
+	LIB_FFMPEG::av_frame_free(&VM_Player::videoContext.frameEncoded);
 	DELETE_POINTER(VM_Player::videoContext.texture);
 	FREE_SWS(VM_Player::scaleContextVideo);
 	FREE_THREAD_COND(VM_Player::videoContext.condition);
@@ -1071,7 +1071,9 @@ int MediaPlayer::VM_Player::openVideo()
 	if ((VM_Player::videoContext.stream == NULL) || (VM_Player::videoContext.stream->codec == NULL))
 		return ERROR_INVALID_ARGUMENTS;
 
-	VM_Player::videoContext.frameEncoded.linesize[0] = 0;
+	if (VM_Player::videoContext.frameEncoded != NULL)
+		VM_Player::videoContext.frameEncoded->linesize[0] = 0;
+
 	VM_Player::videoContext.index     = VM_Player::videoContext.stream->index;
 	VM_Player::videoContext.frame     = LIB_FFMPEG::av_frame_alloc();
 	VM_Player::videoContext.condition = SDL_CreateCond();
@@ -1412,11 +1414,11 @@ void MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 				if (skipSub)
 					continue;
 
-				LIB_FFMPEG::AVPicture frameEncoded;
-				int                   scaleResult = 0;
-				VM_Texture*           texture     = NULL;
+				LIB_FFMPEG::AVFrame* frameEncoded = LIB_FFMPEG::av_frame_alloc();
+				int                  scaleResult  = 0;
+				VM_Texture*          texture      = NULL;
 
-				if (avpicture_alloc(&frameEncoded, ffmpegPixelFormat, sub->subRect->w, sub->subRect->h) == 0)
+				if (av_image_alloc(frameEncoded->data, frameEncoded->linesize, sub->subRect->w, sub->subRect->h, ffmpegPixelFormat, 32) > 0)
 				{
 					VM_Player::scaleContextSub = sws_getCachedContext(
 						VM_Player::scaleContextSub,
@@ -1430,7 +1432,7 @@ void MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 					scaleResult = sws_scale(
 						VM_Player::scaleContextSub,
 						sub->subRect->data, sub->subRect->linesize, 0, sub->subRect->h,
-						frameEncoded.data, frameEncoded.linesize
+						frameEncoded->data, frameEncoded->linesize
 					);
 				}
 
@@ -1444,13 +1446,13 @@ void MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 					};
 
 					SDL_SetTextureBlendMode(texture->data, SDL_BLENDMODE_BLEND);
-					SDL_UpdateTexture(texture->data, NULL, frameEncoded.data[0], frameEncoded.linesize[0]);
+					SDL_UpdateTexture(texture->data, NULL, frameEncoded->data[0], frameEncoded->linesize[0]);
 					SDL_RenderCopy(VM_Window::Renderer, texture->data, NULL, &renderLocation);
 
 					DELETE_POINTER(texture);
 				}
 
-				FREE_AVPICTURE(frameEncoded);
+				LIB_FFMPEG::av_frame_free(&frameEncoded);
 			}
 
 			SDL_SetRenderTarget(VM_Window::Renderer, NULL);
@@ -1570,7 +1572,9 @@ int MediaPlayer::VM_Player::renderVideoCreateTexture()
 	// CREATE A SCALING CONTEXT FOR NON-YUV420P VIDEOS
 	if ((videoStream->codec->pix_fmt != LIB_FFMPEG::AV_PIX_FMT_YUV420P) && (VM_Player::videoContext.texture->data != NULL))
 	{
-		if (avpicture_alloc(&VM_Player::videoContext.frameEncoded, ffmpegPixelFormat, videoFrame->width, videoFrame->height) < 0)
+		VM_Player::videoContext.frameEncoded = LIB_FFMPEG::av_frame_alloc();
+
+		if (av_image_alloc(VM_Player::videoContext.frameEncoded->data, VM_Player::videoContext.frameEncoded->linesize, videoFrame->width, videoFrame->height, ffmpegPixelFormat, 32) <= 0)
 			DELETE_POINTER(VM_Player::videoContext.texture);
 
 		VM_Player::scaleContextVideo = sws_getCachedContext(
@@ -1581,7 +1585,7 @@ int MediaPlayer::VM_Player::renderVideoCreateTexture()
 		);
 					
 		if (VM_Player::scaleContextVideo == NULL) {
-			FREE_AVPICTURE(VM_Player::videoContext.frameEncoded);
+			LIB_FFMPEG::av_frame_free(&VM_Player::videoContext.frameEncoded);
 			DELETE_POINTER(VM_Player::videoContext.texture);
 		}
 	}
@@ -1641,16 +1645,16 @@ int MediaPlayer::VM_Player::renderVideoUpdateTexture()
 	{
 		int scaleResult = sws_scale(
 			VM_Player::scaleContextVideo, videoFrame->data, videoFrame->linesize, 0, videoFrame->height,
-			VM_Player::videoContext.frameEncoded.data, VM_Player::videoContext.frameEncoded.linesize
+			VM_Player::videoContext.frameEncoded->data, VM_Player::videoContext.frameEncoded->linesize
 		);
 
 		// COPY THE CONVERTED FRAME TO THE TEXTURE
 		if (scaleResult > 0) {
 			SDL_UpdateYUVTexture(
 				VM_Player::videoContext.texture->data, NULL, 
-				VM_Player::videoContext.frameEncoded.data[0], VM_Player::videoContext.frameEncoded.linesize[0],
-				VM_Player::videoContext.frameEncoded.data[1], VM_Player::videoContext.frameEncoded.linesize[1],
-				VM_Player::videoContext.frameEncoded.data[2], VM_Player::videoContext.frameEncoded.linesize[2]
+				VM_Player::videoContext.frameEncoded->data[0], VM_Player::videoContext.frameEncoded->linesize[0],
+				VM_Player::videoContext.frameEncoded->data[1], VM_Player::videoContext.frameEncoded->linesize[1],
+				VM_Player::videoContext.frameEncoded->data[2], VM_Player::videoContext.frameEncoded->linesize[2]
 			);
 		}
 	}

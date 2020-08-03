@@ -196,8 +196,9 @@ Graphics::VM_Image* Graphics::VM_Graphics::CreateSnapshot(const String &filePath
 	if (formatContext == NULL)
 		return NULL;
 
-	bool                 isM4A         = VM_FileSystem::IsM4A(formatContext);
 	LIB_FREEIMAGE::FIBITMAP* snapshotImage = NULL;
+
+	bool isM4A = VM_FileSystem::IsM4A(formatContext);
 
 	// EXTRACT THUMBNAIL OR COVER ART FROM VIDEO STREAM
 	if (!isM4A)
@@ -211,7 +212,10 @@ Graphics::VM_Image* Graphics::VM_Graphics::CreateSnapshot(const String &filePath
 
 	VM_Image* image = new VM_Image(true, 0, 0, 0);
 
-	image->update(snapshotImage);
+	if (snapshotImage != NULL) {
+		image->update(snapshotImage);
+	}
+
 	FREE_IMAGE(snapshotImage);
 
 	return image;
@@ -385,14 +389,12 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotVideo(int mediaID,
 		frameReads++;
 	}
 
-	LIB_FFMPEG::AVPicture videoFrameRGB;
-	avpicture_alloc(&videoFrameRGB, LIB_FFMPEG::AV_PIX_FMT_BGR24, 0, 0);
-
 	LIB_FFMPEG::SwsContext* videoScaleContext = NULL;
+	LIB_FFMPEG::AVFrame*    videoFrameRGB     = LIB_FFMPEG::av_frame_alloc();
 
 	if (frameReturned && (videoFrameYUV->linesize[0] > 0))
 	{
-		if (avpicture_alloc(&videoFrameRGB, LIB_FFMPEG::AV_PIX_FMT_BGR24, videoFrameYUV->width, videoFrameYUV->height) == 0)
+		if (av_image_alloc(videoFrameRGB->data, videoFrameRGB->linesize, videoFrameYUV->width, videoFrameYUV->height, LIB_FFMPEG::AV_PIX_FMT_BGR24, 32) > 0)
 		{
 			videoScaleContext = sws_getContext(
 				videoFrameYUV->width, videoFrameYUV->height, videoStream->codec->pix_fmt,
@@ -407,7 +409,7 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotVideo(int mediaID,
 	{
 		scaleResult = sws_scale(
 			videoScaleContext, videoFrameYUV->data, videoFrameYUV->linesize, 0, videoFrameYUV->height,
-			videoFrameRGB.data, videoFrameRGB.linesize
+			videoFrameRGB->data, videoFrameRGB->linesize
 		);
 	}
 
@@ -416,19 +418,19 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotVideo(int mediaID,
 	if (scaleResult > 0)
 	{
 		snapshotImage = LIB_FREEIMAGE::FreeImage_ConvertFromRawBits(
-			static_cast<uint8_t*>(videoFrameRGB.data[0]), videoFrameYUV->width, videoFrameYUV->height, videoFrameRGB.linesize[0],
+			static_cast<uint8_t*>(videoFrameRGB->data[0]), videoFrameYUV->width, videoFrameYUV->height, videoFrameRGB->linesize[0],
 			24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK, 1
 		);
 	}
 
 	if (snapshotImage != NULL) {
 		SDL_Rect scaledSize = VM_Graphics::GetScaledSize(videoFrameYUV->width, videoFrameYUV->height);
-		snapshotImage = VM_Graphics::ResizeImage(&snapshotImage, scaledSize.w, scaledSize.h);
+		snapshotImage       = VM_Graphics::ResizeImage(&snapshotImage, scaledSize.w, scaledSize.h);
 	}
 
 	FREE_STREAM(videoStream);
 	FREE_SWS(videoScaleContext);
-	FREE_AVPICTURE(videoFrameRGB);
+	LIB_FFMPEG::av_frame_free(&videoFrameRGB);
 	LIB_FFMPEG::av_frame_free(&videoFrameYUV);
 
 	return snapshotImage;

@@ -94,6 +94,7 @@ namespace LIB_FFMPEG
 	extern "C"
 	{
 		#include <libavformat/avformat.h>
+		#include <libavutil/imgutils.h>
 		#include <libavutil/opt.h>
 		#include <libavutil/time.h>
 		#include <libswresample/swresample.h>
@@ -205,7 +206,6 @@ namespace VoyaMedia
 	#define FREE_DB(d)             if (d != NULL) { LIB_SQLITE::sqlite3_close(d);  d = NULL; }
 	#define FREE_JSON_DOC(d)       if (d != NULL) { LIB_JSON::json_free_value(&d); d = NULL; }
 	#define FREE_IMAGE(i)          if (i != NULL) { LIB_FREEIMAGE::FreeImage_Unload(i); i = NULL; }
-	#define FREE_FRAME(f, p)       if (f != NULL) { if (p) { LIB_FFMPEG::avpicture_free(reinterpret_cast<LIB_FFMPEG::AVPicture*>(f)); } LIB_FFMPEG::av_frame_free(&f); f = NULL; }
 	#define FREE_MEMORY(m)         if (m != NULL) { LIB_FREEIMAGE::FreeImage_CloseMemory(m); m = NULL; }
 	#define FREE_PACKET(p)         if (p != NULL) { LIB_FFMPEG::av_free_packet(p); LIB_FFMPEG::av_free(p); p = NULL; }
 	#define FREE_POINTER(p)        if (p != NULL) { free(p); p = NULL; }

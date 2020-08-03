@@ -128,7 +128,7 @@ namespace VoyaMedia
 			LIB_FFMPEG::AVFrame*  frame;
 			int                   frameDecoded;
 			int                   frameDuration;
-			LIB_FFMPEG::AVPicture frameEncoded;
+			LIB_FFMPEG::AVFrame*  frameEncoded;
 			int                   index;
 			SDL_mutex*            mutex;
 			VM_Packets            packets;
