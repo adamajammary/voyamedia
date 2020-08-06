@@ -73,18 +73,19 @@ namespace VoyaMedia
 			VM_Component*           scrollBar;
 
 		private:
-			const int             limit = 10;
-			int                   maxRows;
-			String                pageTokenPrev;
-			String                pageTokenNext;
-			Database::VM_DBResult result;
-			std::mutex            resultMutex;
-			VM_Texture*           scrollPane;
-			bool                  shouldRefreshRows;
-			bool                  shouldRefreshSelected;
-			bool                  shouldRefreshThumbs;
-			VM_CacheResponses     response;
-			VM_TableStates        states;
+			const int                   limit = 10;
+			int                         maxRows;
+			String                      pageTokenPrev;
+			String                      pageTokenNext;
+			Database::VM_DBResult       result;
+			std::mutex                  resultMutex;
+			VM_Texture*                 scrollPane;
+			bool                        shouldRefreshRows;
+			bool                        shouldRefreshSelected;
+			bool                        shouldRefreshThumbs;
+			VM_CacheResponses           response;
+			VM_TableStates              states;
+			std::queue<std::thread::id> thumbThreads;
 
 		public:
 			VM_Button*    getButton(const String &buttonID);
@@ -108,6 +109,7 @@ namespace VoyaMedia
 			void          refreshRows();
 			void          refreshSelected();
 			void          refreshThumbs();
+			void          removeThumbThread();
 			virtual int   render();
 			int           resetState(bool resetDataRequest = true);
 			void          resetScroll(VM_Component* scrollBar);

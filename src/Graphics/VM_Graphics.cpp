@@ -749,8 +749,10 @@ int Graphics::VM_Graphics::CreateThumbThread(void* userData)
 
 	DELETE_POINTER(threadData);
 
+	VM_GUI::ListTable->removeThumbThread();
+
 	if ((result == RESULT_OK) && !VM_Window::Quit)
-		VM_GUI::ListTable->refreshRows();
+		VM_GUI::ListTable->refreshThumbs();
 
 	return RESULT_OK;
 }

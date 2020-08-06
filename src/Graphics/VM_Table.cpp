@@ -870,7 +870,12 @@ void Graphics::VM_Table::refreshSelected()
 
 void Graphics::VM_Table::refreshThumbs()
 {
-	this->shouldRefreshThumbs = true;
+	this->shouldRefreshThumbs = this->thumbThreads.empty();
+}
+
+void Graphics::VM_Table::removeThumbThread()
+{
+	this->thumbThreads.pop();
 }
 
 int Graphics::VM_Table::render()
@@ -1336,8 +1341,11 @@ void Graphics::VM_Table::setData()
 				threadData->data["thumb_path"] = thumbPath;
 			#endif
 
-			std::thread createThumb(VM_Graphics::CreateThumbThread, threadData);
-			createThumb.detach();
+			std::thread thumbThread(VM_Graphics::CreateThumbThread, threadData);
+
+			this->thumbThreads.push(thumbThread.get_id());
+
+			thumbThread.detach();
 		}
 	}
 
@@ -1431,7 +1439,7 @@ int Graphics::VM_Table::setRows(bool temp)
 				buttonColumn->backgroundColor = { 0, 0, 0, 0xFF };
 				buttonColumn->highlightColor  = buttonColumn->backgroundColor;
 
-				if (!temp)
+				if (!temp && this->thumbThreads.empty())
 					buttonColumn->setThumb(this->id);
 			// LAST COLUMN - ABOUT/INFO
 			} else if ((col == (int)this->buttons.size() - 1) && !temp) {
