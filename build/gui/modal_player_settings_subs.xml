@@ -22,9 +22,11 @@
       </panel>
 
       <panel id="list_table_bottom" height="25" valign="middle">
+        <button id="list_offset_start" halign="center" valign="middle" height="100%" width="height" image-file="prev-4-512.png" image-width="50%" image-height="image-width"></button>
         <button id="list_offset_prev" halign="center" valign="middle" height="100%" width="height" image-file="prev-2-512.png" image-width="50%" image-height="image-width"></button>
         <button id="list_details_text" halign="center" valign="middle"></button>
         <button id="list_offset_next" halign="center" valign="middle" height="100%" width="height" image-file="next-2-512.png" image-width="50%" image-height="image-width"></button>
+        <button id="list_offset_end" halign="center" valign="middle" height="100%" width="height" image-file="next-4-512.png" image-width="50%" image-height="image-width"></button>
       </panel>
     </panel>
 

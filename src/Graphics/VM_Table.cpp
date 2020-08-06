@@ -689,8 +689,7 @@ VM_DBResult Graphics::VM_Table::getYouTube()
 			else if (VM_JSON::GetKey(item) == "snippet")
 			{
 				// TITLE
-				row["name"] = VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "title"));
-				row["name"] = VM_Text::Replace(row["name"], "\\\"", "\"");
+				row["name"] = VM_Text::ReplaceHTML(VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "title")));
 
 				// THUMB
 				LIB_JSON::json_t* thumb  = NULL;
@@ -730,6 +729,29 @@ bool Graphics::VM_Table::isRowVisible()
 	return ((selectedRow >= scrollOffset) && (selectedRow <= maxOffset));
 }
 
+bool Graphics::VM_Table::offsetEnd()
+{
+	if (SHOUTCAST_IS_SELECTED || YOUTUBE_IS_SELECTED)
+		return false;
+
+	int remainder = (this->maxRows % this->limit);
+	int end       = (this->maxRows - (remainder > 0 ? remainder : this->limit));
+
+	if (this->states[VM_Top::Selected].offset < end)
+	{
+		this->states[VM_Top::Selected].offset       = end;
+		this->states[VM_Top::Selected].scrollOffset = 0;
+		this->states[VM_Top::Selected].selectedRow  = 0;
+
+		this->refreshRows();
+		this->refreshSelected();
+
+		return true;
+	}
+
+	return false;
+}
+
 bool Graphics::VM_Table::offsetNext()
 {
 	if (this->states[VM_Top::Selected].offset + this->limit < this->maxRows)
@@ -752,12 +774,33 @@ bool Graphics::VM_Table::offsetNext()
 
 bool Graphics::VM_Table::offsetPrev()
 {
-	if (this->states[VM_Top::Selected].offset - this->limit >= 0)
+	if (this->states[VM_Top::Selected].offset >= this->limit)
 	{
 		if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
 			this->states[VM_Top::Selected].pageToken = this->pageTokenPrev;
 
 		this->states[VM_Top::Selected].offset      -= this->limit;
+		this->states[VM_Top::Selected].scrollOffset = 0;
+		this->states[VM_Top::Selected].selectedRow  = 0;
+
+		this->refreshRows();
+		this->refreshSelected();
+
+		return true;
+	}
+
+	return false;
+}
+
+bool Graphics::VM_Table::offsetStart()
+{
+
+	if (this->states[VM_Top::Selected].offset >= this->limit)
+	{
+		if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
+			this->states[VM_Top::Selected].pageToken = "";
+
+		this->states[VM_Top::Selected].offset       = 0;
 		this->states[VM_Top::Selected].scrollOffset = 0;
 		this->states[VM_Top::Selected].selectedRow  = 0;
 

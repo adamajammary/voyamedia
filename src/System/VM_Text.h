@@ -47,6 +47,7 @@ namespace VoyaMedia
 			static WString   Remove(const WString &text, const WString &removeSubstring);
 			static String    Replace(const String &text, const String &oldSubstring, const String &newSubstring);
 			static WString   Replace(const WString &text, const WString &oldSubstring, const WString &newSubstring);
+			static String    ReplaceHTML(const String &html);
 			static Strings   Split(const String &text, const String &delimiter, bool returnEmpty = true);
 			static String    ToDuration(const int64_t duration);
 			static String    ToDuration(const String &text);

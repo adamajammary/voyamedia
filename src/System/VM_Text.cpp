@@ -698,6 +698,18 @@ WString System::VM_Text::Replace(const WString &text, const WString &oldSubstrin
 	return formattedString;
 }
 
+String System::VM_Text::ReplaceHTML(const String &html)
+{
+	String result = String(html);
+
+	result = VM_Text::Replace(result, "&amp;",  "&");
+	result = VM_Text::Replace(result, "&#39;",  "'");
+	result = VM_Text::Replace(result, "\\\"",   "\"");
+	result = VM_Text::Replace(result, "&quot;", "\"");
+
+	return result;
+}
+
 Strings System::VM_Text::Split(const String &text, const String &delimiter, bool returnEmpty)
 {
 	Strings parts;
@@ -915,18 +927,19 @@ String System::VM_Text::ToUTF8(const WString &stringUNICODE, bool useWCSTOMBS)
 	String stringUTF8;
 
 	if (useWCSTOMBS) {
-		char*  stringBuffer = (char*)malloc((stringUNICODE.size() + 1) * sizeof(char));
+		size_t size         = (stringUNICODE.size() + 1) * sizeof(char);
+		char*  stringBuffer = (char*)malloc(size);
 		size_t sizeUTF8     = std::wcstombs(stringBuffer, stringUNICODE.c_str(), stringUNICODE.size());
 
-		stringBuffer[sizeUTF8] = 0;
+		if (sizeUTF8 != (size_t)-1)
+			stringBuffer[sizeUTF8] = 0;
 
 		stringUTF8 = String(stringBuffer);
+
 		FREE_POINTER(stringBuffer);
 	} else {
 		char* stringBuffer = SDL_iconv_string(
-			"UTF-8", "UTF-16LE",
-			reinterpret_cast<const char*>(stringUNICODE.c_str()),
-			(stringUNICODE.size() + 1) * sizeof(wchar_t)
+			"UTF-8", "UTF-16LE", reinterpret_cast<const char*>(stringUNICODE.c_str()), (stringUNICODE.size() + 1) * sizeof(wchar_t)
 		);
 
 		stringUTF8 = String(stringBuffer);

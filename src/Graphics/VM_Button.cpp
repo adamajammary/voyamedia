@@ -151,6 +151,9 @@ int Graphics::VM_Button::render()
 	if (!this->visible)
 		return ERROR_INVALID_ARGUMENTS;
 
+	if ((this->id == "list_offset_end") && (SHOUTCAST_IS_SELECTED || YOUTUBE_IS_SELECTED))
+		return RESULT_OK;
+
 	// COLOR BACKGROUND
 	if ((this->backgroundColor.a == 0xFF) || (this->parent == NULL) || (this->parent->backgroundColor.a == 0xFF))
 	{

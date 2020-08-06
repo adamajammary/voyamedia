@@ -161,7 +161,7 @@ int System::VM_EventManager::HandleEvents()
 			VM_Player::CursorShow();
 
 			// SCROLL MOUSE WHEEL
-			if (event.wheel.y != 0)
+			if ((listTable != NULL) && (event.wheel.y != 0))
 			{
 				scrollAmount = (std::signbit((double)event.wheel.y) ? 1 : -1);
 				listTable->selectRow(listTable->getSelectedRowIndex() + scrollAmount);
@@ -857,7 +857,7 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 	{
 		for (int i = 1; i < (int)table->buttons.size() - 1; i++)
 		{
-			if (!VM_Graphics::ButtonPressed(mouseEvent, table->buttons[i]->backgroundArea))
+			if (!VM_Graphics::ButtonPressed(mouseEvent, table->buttons[i]->backgroundArea) || (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE))
 				continue;
 
 			table->sort(table->buttons[i]->id);
@@ -887,10 +887,14 @@ bool System::VM_EventManager::isClickedTableBottom(SDL_Event* mouseEvent, VM_Com
 		if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 			continue;
 
-		if (button->id == "list_offset_prev")
+		if (button->id == "list_offset_start")
+			table->offsetStart();
+		else if (button->id == "list_offset_prev")
 			table->offsetPrev();
 		else if (button->id == "list_offset_next")
 			table->offsetNext();
+		else if (button->id == "list_offset_end")
+			table->offsetEnd();
 
 		return true;
 	}

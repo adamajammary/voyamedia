@@ -100,8 +100,10 @@ namespace VoyaMedia
 			String        getSQL();
 			VM_TableState getState();
 			bool          isRowVisible();
+			bool          offsetEnd();
 			bool          offsetNext();
 			bool          offsetPrev();
+			bool          offsetStart();
 			int           refresh();
 			void          refreshRows();
 			void          refreshSelected();
