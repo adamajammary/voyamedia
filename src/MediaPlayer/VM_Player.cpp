@@ -2234,10 +2234,9 @@ int MediaPlayer::VM_Player::threadPackets(void* userData)
 		VM_Player::TimeOut->stop();
 
 		// WAIT IF THE QUEUES ARE FULL
-		while ((VM_Player::isPacketQueueFull(MEDIA_TYPE_AUDIO) || VM_Player::isPacketQueueFull(MEDIA_TYPE_VIDEO)) &&
-			!VM_Player::seekRequested && !VM_Player::State.quit)
+		while ((VM_Player::isPacketQueueFull(MEDIA_TYPE_AUDIO) || VM_Player::isPacketQueueFull(MEDIA_TYPE_VIDEO)) && !VM_Player::seekRequested && !VM_Player::State.quit)
 		{
-			if (VIDEO_IS_SELECTED && VM_Player::videoContext.packets.empty())
+			if (VIDEO_IS_SELECTED && (VM_Player::audioContext.packets.empty() || VM_Player::videoContext.packets.empty()))
 				break;
 
 			SDL_Delay(DELAY_TIME_ONE_MS);
