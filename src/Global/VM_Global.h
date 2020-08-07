@@ -448,15 +448,16 @@ namespace VoyaMedia
 		const int CURSOR_HIDE_DELAY = 2000;
 	#endif
 
-	const int          DEFAULT_MARGIN            = 30;
+	const int          DEFAULT_MARGIN            = 10;
 	const int          DEFAULT_CHAR_BUFFER_SIZE  = 1024;
 	const int          DEFAULT_WCHAR_BUFFER_SIZE = 4096;
-	//const double       DEFAULT_FONT_DPI_RATIO    = 0.75; // (72.0 / 96.0)
+	const float        DEFAULT_FONT_DPI_RATIO    = 0.75f; // (72.0 / 96.0)
 	const int          DEFAULT_FONT_SIZE         = 11;
 	const int          DEFAULT_FONT_SIZE_SUB     = 48;
 	const VM_PlayType  DEFAULT_LOOP_TYPE         = PLAY_TYPE_NORMAL;
 	const VM_MediaType DEFAULT_MEDIA_TYPE        = MEDIA_TYPE_AUDIO;
 	const int          DEFAULT_SCALE_FILTER      = SWS_LANCZOS;
+	const SDL_Point    DEFAULT_SUB_SCREEN_SIZE   = { 384, 288 };
 
 	#if defined _android
 		const float DEFAULT_DPI = 160.0f;
@@ -567,13 +568,6 @@ namespace VoyaMedia
 		class  VM_Image;
 		struct VM_TableState;
 		class  VM_Texture;
-
-		struct VM_PointF
-		{
-			float x, y;
-			VM_PointF()                 { this->x = 0; this->y = 0; }
-			VM_PointF(float x, float y) { this->x = x; this->y = y; }
-		};
 
 		typedef std::vector<VM_Button*>                          VM_Buttons;
 		typedef umapEH<VM_MediaType, StringMap, VM_EnumHash>     VM_CacheResponses;

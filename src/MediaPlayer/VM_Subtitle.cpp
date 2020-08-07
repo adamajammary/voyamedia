@@ -89,10 +89,10 @@ MediaPlayer::VM_Subtitles MediaPlayer::VM_Subtitle::getDuplicateSubs(const VM_Su
 	for (auto sub : subs)
 	{
 		if ((sub == NULL) ||
-			(this->id       == sub->id) ||
+			(this->id == sub->id) ||
 			(this->pts.start != sub->pts.start) ||
 			(this->pts.end   != sub->pts.end) ||
-			((this->text    != sub->text) && (text3 != VM_SubFontEngine::RemoveFormatting(sub->text3))) ||
+			((this->text != sub->text) && (text3 != VM_SubFontEngine::RemoveFormatting(sub->text3))) ||
 			(std::atoi(this->textSplit[0].c_str()) == std::atoi(sub->textSplit[0].c_str())))
 		{
 			continue;
@@ -113,13 +113,13 @@ SDL_Rect MediaPlayer::VM_Subtitle::getMargins()
 {
 	if (this->style != NULL)
 	{
-		VM_PointF scale = VM_Player::GetSubScale();
+		SDL_FPoint scale = VM_Player::GetSubScale();
 
 		return {
-			(int)((float)this->style->marginL * scale.x),
-			(int)((float)this->style->marginR * scale.x),
-			(int)((float)this->style->marginV * scale.y),
-			(int)((float)this->style->marginV * scale.y),
+			(int)((float)this->style->marginL * max(1.0f, scale.x)),
+			(int)((float)this->style->marginR * max(1.0f, scale.x)),
+			(int)((float)this->style->marginV * max(1.0f, scale.y)),
+			(int)((float)this->style->marginV * max(1.0f, scale.y)),
 		};
 	}
 
@@ -139,7 +139,7 @@ SDL_Point MediaPlayer::VM_Subtitle::getShadow()
 {
 	if (this->style != NULL)
 	{
-		VM_PointF scale = VM_Player::GetSubScale();
+		SDL_FPoint scale = VM_Player::GetSubScale();
 
 		return {
 			(int)((float)this->style->shadow.x * scale.x),

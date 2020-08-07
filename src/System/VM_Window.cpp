@@ -354,6 +354,7 @@ void System::VM_Window::resize()
 	}
 
 	if (!VM_Player::State.isStopped) {
+		VM_Player::Render(VM_PlayerControls::GetSnapshotArea());
 		VM_Player::Refresh();
 		VM_PlayerControls::Refresh();
 		VM_PlayerControls::RefreshControls();

@@ -12,6 +12,26 @@ bool                      MediaPlayer::VM_PlayerControls::progressTimeLeft = fal
 bool                      MediaPlayer::VM_PlayerControls::refreshPending   = false;
 bool                      MediaPlayer::VM_PlayerControls::visible          = false;
 
+SDL_Rect MediaPlayer::VM_PlayerControls::GetSnapshotArea()
+{
+	VM_Component* snapshot = VM_GUI::Components["bottom_player_snapshot"];
+
+	snapshot->backgroundArea.x = 0;
+	snapshot->backgroundArea.y = 0;
+	snapshot->backgroundArea.w = VM_Window::Dimensions.w;
+	snapshot->backgroundArea.h = VM_Window::Dimensions.h;
+
+	if (VM_PlayerControls::visible) {
+		VM_Component* bottom = VM_GUI::Components["bottom"];
+		VM_Component* topBar = VM_GUI::Components["top_bar"];
+
+		snapshot->backgroundArea.y = (topBar->backgroundArea.y + topBar->backgroundArea.h);
+		snapshot->backgroundArea.h -= (snapshot->backgroundArea.y + bottom->backgroundArea.h);
+	}
+
+	return snapshot->backgroundArea;
+}
+
 int MediaPlayer::VM_PlayerControls::Hide(bool skipFS)
 {
 	VM_PlayerControls::visible = false;
@@ -20,20 +40,11 @@ int MediaPlayer::VM_PlayerControls::Hide(bool skipFS)
 		return RESULT_OK;
 
 	VM_Component* controls = VM_GUI::Components["bottom_player_controls"];
-	VM_Component* snapshot = VM_GUI::Components["bottom_player_snapshot"];
 
 	controls->visible = false;
 
-	#if !defined _android && !defined _ios
-	if (VM_Window::FullScreenMaximized) {
-	#endif
-		snapshot->backgroundArea.y = 0;
-		snapshot->backgroundArea.h = VM_Window::Dimensions.h;
-	#if !defined _android && !defined _ios
-	}
-	#endif
-
 	VM_Player::FreeTextures();
+	VM_Player::Render(VM_PlayerControls::GetSnapshotArea());
 	VM_Player::Refresh();
 
 	return RESULT_OK;
@@ -386,23 +397,12 @@ int MediaPlayer::VM_PlayerControls::Show(bool skipFS)
 	if (skipFS)
 		return RESULT_OK;
 
-	VM_Component* bottom   = VM_GUI::Components["bottom"];
 	VM_Component* controls = VM_GUI::Components["bottom_player_controls"];
-	VM_Component* snapshot = VM_GUI::Components["bottom_player_snapshot"];
-	VM_Component* topBar   = VM_GUI::Components["top_bar"];
 
 	controls->visible = true;
 
-	#if !defined _android && !defined _ios
-	if (VM_Window::FullScreenMaximized) {
-	#endif
-		snapshot->backgroundArea.y = (topBar->backgroundArea.y + topBar->backgroundArea.h);
-		snapshot->backgroundArea.h = (VM_Window::Dimensions.h - snapshot->backgroundArea.y - bottom->backgroundArea.h);
-	#if !defined _android && !defined _ios
-	}
-	#endif
-
 	VM_Player::FreeTextures();
+	VM_Player::Render(VM_PlayerControls::GetSnapshotArea());
 	VM_Player::Refresh();
 
 	return RESULT_OK;

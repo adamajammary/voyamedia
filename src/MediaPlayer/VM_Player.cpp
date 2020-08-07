@@ -34,6 +34,7 @@ MediaPlayer::VM_PlayerSubContext   MediaPlayer::VM_Player::subContext;
 Strings                            MediaPlayer::VM_Player::SubsExternal;
 VM_TimeOut*                        MediaPlayer::VM_Player::TimeOut;
 MediaPlayer::VM_PlayerVideoContext MediaPlayer::VM_Player::videoContext;
+SDL_Rect                           MediaPlayer::VM_Player::VideoDimensions;
 bool                               MediaPlayer::VM_Player::videoFrameAvailable;
 
 void MediaPlayer::VM_Player::Init()
@@ -457,7 +458,7 @@ int MediaPlayer::VM_Player::GetStreamIndex(VM_MediaType mediaType)
 	return -1;
 }
 
-VM_PointF MediaPlayer::VM_Player::GetSubScale()
+SDL_FPoint MediaPlayer::VM_Player::GetSubScale()
 {
 	return VM_Player::subContext.scale;
 }
@@ -937,20 +938,15 @@ int MediaPlayer::VM_Player::openSub()
 			float subVideoScale        = ((float)subHeight / (float)videoHeight);
 			VM_Player::subContext.size = { (int)((float)videoWidth * subVideoScale), subHeight };
 		} else {
-			VM_Player::subContext.size = { 384, 288 };
+			VM_Player::subContext.size = DEFAULT_SUB_SCREEN_SIZE;
 		}
 
 		auto bottom = VM_GUI::Components["bottom"];
 		auto topBar = VM_GUI::Components["top_bar"];
 
-		SDL_Point playerSnapshot = {
-			VM_Window::Dimensions.w,
-			(VM_Window::Dimensions.h - topBar->backgroundArea.h - bottom->backgroundArea.h)
-		};
-
 		VM_Player::subContext.scale = {
-			(float)((float)playerSnapshot.x / (float)VM_Player::subContext.size.x * 0.9f),
-			(float)((float)playerSnapshot.y / (float)VM_Player::subContext.size.y * 0.9f)
+			(float)((float)VM_Player::VideoDimensions.x / (float)VM_Player::subContext.size.x * DEFAULT_FONT_DPI_RATIO),
+			(float)((float)VM_Player::VideoDimensions.y / (float)VM_Player::subContext.size.y * DEFAULT_FONT_DPI_RATIO)
 		};
 
 		// STYLE VERSION
@@ -1228,25 +1224,25 @@ int MediaPlayer::VM_Player::PlaylistLoopTypeToggle()
 
 void MediaPlayer::VM_Player::Refresh()
 {
-	auto snapshot = VM_GUI::Components["bottom_player_snapshot"];
+	if (!SDL_RectEmpty(&VM_Player::VideoDimensions)) {
+		VM_Player::subContext.scale = {
+			(float)((float)VM_Player::VideoDimensions.w / (float)VM_Player::subContext.size.x * DEFAULT_FONT_DPI_RATIO),
+			(float)((float)VM_Player::VideoDimensions.h / (float)VM_Player::subContext.size.y * DEFAULT_FONT_DPI_RATIO)
+		};
 
-	VM_Player::subContext.scale = {
-		(float)((float)snapshot->backgroundArea.w / (float)VM_Player::subContext.size.x * 0.9f),
-		(float)((float)snapshot->backgroundArea.h / (float)VM_Player::subContext.size.y * 0.9f)
-	};
+		for (auto sub : VM_Player::subContext.subs)
+		{
+			sub->skip = false;
 
-	for (auto sub : VM_Player::subContext.subs)
-	{
-		sub->skip = false;
+			if ((sub->style != NULL) && !sub->style->fontName.empty())
+				sub->style->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale, sub);
+		}
 
-		if ((sub->style != NULL) && !sub->style->fontName.empty())
-			sub->style->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale, sub);
+		VM_SubFontEngine::RemoveSubs();
+		DELETE_POINTER(VM_Player::subContext.texture);
+
+		VM_Player::refreshSub = true;
 	}
-
-	VM_SubFontEngine::RemoveSubs();
-	DELETE_POINTER(VM_Player::subContext.texture);
-
-	VM_Player::refreshSub = true;
 }
 
 int MediaPlayer::VM_Player::Render(const SDL_Rect &location)
@@ -1482,8 +1478,7 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 		if (VM_Player::subContext.texture == NULL)
 		{
 			VM_Player::subContext.texture = new VM_Texture(
-				SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
-				VM_Window::Dimensions.w, VM_Window::Dimensions.h
+				SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, VM_Player::VideoDimensions.w, VM_Player::VideoDimensions.h
 			);
 		}
 
@@ -1496,8 +1491,7 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 			SDL_SetTextureBlendMode(VM_Player::subContext.texture->data, SDL_BLENDMODE_BLEND);
 
 			VM_SubFontEngine::RenderSubText(
-				VM_Player::subContext.subs,
-				VM_Player::subContext.fonts[FONT_MERGED], VM_Player::subContext.fonts[FONT_CJK]
+				VM_Player::subContext.subs, VM_Player::subContext.fonts[FONT_MERGED], VM_Player::subContext.fonts[FONT_CJK]
 			);
 
 			SDL_SetRenderTarget(VM_Window::Renderer, NULL);
@@ -1518,10 +1512,7 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 		(VM_Player::subContext.texture != NULL) && 
 		(VM_Player::subContext.texture->data != NULL))
 	{
-		SDL_RenderCopy(
-			VM_Window::Renderer, VM_Player::subContext.texture->data,
-			NULL, &VM_Player::videoContext.renderLocation
-		);
+		SDL_RenderCopy(VM_Window::Renderer, VM_Player::subContext.texture->data, NULL, &VM_Player::VideoDimensions);
 	}
 }
 
@@ -1542,12 +1533,12 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 		if (updateTexture)
 			VM_Player::renderVideoUpdateTexture();
 
-		if (!SDL_RectEmpty(&VM_Player::videoContext.renderLocation) && !VM_Player::State.quit)
+		if (!SDL_RectEmpty(&VM_Player::VideoDimensions) && !VM_Player::State.quit)
 		{
 			VM_Color backgroundColor = SDL_COLOR_BLACK;
 			VM_Graphics::FillArea(&backgroundColor, &location);
 
-			SDL_RenderCopy(VM_Window::Renderer, VM_Player::videoContext.texture->data, NULL, &VM_Player::videoContext.renderLocation);
+			SDL_RenderCopy(VM_Window::Renderer, VM_Player::videoContext.texture->data, NULL, &VM_Player::VideoDimensions);
 		}
 	}
 }
@@ -1613,11 +1604,17 @@ int MediaPlayer::VM_Player::renderVideoScaleRenderLocation(const SDL_Rect &locat
 		scaledHeight = (maxHeight <= location.h ? maxHeight : location.h);
 	}
 
+	bool isVideoDimensionsEmpty = SDL_RectEmpty(&VM_Player::VideoDimensions);
+
 	// CALCULATE THE RENDER LOCATION
-	VM_Player::videoContext.renderLocation.x = (location.x + ((location.w - scaledWidth)  / 2));
-	VM_Player::videoContext.renderLocation.y = (location.y + ((location.h - scaledHeight) / 2));
-	VM_Player::videoContext.renderLocation.w = scaledWidth;
-	VM_Player::videoContext.renderLocation.h = scaledHeight;
+	VM_Player::VideoDimensions.x = (location.x + ((location.w - scaledWidth)  / 2));
+	VM_Player::VideoDimensions.y = (location.y + ((location.h - scaledHeight) / 2));
+	VM_Player::VideoDimensions.w = scaledWidth;
+	VM_Player::VideoDimensions.h = scaledHeight;
+
+	if (isVideoDimensionsEmpty) {
+		VM_Player::Refresh();
+	}
 
 	return RESULT_OK;
 }
@@ -1688,6 +1685,7 @@ void MediaPlayer::VM_Player::reset()
 	VM_Player::SelectedRow              = {};
 	VM_Player::TimeOut                  = NULL;
 	VM_Player::videoFrameAvailable      = false;
+	VM_Player::VideoDimensions          = {};
 
 	VM_Player::audioContext.reset();
 	VM_Player::subContext.reset();
