@@ -665,7 +665,7 @@ int Graphics::VM_GUI::setTable(VM_Component* parent, VM_Component* component)
 			for (auto button : VM_GUI::Components["bottom_player_controls_controls_right"]->buttons)
 				dynamic_cast<VM_Button*>(button)->removeImage();
 
-			VM_PlayerControls::Hide(true);
+			VM_PlayerControls::Hide();
 			VM_PlayerControls::Init();
 			VM_PlayerControls::Refresh();
 
@@ -693,19 +693,11 @@ int Graphics::VM_GUI::setTable(VM_Component* parent, VM_Component* component)
 
 void Graphics::VM_GUI::showPlayerControls()
 {
-	VM_PlayerControls::Show(true);
+	VM_PlayerControls::Show();
 	VM_PlayerControls::Init();
 	VM_PlayerControls::Refresh();
 
-	VM_Component* bottom   = VM_GUI::Components["bottom"];
-	VM_Component* player   = VM_GUI::Components["bottom_player"];
-	VM_Component* snapshot = VM_GUI::Components["bottom_player_snapshot"];
-	VM_Component* topBar   = VM_GUI::Components["top_bar"];
-
-	snapshot->backgroundArea.x = 0;
-	snapshot->backgroundArea.y = (topBar->backgroundArea.y + topBar->backgroundArea.h);
-	snapshot->backgroundArea.w = VM_Window::Dimensions.w;
-	snapshot->backgroundArea.h = (VM_Window::Dimensions.h - snapshot->backgroundArea.y - bottom->backgroundArea.h);
+	VM_Component* player = VM_GUI::Components["bottom_player"];
 
 	player->backgroundArea = {};
 	player->borderWidth    = {};

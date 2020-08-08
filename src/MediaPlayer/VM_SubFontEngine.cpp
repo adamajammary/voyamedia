@@ -77,9 +77,7 @@ MediaPlayer::VM_SubTexture* MediaPlayer::VM_SubFontEngine::createSubOutline(VM_S
 	if (subFill->subtitle->style != NULL)
 		TTF_SetFontStyle(font, subFill->subtitle->style->fontStyle);
 
-	SDL_Surface* surface = TTF_RenderUNICODE_Blended(
-		font, subFill->textUTF16, subFill->subtitle->getColorOutline()
-	);
+	SDL_Surface* surface = TTF_RenderUNICODE_Blended(font, subFill->textUTF16, subFill->subtitle->getColorOutline());
 
 	if (surface == NULL)
 		return NULL;
@@ -135,9 +133,7 @@ MediaPlayer::VM_SubTexture* MediaPlayer::VM_SubFontEngine::createSubShadow(VM_Su
 	if (subFill->subtitle->style != NULL)
 		TTF_SetFontStyle(font, subFill->subtitle->style->fontStyle);
 
-	SDL_Surface* surface = TTF_RenderUNICODE_Blended(
-		font, subFill->textUTF16, subFill->subtitle->getColorShadow()
-	);
+	SDL_Surface* surface = TTF_RenderUNICODE_Blended(font, subFill->textUTF16, subFill->subtitle->getColorShadow());
 
 	if (surface == NULL)
 		return NULL;
@@ -1548,66 +1544,29 @@ int MediaPlayer::VM_SubFontEngine::splitSub(uint16_t* subStringUTF16, VM_Subtitl
 	if ((subStringUTF16 == NULL) || (sub == NULL))
 		return ERROR_UNKNOWN;
 
-	// Calculate total sub width
-	int  width, height;
-	auto margins  = sub->getMargins();
-	int  maxWidth = (VM_Player::VideoDimensions.w - DEFAULT_MARGIN - DEFAULT_MARGIN - margins.x - margins.y);
-
+	// Get the font used to render the sub
 	TTF_Font* font = sub->getFont();
 
 	if (font == NULL)
 		return ERROR_UNKNOWN;
 
-	// SPLIT STYLING
-	if ((sub->text3.find("{") != sub->text3.rfind("{")) && VM_Text::IsValidSubtitle(sub->text3) &&
-		(sub->text3.find("^") == String::npos))
-	{
-		uint16_t utf16[DEFAULT_CHAR_BUFFER_SIZE];
-		String   text3 = VM_SubFontEngine::RemoveFormatting(sub->text3);
+	TTF_SetFontOutline(font, sub->getOutline());
 
-		VM_Text::ToUTF16(text3, utf16, DEFAULT_CHAR_BUFFER_SIZE);
-		TTF_SizeUNICODE(font, utf16, &width, &height);
+	if (sub->style != NULL)
+		TTF_SetFontStyle(font, sub->style->fontStyle);
 
-		if ((width > maxWidth) && (sub->text3.find("\\q2") == String::npos))
-		{
-			int     width2 = 0;
-			Strings split  = VM_Text::Split(sub->text3, "{");
+	// Calculate max width available for rendering the sub
+	auto margins  = sub->getMargins();
+	int  maxWidth = (VM_Player::VideoDimensions.w - DEFAULT_MARGIN - DEFAULT_MARGIN - margins.x - margins.y);
 
-			for (const auto &s : split)
-			{
-				size_t f  = s.rfind("}");
-				String s2 = (f != String::npos ? s.substr(f + 1) : s);
+	// Split the sub text based on styling formatting tags
+	if ((sub->text3.find("{") != sub->text3.rfind("{")) && VM_Text::IsValidSubtitle(sub->text3) && (sub->text3.find("^") == String::npos))
+		return VM_SubFontEngine::splitSubStyling(subStringUTF16, sub, prevSub, font, maxWidth, subStrings16);
 
-				VM_Text::ToUTF16(s2, utf16, DEFAULT_CHAR_BUFFER_SIZE);
-				TTF_SizeUNICODE(font, utf16, &width, &height);
-
-				width2 += width;
-
-				if (s2 == sub->text)
-					break;
-
-				if (width2 > maxWidth)
-					width2 = width;
-			}
-
-			if (width2 > maxWidth)
-			{
-				sub->offsetY = true; // Absolute position: force new line
-
-				if (prevSub != NULL)
-					prevSub->splitStyling = false; // Relative align: force new line
-			}
-		}
-
-		subStrings16.push_back(subStringUTF16);
-
-		return RESULT_OK;
-	}
-
-	// NORMAL SPLIT
+	// Split the sub if it's larger than the available width
+	int  width, height;
 	TTF_SizeUNICODE(font, subStringUTF16, &width, &height);
 
-	// Split sub if larger than video width
 	if ((width >= maxWidth) && (sub->text3.find("\\q2") == String::npos))
 	{
 		Strings words   = VM_Text::Split(VM_Text::Trim(sub->text), " ");
@@ -1679,6 +1638,10 @@ int MediaPlayer::VM_SubFontEngine::splitSubDistributeByLines(const Strings &word
 
 				subStrings16.clear();
 
+				#if defined _DEBUG
+					LOG("splitSubDistributeByLines: FAIL => %d > %d, %s", lineWidth, maxWidth, line.c_str());
+				#endif
+
 				return ERROR_UNKNOWN;
 			}
 
@@ -1729,6 +1692,51 @@ void MediaPlayer::VM_SubFontEngine::splitSubDistributeByWidth(const Strings &wor
 		if (i < words.size() - 1)
 			lineString2.append(" " + words[i + 1]);
 	}
+}
+
+int MediaPlayer::VM_SubFontEngine::splitSubStyling(uint16_t* subStringUTF16, VM_Subtitle* sub, VM_Subtitle* prevSub, TTF_Font* font, const int maxWidth, std::vector<uint16_t*> &subStrings16)
+{
+	int      width, height;
+	uint16_t utf16[DEFAULT_CHAR_BUFFER_SIZE];
+	String   text3 = VM_SubFontEngine::RemoveFormatting(sub->text3);
+
+	VM_Text::ToUTF16(text3, utf16, DEFAULT_CHAR_BUFFER_SIZE);
+	TTF_SizeUNICODE(font, utf16, &width, &height);
+
+	if ((width > maxWidth) && (sub->text3.find("\\q2") == String::npos))
+	{
+		int     width2 = 0;
+		Strings split  = VM_Text::Split(sub->text3, "{");
+
+		for (const auto &s : split)
+		{
+			size_t f  = s.rfind("}");
+			String s2 = (f != String::npos ? s.substr(f + 1) : s);
+
+			VM_Text::ToUTF16(s2, utf16, DEFAULT_CHAR_BUFFER_SIZE);
+			TTF_SizeUNICODE(font, utf16, &width, &height);
+
+			width2 += width;
+
+			if (s2 == sub->text)
+				break;
+
+			if (width2 > maxWidth)
+				width2 = width;
+		}
+
+		if (width2 > maxWidth)
+		{
+			sub->offsetY = true; // Absolute position: force new line
+
+			if (prevSub != NULL)
+				prevSub->splitStyling = false; // Relative align: force new line
+		}
+	}
+
+	subStrings16.push_back(subStringUTF16);
+
+	return RESULT_OK;
 }
 
 // http://docs.aegisub.org/3.2/ASS_Tags/

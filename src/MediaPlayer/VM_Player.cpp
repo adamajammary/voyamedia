@@ -941,14 +941,6 @@ int MediaPlayer::VM_Player::openSub()
 			VM_Player::subContext.size = DEFAULT_SUB_SCREEN_SIZE;
 		}
 
-		auto bottom = VM_GUI::Components["bottom"];
-		auto topBar = VM_GUI::Components["top_bar"];
-
-		VM_Player::subContext.scale = {
-			(float)((float)VM_Player::VideoDimensions.x / (float)VM_Player::subContext.size.x * DEFAULT_FONT_DPI_RATIO),
-			(float)((float)VM_Player::VideoDimensions.y / (float)VM_Player::subContext.size.y * DEFAULT_FONT_DPI_RATIO)
-		};
-
 		// STYLE VERSION
 		if (!subHeader.empty())
 		{
@@ -980,10 +972,6 @@ int MediaPlayer::VM_Player::openSub()
 				}
 
 				VM_SubStyle* subStyle = new VM_SubStyle(subHeaderParts, version);
-
-				if (!subStyle->fontName.empty())
-					subStyle->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale);
-
 				VM_Player::subContext.styles.push_back(subStyle);
 			}
 		}

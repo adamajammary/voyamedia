@@ -32,20 +32,19 @@ SDL_Rect MediaPlayer::VM_PlayerControls::GetSnapshotArea()
 	return snapshot->backgroundArea;
 }
 
-int MediaPlayer::VM_PlayerControls::Hide(bool skipFS)
+int MediaPlayer::VM_PlayerControls::Hide()
 {
 	VM_PlayerControls::visible = false;
-
-	if (skipFS)
-		return RESULT_OK;
 
 	VM_Component* controls = VM_GUI::Components["bottom_player_controls"];
 
 	controls->visible = false;
 
-	VM_Player::FreeTextures();
-	VM_Player::Render(VM_PlayerControls::GetSnapshotArea());
-	VM_Player::Refresh();
+	if (!VM_Player::State.isStopped) {
+		VM_Player::FreeTextures();
+		VM_Player::Render(VM_PlayerControls::GetSnapshotArea());
+		VM_Player::Refresh();
+	}
 
 	return RESULT_OK;
 }
@@ -390,12 +389,9 @@ int MediaPlayer::VM_PlayerControls::SetVolume(SDL_Event* mouseEvent)
 	return RESULT_OK;
 }
 
-int MediaPlayer::VM_PlayerControls::Show(bool skipFS)
+int MediaPlayer::VM_PlayerControls::Show()
 {
 	VM_PlayerControls::visible = true;
-
-	if (skipFS)
-		return RESULT_OK;
 
 	VM_Component* controls = VM_GUI::Components["bottom_player_controls"];
 
