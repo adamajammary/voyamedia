@@ -854,6 +854,78 @@ MediaPlayer::VM_SubStyle* MediaPlayer::VM_SubFontEngine::getSubStyle(const VM_Su
 	return NULL;
 }
 
+void MediaPlayer::VM_SubFontEngine::handleSubCollisions(const VM_SubTextureId &subTextures, const VM_SubTexturesId &subs)
+{
+	const size_t MAX_TRIES = subs.size();
+	SDL_Rect     collider  = {};
+
+	for (size_t i = 0; i < MAX_TRIES; i++)
+	{
+		bool collision = false;
+
+		for (const auto &sub : subs)
+		{
+			if ((subTextures.first == sub.first) || !SDL_IntersectRect(&subTextures.second[0]->total, &sub.second[0]->total, &collider))
+				continue;
+
+			int offsetY = 0;
+
+			for (auto subTexture : subTextures.second)
+			{
+				if (subTexture->subtitle->layer >= 0)
+					continue;
+
+				if (subTexture->subtitle->isAlignedTop())
+					subTexture->locationRender.y = (collider.y + collider.h + offsetY);
+				else
+					subTexture->locationRender.y = (collider.y - subTexture->total.h + offsetY);
+
+				subTexture->total.y = subTextures.second[0]->locationRender.y;
+
+				offsetY += subTexture->locationRender.h;
+			}
+
+			collision = true;
+
+			break;
+		}
+
+		if (!collision)
+			break;
+	}
+}
+
+int MediaPlayer::VM_SubFontEngine::handleSubsOutOfBound(const VM_SubTextureId &subTextures)
+{
+	if (subTextures.second.empty() || (subTextures.second[0]->subtitle->text3.find("\\q2") != String::npos))
+		return ERROR_INVALID_ARGUMENTS;
+
+	bool outOfBoundsX = (subTextures.second[0]->locationRender.x < 0);
+	bool outOfBoundsY = (subTextures.second[0]->locationRender.y < 0);
+
+	if (!outOfBoundsX && !outOfBoundsY)
+		return RESULT_OK;
+
+	int offsetY = 0;
+
+	for (auto subTexture : subTextures.second)
+	{
+		if (outOfBoundsX) {
+			subTexture->locationRender.x = 0;
+			subTexture->total.x          = 0;
+		}
+
+		if (outOfBoundsY) {
+			subTexture->locationRender.y = offsetY;
+			subTexture->total.y          = 0;
+
+			offsetY += subTexture->locationRender.h;
+		}
+	}
+
+	return RESULT_OK;
+}
+
 String MediaPlayer::VM_SubFontEngine::RemoveFormatting(const String &subString)
 {
 	size_t findPos1, findPos2;
@@ -877,9 +949,9 @@ String MediaPlayer::VM_SubFontEngine::RemoveFormatting(const String &subString)
 void MediaPlayer::VM_SubFontEngine::RemoveSubs()
 {
 	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsBottom);
+	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsTop);
 	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsMiddle);
 	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsPosition);
-	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsTop);
 }
 
 void MediaPlayer::VM_SubFontEngine::removeSubs(VM_SubTexturesId &subs)
@@ -895,9 +967,9 @@ void MediaPlayer::VM_SubFontEngine::removeSubs(VM_SubTexturesId &subs)
 void MediaPlayer::VM_SubFontEngine::RemoveSubs(size_t id)
 {
 	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsBottom,   id);
+	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsTop,      id);
 	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsMiddle,   id);
 	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsPosition, id);
-	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsTop,      id);
 }
 
 void MediaPlayer::VM_SubFontEngine::removeSubs(VM_SubTexturesId &subs, size_t id)
@@ -1036,9 +1108,17 @@ void MediaPlayer::VM_SubFontEngine::renderSubsPositionAbsolute(VM_SubTexturesId 
 	VM_SubFontEngine::renderSubs(subs);
 }
 
-void MediaPlayer::VM_SubFontEngine::renderSubsPositionRelative(VM_SubTexturesId &subs)
+void MediaPlayer::VM_SubFontEngine::renderSubsPositionRelative(VM_SubTexturesId &subs, bool isAlignedMiddle)
 {
-	VM_SubFontEngine::setSubPositionRelativeTop(subs);
+	VM_SubFontEngine::setSubPositionRelative(subs);
+
+	if (isAlignedMiddle) {
+		for (const auto& sub : VM_SubFontEngine::subsMiddle) {
+			VM_SubFontEngine::handleSubCollisions(sub, VM_SubFontEngine::subsBottom);
+			VM_SubFontEngine::handleSubCollisions(sub, VM_SubFontEngine::subsTop);
+		}
+	}
+
 	VM_SubFontEngine::renderSubs(subs);
 }
 
@@ -1117,16 +1197,16 @@ int MediaPlayer::VM_SubFontEngine::RenderSubText(const VM_Subtitles &subs, TTF_F
 	}
 
 	// Calculate and set the total width for split subs
-	VM_SubFontEngine::setTotalWidthAbsolute(VM_SubFontEngine::subsPosition);
+	VM_SubFontEngine::setTotalWidthRelative(VM_SubFontEngine::subsBottom);
 	VM_SubFontEngine::setTotalWidthRelative(VM_SubFontEngine::subsTop);
 	VM_SubFontEngine::setTotalWidthRelative(VM_SubFontEngine::subsMiddle);
-	VM_SubFontEngine::setTotalWidthRelative(VM_SubFontEngine::subsBottom);
+	VM_SubFontEngine::setTotalWidthAbsolute(VM_SubFontEngine::subsPosition);
 
 	// Render subs
-	VM_SubFontEngine::renderSubsPositionAbsolute(VM_SubFontEngine::subsPosition);
-	VM_SubFontEngine::renderSubsPositionRelative(VM_SubFontEngine::subsTop);
-	VM_SubFontEngine::renderSubsPositionRelative(VM_SubFontEngine::subsMiddle);
 	VM_SubFontEngine::renderSubsPositionRelative(VM_SubFontEngine::subsBottom);
+	VM_SubFontEngine::renderSubsPositionRelative(VM_SubFontEngine::subsTop);
+	VM_SubFontEngine::renderSubsPositionRelative(VM_SubFontEngine::subsMiddle, true);
+	VM_SubFontEngine::renderSubsPositionAbsolute(VM_SubFontEngine::subsPosition);
 
 	#if defined _DEBUG
 		auto time = (SDL_GetTicks() - start);
@@ -1273,7 +1353,6 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 
 					subsX[i]->total.x = subsX[0]->locationRender.x;
 					subsX[i]->total.w = subTexture->total.w;
-					subsX[i]->max.w   = subsX[i]->total.w;
 				}
 
 				totalHeight += subTexture->locationRender.h;
@@ -1284,8 +1363,6 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 			prevSub = subTexture;
 		}
 
-		int minX = VM_Player::VideoDimensions.w;
-
 		for (auto subTexture : subTextures.second)
 		{
 			if (subTexture->subtitle->skip)
@@ -1295,10 +1372,6 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 			int rotationPointY = (int)((float)subTexture->subtitle->rotationPoint.y * subScale.y);
 
 			subTexture->total.h = totalHeight;
-			subTexture->max.h   = subTexture->total.h;
-
-			if (subTexture->total.x < minX)
-				minX = subTexture->total.x;
 
 			// VERTICAL ALIGN
 			if (subTexture->subtitle->isAlignedBottom())
@@ -1314,21 +1387,45 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 			subTexture->subtitle->rotationPoint.y -= (subTexture->locationRender.y - positionY);
 		}
 
+		int minY = VM_Player::VideoDimensions.h;
+		int minX = VM_Player::VideoDimensions.w;
+		int maxX = 0;
+
 		for (auto subTexture : subTextures.second)
 		{
-			if (!subTexture->subtitle->skip) {
-				subTexture->total.y = subTextures.second[0]->locationRender.y;
-				subTexture->max.y   = subTexture->total.y;
-				subTexture->max.x   = minX;
-			}
+			if (subTexture->subtitle->skip)
+				continue;
+
+			if (subTexture->locationRender.y < minY)
+				minY = subTexture->locationRender.y;
+
+			if (subTexture->locationRender.x < minX)
+				minX = subTexture->locationRender.x;
+
+			if (subTexture->locationRender.x + subTexture->locationRender.w > maxX)
+				maxX = (subTexture->locationRender.x + subTexture->locationRender.w);
 		}
+
+		for (auto subTexture : subTextures.second)
+		{
+			if (subTexture->subtitle->skip)
+				continue;
+
+			subTexture->total.x = minX;
+			subTexture->total.y = minY;
+			subTexture->total.w = (maxX - minX);
+		}
+
+		VM_SubFontEngine::handleSubCollisions(subTextures, VM_SubFontEngine::subsBottom);
+		VM_SubFontEngine::handleSubCollisions(subTextures, VM_SubFontEngine::subsTop);
+		VM_SubFontEngine::handleSubCollisions(subTextures, VM_SubFontEngine::subsMiddle);
+
+		VM_SubFontEngine::handleSubsOutOfBound(subTextures);
 	}
 }
 
-void MediaPlayer::VM_SubFontEngine::setSubPositionRelativeTop(const VM_SubTexturesId &subs)
+void MediaPlayer::VM_SubFontEngine::setSubPositionRelative(const VM_SubTexturesId &subs)
 {
-	VM_SubTexture* previousSub = NULL;
-
 	for (const auto &subTextures : subs)
 	{
 		VM_SubTextures subLine;
@@ -1372,7 +1469,6 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionRelativeTop(const VM_SubTextur
 
 				subWord->total.x = subLine[0]->locationRender.x;
 				subWord->total.w = subTexture->total.w;
-				subWord->max.w   = subWord->total.w;
 			}
 
 			totalHeight += maxHeight;
@@ -1382,18 +1478,12 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionRelativeTop(const VM_SubTextur
 			subLine.clear();
 		}
 
-		int minX = VM_Player::VideoDimensions.w;
-
 		for (auto subTexture : subTextures.second)
 		{
 			if (subTexture->subtitle->skip)
 				continue;
 
 			subTexture->total.h = totalHeight;
-			subTexture->max.h   = subTexture->total.h;
-
-			if (subTexture->total.x < minX)
-				minX = subTexture->total.x;
 
 			// OFFSET SUBS VERTICALLY (Y) BASED ON ALIGNMENT
 			auto margins = subTexture->subtitle->getMargins();
@@ -1410,53 +1500,40 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionRelativeTop(const VM_SubTextur
 				subTexture->locationRender.y += offsetY;
 		}
 
+		int minY = VM_Player::VideoDimensions.h;
+		int minX = VM_Player::VideoDimensions.w;
+		int maxX = 0;
+
 		for (auto subTexture : subTextures.second)
 		{
-			if (!subTexture->subtitle->skip) {
-				subTexture->total.y = subTextures.second[0]->locationRender.y;
-				subTexture->max.y   = subTexture->total.y;
-				subTexture->max.x   = minX;
+			if (subTexture->subtitle->skip)
+				continue;
 
-				subTexture->subtitle->rotationPoint.y  = (subTexture->total.h / 2);
-				subTexture->subtitle->rotationPoint.y -= (subTexture->locationRender.y - subTexture->total.y);
-			}
+			if (subTexture->locationRender.y < minY)
+				minY = subTexture->locationRender.y;
+
+			if (subTexture->locationRender.x < minX)
+				minX = subTexture->locationRender.x;
+
+			if (subTexture->locationRender.x + subTexture->locationRender.w > maxX)
+				maxX = (subTexture->locationRender.x + subTexture->locationRender.w);
 		}
 
-		// CHECK COLLISION WITH PREVIOUS SUBS
-		if (previousSub != NULL)
+		for (auto subTexture : subTextures.second)
 		{
-			SDL_Rect coll = {};
+			if (subTexture->subtitle->skip)
+				continue;
 
-			for (const auto &sub : subs)
-			{
-				if ((subTextures.first == sub.first) ||
-					!SDL_IntersectRect(&subTextures.second[0]->max, &sub.second[0]->max, &coll))
-				{
-					continue;
-				}
+			subTexture->total.x = minX;
+			subTexture->total.y = minY;
+			subTexture->total.w = (maxX - minX);
 
-				int offsetY = 0;
-
-				for (auto subTexture : subTextures.second)
-				{
-					if (subTexture->subtitle->layer >= 0)
-						continue;
-
-					if (subTexture->subtitle->isAlignedTop())
-						subTexture->locationRender.y = (previousSub->total.y + previousSub->total.h + offsetY);
-					else
-						subTexture->locationRender.y = (previousSub->total.y - subTexture->total.h + offsetY);
-
-					subTexture->total.y = subTextures.second[0]->locationRender.y;
-					offsetY            += subTexture->locationRender.h;
-				}
-
-				break;
-			}
+			subTexture->subtitle->rotationPoint.y  = (subTexture->total.h / 2);
+			subTexture->subtitle->rotationPoint.y -= (subTexture->locationRender.y - subTexture->total.y);
 		}
 
-		if (!subTextures.second.empty())
-			previousSub = subTextures.second[0];
+		VM_SubFontEngine::handleSubCollisions(subTextures, subs);
+		VM_SubFontEngine::handleSubsOutOfBound(subTextures);
 	}
 }
 
@@ -1494,11 +1571,6 @@ void MediaPlayer::VM_SubFontEngine::setTotalWidthAbsolute(const VM_SubTexturesId
 				subsX.clear();
 			}
 		}
-
-		for (auto subTexture : subTextures.second) {
-			if (!subTexture->subtitle->skip)
-				subTexture->max.w = maxWidth;
-		}
 	}
 }
 
@@ -1530,11 +1602,6 @@ void MediaPlayer::VM_SubFontEngine::setTotalWidthRelative(const VM_SubTexturesId
 
 			totalWidth = 0;
 			subLine.clear();
-		}
-
-		for (auto subTexture : subTextures.second) {
-			if (!subTexture->subtitle->skip)
-				subTexture->max.w = maxWidth;
 		}
 	}
 }

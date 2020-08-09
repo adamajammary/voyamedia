@@ -602,6 +602,7 @@ namespace VoyaMedia
 		typedef std::list<VM_Subtitle*>           VM_Subtitles;
 		typedef std::vector<VM_SubStyle*>         VM_SubStyles;
 		typedef std::vector<VM_SubTexture*>       VM_SubTextures;
+		typedef std::pair<size_t, VM_SubTextures> VM_SubTextureId;
 		typedef umap<size_t, VM_SubTextures>      VM_SubTexturesId;
 	}
 
