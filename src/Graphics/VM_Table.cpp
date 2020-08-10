@@ -875,7 +875,8 @@ void Graphics::VM_Table::refreshThumbs()
 
 void Graphics::VM_Table::removeThumbThread()
 {
-	this->thumbThreads.pop();
+	if (!this->thumbThreads.empty())
+		this->thumbThreads.pop();
 }
 
 int Graphics::VM_Table::render()
@@ -1423,7 +1424,8 @@ int Graphics::VM_Table::setRows(bool temp)
 
 			buttonColumn->backgroundArea.y += offsetY;
 			buttonColumn->backgroundColor   = (row % 2 == 0 ? row1Color : row2Color);
-			buttonColumn->borderWidth       = VM_Border(3, 0, 0, 0);
+			buttonColumn->borderColor       = { 0x10, 0x10, 0x10, 0xFF };
+			buttonColumn->borderWidth       = VM_Border(2, 0, 0, 0);
 			buttonColumn->id               += ("_" + std::to_string(row) + "_" + std::to_string(col));
 			buttonColumn->highlightColor    = this->getColor("highlight");
 			buttonColumn->mediaID           = std::atoi(this->result[row]["id"].c_str());

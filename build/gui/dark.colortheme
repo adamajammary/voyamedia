@@ -3,7 +3,7 @@ main.border-color=#303030FF
 main.highlight-color=#303030FF
 main.text-color=#FFFFFFFF
 
-top_bar.background-color=#101010FF
+top_bar.background-color=#202020FF
 
 top.background-color=#101010FF
 
@@ -31,7 +31,7 @@ list_table_scrollbar.background-color=#101010FF
 list_table_scrollbar.border-color=#101010FF
 list_table_scrollbar_bar.background-color=#202020FF
 
-list_table_bottom.background-color=#202020FF
+list_table_bottom.background-color=#101010FF
 
 bottom.background-color=#101010FF
 

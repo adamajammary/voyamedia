@@ -18,7 +18,7 @@
     </panel>
 
     <panel id="middle" orientation="vertical">
-      <panel id="middle_search" height="12%" valign="middle">
+      <panel id="middle_search" height="12%" valign="middle" border-width="1 0 0 1">
         <button id="middle_search_playlist_save" halign="center" valign="middle" height="100%" width="height" image-file="playlist-save-2-512.png" image-height="70%" image-width="image-height" modal="modal_playlist_save"></button>
         <button id="middle_search_input" halign="center" valign="middle" border-width="2"></button>
         <button id="middle_search_button" halign="center" valign="middle" height="100%" width="height" image-file="search-4-512.png" image-height="50%" image-width="image-height"></button>
@@ -38,7 +38,7 @@
         </panel>
       </panel>
 
-      <panel id="list_table_bottom" height="25" valign="middle">
+      <panel id="list_table_bottom" height="25" valign="middle" border-width="1 0 0 1">
         <button id="list_offset_start" halign="center" valign="middle" height="100%" width="height" image-file="prev-4-512.png" image-width="50%" image-height="image-width"></button>
         <button id="list_offset_prev" halign="center" valign="middle" height="100%" width="height" image-file="prev-2-512.png" image-width="50%" image-height="image-width"></button>
         <button id="list_details_text" halign="center" valign="middle"></button>
