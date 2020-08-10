@@ -883,8 +883,10 @@ void MediaPlayer::VM_SubFontEngine::handleSubCollisions(const VM_SubTextureId &s
 				subTexture->total.y = subTextures.second[0]->locationRender.y;
 
 				offsetY += subTexture->locationRender.h;
-			}
 
+				DELETE_POINTER(subTexture->outline);
+				DELETE_POINTER(subTexture->shadow);
+			}
 			collision = true;
 
 			break;
@@ -921,6 +923,9 @@ int MediaPlayer::VM_SubFontEngine::handleSubsOutOfBound(const VM_SubTextureId &s
 
 			offsetY += subTexture->locationRender.h;
 		}
+
+		DELETE_POINTER(subTexture->outline);
+		DELETE_POINTER(subTexture->shadow);
 	}
 
 	return RESULT_OK;
@@ -949,8 +954,8 @@ String MediaPlayer::VM_SubFontEngine::RemoveFormatting(const String &subString)
 void MediaPlayer::VM_SubFontEngine::RemoveSubs()
 {
 	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsBottom);
-	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsTop);
 	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsMiddle);
+	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsTop);
 	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsPosition);
 }
 
@@ -967,8 +972,8 @@ void MediaPlayer::VM_SubFontEngine::removeSubs(VM_SubTexturesId &subs)
 void MediaPlayer::VM_SubFontEngine::RemoveSubs(size_t id)
 {
 	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsBottom,   id);
-	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsTop,      id);
 	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsMiddle,   id);
+	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsTop,      id);
 	VM_SubFontEngine::removeSubs(VM_SubFontEngine::subsPosition, id);
 }
 
@@ -1075,7 +1080,7 @@ void MediaPlayer::VM_SubFontEngine::renderSubs(VM_SubTexturesId &subs)
 	});
 
 	// RENDER NON-LAYERED SUBS
-	for (const auto & subTextures : subs)
+	for (const auto &subTextures : subs)
 	{
 		// BORDER / SHADOW
 		for (auto subTexture : subTextures.second)
@@ -1100,26 +1105,6 @@ void MediaPlayer::VM_SubFontEngine::renderSubs(VM_SubTexturesId &subs)
 
 		subs[subTexture->subtitle->id].push_back(subTexture);
 	}
-}
-
-void MediaPlayer::VM_SubFontEngine::renderSubsPositionAbsolute(VM_SubTexturesId &subs)
-{
-	VM_SubFontEngine::setSubPositionAbsolute(subs);
-	VM_SubFontEngine::renderSubs(subs);
-}
-
-void MediaPlayer::VM_SubFontEngine::renderSubsPositionRelative(VM_SubTexturesId &subs, bool isAlignedMiddle)
-{
-	VM_SubFontEngine::setSubPositionRelative(subs);
-
-	if (isAlignedMiddle) {
-		for (const auto& sub : VM_SubFontEngine::subsMiddle) {
-			VM_SubFontEngine::handleSubCollisions(sub, VM_SubFontEngine::subsBottom);
-			VM_SubFontEngine::handleSubCollisions(sub, VM_SubFontEngine::subsTop);
-		}
-	}
-
-	VM_SubFontEngine::renderSubs(subs);
 }
 
 int MediaPlayer::VM_SubFontEngine::RenderSubText(const VM_Subtitles &subs, TTF_Font* fontMerged, TTF_Font* fontCJK)
@@ -1198,15 +1183,34 @@ int MediaPlayer::VM_SubFontEngine::RenderSubText(const VM_Subtitles &subs, TTF_F
 
 	// Calculate and set the total width for split subs
 	VM_SubFontEngine::setTotalWidthRelative(VM_SubFontEngine::subsBottom);
-	VM_SubFontEngine::setTotalWidthRelative(VM_SubFontEngine::subsTop);
 	VM_SubFontEngine::setTotalWidthRelative(VM_SubFontEngine::subsMiddle);
+	VM_SubFontEngine::setTotalWidthRelative(VM_SubFontEngine::subsTop);
 	VM_SubFontEngine::setTotalWidthAbsolute(VM_SubFontEngine::subsPosition);
 
-	// Render subs
-	VM_SubFontEngine::renderSubsPositionRelative(VM_SubFontEngine::subsBottom);
-	VM_SubFontEngine::renderSubsPositionRelative(VM_SubFontEngine::subsTop);
-	VM_SubFontEngine::renderSubsPositionRelative(VM_SubFontEngine::subsMiddle, true);
-	VM_SubFontEngine::renderSubsPositionAbsolute(VM_SubFontEngine::subsPosition);
+	// Calculate and set the relatively aligned sub positions
+	VM_SubFontEngine::setSubPositionRelative(VM_SubFontEngine::subsBottom);
+	VM_SubFontEngine::setSubPositionRelative(VM_SubFontEngine::subsMiddle);
+	VM_SubFontEngine::setSubPositionRelative(VM_SubFontEngine::subsTop);
+
+	// Handle sub collisions
+	for (const auto &sub : VM_SubFontEngine::subsMiddle) {
+		VM_SubFontEngine::handleSubCollisions(sub, VM_SubFontEngine::subsBottom);
+		VM_SubFontEngine::handleSubCollisions(sub, VM_SubFontEngine::subsTop);
+	}
+
+	for (const auto &sub : VM_SubFontEngine::subsTop) {
+		VM_SubFontEngine::handleSubCollisions(sub, VM_SubFontEngine::subsMiddle);
+		VM_SubFontEngine::handleSubCollisions(sub, VM_SubFontEngine::subsBottom);
+	}
+
+	// Calculate and set the absolutely aligned sub positions
+	VM_SubFontEngine::setSubPositionAbsolute(VM_SubFontEngine::subsPosition);
+
+	// Render the subs
+	VM_SubFontEngine::renderSubs(VM_SubFontEngine::subsBottom);
+	VM_SubFontEngine::renderSubs(VM_SubFontEngine::subsMiddle);
+	VM_SubFontEngine::renderSubs(VM_SubFontEngine::subsTop);
+	VM_SubFontEngine::renderSubs(VM_SubFontEngine::subsPosition);
 
 	#if defined _DEBUG
 		auto time = (SDL_GetTicks() - start);
@@ -1417,8 +1421,8 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 		}
 
 		VM_SubFontEngine::handleSubCollisions(subTextures, VM_SubFontEngine::subsBottom);
-		VM_SubFontEngine::handleSubCollisions(subTextures, VM_SubFontEngine::subsTop);
 		VM_SubFontEngine::handleSubCollisions(subTextures, VM_SubFontEngine::subsMiddle);
+		VM_SubFontEngine::handleSubCollisions(subTextures, VM_SubFontEngine::subsTop);
 
 		VM_SubFontEngine::handleSubsOutOfBound(subTextures);
 	}

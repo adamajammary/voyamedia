@@ -55,8 +55,6 @@ namespace VoyaMedia
 			static int            renderSub(VM_SubTexture* subTexture);
 			static int            renderSubBorderShadow(VM_SubTexture* subTexture);
 			static void           renderSubs(VM_SubTexturesId &subs);
-			static void           renderSubsPositionAbsolute(VM_SubTexturesId &subs);
-			static void           renderSubsPositionRelative(VM_SubTexturesId &subs, bool isAlignedMiddle = false);
 			static void           setSubPositionAbsolute(const VM_SubTexturesId &subs);
 			static void           setSubPositionRelative(const VM_SubTexturesId &subs);
 			static void           setTotalWidthAbsolute(const VM_SubTexturesId &subs);
