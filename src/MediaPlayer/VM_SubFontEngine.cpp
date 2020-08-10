@@ -902,19 +902,17 @@ int MediaPlayer::VM_SubFontEngine::handleSubsOutOfBound(const VM_SubTextureId &s
 	if (subTextures.second.empty() || (subTextures.second[0]->subtitle->text3.find("\\q2") != String::npos))
 		return ERROR_INVALID_ARGUMENTS;
 
-	bool outOfBoundsX = (subTextures.second[0]->locationRender.x < 0);
+	int  offsetY      = 0;
 	bool outOfBoundsY = (subTextures.second[0]->locationRender.y < 0);
-
-	if (!outOfBoundsX && !outOfBoundsY)
-		return RESULT_OK;
-
-	int offsetY = 0;
 
 	for (auto subTexture : subTextures.second)
 	{
-		if (outOfBoundsX) {
+		if (subTexture->locationRender.x < 0) {
 			subTexture->locationRender.x = 0;
 			subTexture->total.x          = 0;
+
+			DELETE_POINTER(subTexture->outline);
+			DELETE_POINTER(subTexture->shadow);
 		}
 
 		if (outOfBoundsY) {
@@ -922,10 +920,10 @@ int MediaPlayer::VM_SubFontEngine::handleSubsOutOfBound(const VM_SubTextureId &s
 			subTexture->total.y          = 0;
 
 			offsetY += subTexture->locationRender.h;
-		}
 
-		DELETE_POINTER(subTexture->outline);
-		DELETE_POINTER(subTexture->shadow);
+			DELETE_POINTER(subTexture->outline);
+			DELETE_POINTER(subTexture->shadow);
+		}
 	}
 
 	return RESULT_OK;
