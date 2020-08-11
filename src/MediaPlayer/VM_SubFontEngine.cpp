@@ -1536,7 +1536,6 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionRelative(const VM_SubTexturesI
 		}
 
 		VM_SubFontEngine::handleSubCollisions(subTextures, subs);
-		VM_SubFontEngine::handleSubsOutOfBound(subTextures);
 	}
 }
 
