@@ -116,10 +116,10 @@ SDL_Rect MediaPlayer::VM_Subtitle::getMargins()
 		SDL_FPoint scale = VM_Player::GetSubScale();
 
 		return {
-			(int)((float)this->style->marginL * max(1.0f, scale.x)),
-			(int)((float)this->style->marginR * max(1.0f, scale.x)),
-			(int)((float)this->style->marginV * max(1.0f, scale.y)),
-			(int)((float)this->style->marginV * max(1.0f, scale.y)),
+			(int)ceilf((float)this->style->marginL * max(1.0f, scale.x)),
+			(int)ceilf((float)this->style->marginR * max(1.0f, scale.x)),
+			(int)ceilf((float)this->style->marginV * max(1.0f, scale.y)),
+			(int)ceilf((float)this->style->marginV * max(1.0f, scale.y)),
 		};
 	}
 
@@ -130,7 +130,7 @@ SDL_Rect MediaPlayer::VM_Subtitle::getMargins()
 int MediaPlayer::VM_Subtitle::getOutline()
 {
 	if (this->style != NULL)
-		return (int)((float)this->style->outline * VM_Player::GetSubScale().y);
+		return (int)ceilf((float)this->style->outline * VM_Player::GetSubScale().y);
 
 	return MIN_OUTLINE;
 }
@@ -142,8 +142,8 @@ SDL_Point MediaPlayer::VM_Subtitle::getShadow()
 		SDL_FPoint scale = VM_Player::GetSubScale();
 
 		return {
-			(int)((float)this->style->shadow.x * scale.x),
-			(int)((float)this->style->shadow.y * scale.y),
+			(int)ceilf((float)this->style->shadow.x * scale.x),
+			(int)ceilf((float)this->style->shadow.y * scale.y),
 		};
 	}
 

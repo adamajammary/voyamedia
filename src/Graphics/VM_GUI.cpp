@@ -373,11 +373,15 @@ int Graphics::VM_GUI::loadComponentsRelative(VM_Component* component)
 	if (component == NULL)
 		return ERROR_INVALID_ARGUMENTS;
 
-	for (auto child : component->children)
-		child->setSizePercent(component);
+	for (auto child : component->children) {
+		if (child->visible)
+			child->setSizePercent(component);
+	}
 
-	for (auto button : component->buttons)
-		button->setSizePercent(component);
+	for (auto button : component->buttons) {
+		if (button->visible)
+			button->setSizePercent(component);
+	}
 
 	VM_GUI::setComponentSizeBlank(component, component->children);
 	VM_GUI::setComponentSizeBlank(component, component->buttons);
@@ -504,6 +508,9 @@ int Graphics::VM_GUI::setComponentSizeBlank(VM_Component* parent, VM_Components 
 
 	for (auto component : components)
 	{
+		if (!component->visible)
+			continue;
+
 		String width  = VM_XML::GetAttribute(component->xmlNode, "width");
 		String height = VM_XML::GetAttribute(component->xmlNode, "height");
 
@@ -533,8 +540,10 @@ int Graphics::VM_GUI::setComponentSizeBlank(VM_Component* parent, VM_Components 
 		}
 	}
 
-	for (auto component : components)
-		component->setSizeBlank(sizeX, sizeY, compsX, compsY);
+	for (auto component : components) {
+		if (component->visible)
+			component->setSizeBlank(sizeX, sizeY, compsX, compsY);
+	}
 
 	return RESULT_OK;
 }
@@ -557,6 +566,9 @@ int Graphics::VM_GUI::setComponentPositionAlign(VM_Component* parent, VM_Compone
 	// LEFT-ALIGN
 	for (auto component : components)
 	{
+		if (!component->visible)
+			continue;
+
 		component->setPositionAlign(offsetX, offsetY);
 
 		if (orientation == "vertical")
@@ -568,6 +580,9 @@ int Graphics::VM_GUI::setComponentPositionAlign(VM_Component* parent, VM_Compone
 	// CALCULATE UNUSED SPACE
 	for (auto component : components)
 	{
+		if (!component->visible)
+			continue;
+
 		remainingX -= (parent->margin.left + component->backgroundArea.w + parent->margin.right);
 		remainingY -= (parent->margin.top  + component->backgroundArea.h + parent->margin.bottom);
 	}
@@ -575,6 +590,9 @@ int Graphics::VM_GUI::setComponentPositionAlign(VM_Component* parent, VM_Compone
 	// ALIGN
 	for (auto component : components)
 	{
+		if (!component->visible)
+			continue;
+
 		offsetX = component->backgroundArea.x;
 		offsetY = component->backgroundArea.y;
 

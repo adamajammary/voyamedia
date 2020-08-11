@@ -116,7 +116,12 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 	button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_settings"]);
 
 	if (button != NULL)
-		button->setImage((VIDEO_IS_SELECTED ? "settings-2-512.png" : "settings-3-512.png"), false);
+	{
+		button->visible = VIDEO_IS_SELECTED;
+
+		if (button->visible)
+			button->setImage("settings-2-512.png", false);
+	}
 
 	// FULLSCREEN
 	button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_fullscreen"]);
@@ -128,17 +133,21 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 	button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_stretch"]);
 
 	if (button != NULL) {
-		if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
+		button->visible = (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED);
+
+		if (button->visible)
 			button->setImage((VM_Player::State.keepAspectRatio ? "stretch-7-512.png" : "stretch-2-512.png"), false);
-		else
-			button->setImage((VM_Player::State.keepAspectRatio ? "stretch-8-512.png" : "stretch-3-512.png"), false);
 	}
 
 	// ROTATE
 	button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_rotate"]);
 
-	if (button != NULL)
-		button->setImage((!PICTURE_IS_SELECTED ? "rotate-4-512.png" : "rotate-3-512.png"), false);
+	if (button != NULL) {
+		button->visible = PICTURE_IS_SELECTED;
+
+		if (button->visible)
+			button->setImage("rotate-3-512.png", false);
+	}
 
 	// PLAYLIST
 	button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_playlist"]);
@@ -147,13 +156,10 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 	{
 		String imageFile = "";
 
-		if (YOUTUBE_IS_SELECTED || SHOUTCAST_IS_SELECTED)
-		{
+		if (YOUTUBE_IS_SELECTED || SHOUTCAST_IS_SELECTED) {
 			VM_Player::State.loopType = PLAY_TYPE_NORMAL;
-			imageFile                   = "loop-7-512.png";
-		}
-		else
-		{
+			imageFile                 = "loop-7-512.png";
+		} else {
 			switch (VM_Player::State.loopType) {
 				case PLAY_TYPE_NORMAL:  imageFile = "loop-1-512.png"; break;
 				case PLAY_TYPE_LOOP:    imageFile = "loop-5-512.png"; break;
@@ -168,8 +174,12 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 	// MUTE
 	button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_mute"]);
 
-	if (button != NULL)
-		button->setImage((VM_Player::State.isMuted ? "mute-2-512.png" : "volume-1-512.png"), false);
+	if (button != NULL) {
+		button->visible = !PICTURE_IS_SELECTED;
+
+		if (button->visible)
+			button->setImage((VM_Player::State.isMuted ? "mute-2-512.png" : "volume-1-512.png"), false);
+	}
 
 	VM_ThreadManager::Mutex.unlock();
 
@@ -186,27 +196,32 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 		button->setText("00:00:00");
 
 	// VOLUME
+	VM_Panel*  panel   = dynamic_cast<VM_Panel*>(VM_GUI::Components["bottom_player_controls_volume"]);
 	button             = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_volume_thumb"]);
 	VM_Button* button2 = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_volume_bar"]);
 
-	if ((button != NULL) && (button2 != NULL))
+	if ((panel != NULL) && (button != NULL) && (button2 != NULL))
 	{
-		float  volumePercent = (float)((float)VM_Player::State.audioVolume / (float)SDL_MIX_MAXVOLUME);
-		String orientation   = VM_XML::GetAttribute(button2->xmlNode, "orientation");
+		panel->visible   = !PICTURE_IS_SELECTED;
+		button->visible  = panel->visible;
+		button2->visible = panel->visible;
 
-		if (orientation == "vertical")
+		if (panel->visible)
 		{
-			button->backgroundArea.x = button2->backgroundArea.x;
-			button->backgroundArea.w = button2->backgroundArea.w;
-			button->backgroundArea.h = (int)((float)button2->backgroundArea.h * volumePercent);
-			button->backgroundArea.y = (button2->backgroundArea.y + button2->backgroundArea.h - button->backgroundArea.h);
-		}
-		else
-		{
-			button->backgroundArea.x = button2->backgroundArea.x;
-			button->backgroundArea.y = button2->backgroundArea.y;
-			button->backgroundArea.h = button2->backgroundArea.h;
-			button->backgroundArea.w = (int)((float)button2->backgroundArea.w * volumePercent);
+			float  volumePercent = (float)((float)VM_Player::State.audioVolume / (float)SDL_MIX_MAXVOLUME);
+			String orientation   = VM_XML::GetAttribute(button2->xmlNode, "orientation");
+
+			if (orientation == "vertical") {
+				button->backgroundArea.x = button2->backgroundArea.x;
+				button->backgroundArea.w = button2->backgroundArea.w;
+				button->backgroundArea.h = (int)((float)button2->backgroundArea.h * volumePercent);
+				button->backgroundArea.y = (button2->backgroundArea.y + button2->backgroundArea.h - button->backgroundArea.h);
+			} else {
+				button->backgroundArea.x = button2->backgroundArea.x;
+				button->backgroundArea.y = button2->backgroundArea.y;
+				button->backgroundArea.h = button2->backgroundArea.h;
+				button->backgroundArea.w = (int)((float)button2->backgroundArea.w * volumePercent);
+			}
 		}
 	}
 

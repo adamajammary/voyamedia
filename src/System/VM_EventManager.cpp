@@ -523,7 +523,7 @@ bool System::VM_EventManager::isClickedBottomControls(SDL_Event* mouseEvent)
 
 	for (auto button : VM_GUI::Components["bottom_controls"]->buttons)
 	{
-		if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
+		if (!button->visible || !VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 			continue;
 
 		if (button->id == "bottom_controls_browse")
@@ -582,7 +582,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 	{
 		for (auto button : VM_GUI::Components["bottom_player_controls_controls_right"]->buttons)
 		{
-			if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
+			if (!button->visible || !VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 				continue;
 
 			// MUTE
@@ -593,7 +593,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 			else if (!VM_Player::State.isStopped)
 			{
 				// SETTINGS
-				if ((button->id == "bottom_player_controls_settings") && VIDEO_IS_SELECTED)
+				if (button->id == "bottom_player_controls_settings")
 					VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));
 				// FULLSCREEN
 				else if (button->id == "bottom_player_controls_fullscreen")
@@ -623,7 +623,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 	{
 		for (auto button : VM_GUI::Components["bottom_player_controls_volume"]->buttons)
 		{
-			if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
+			if (!button->visible || !VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 				continue;
 
 			// VOLUME
@@ -643,7 +643,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 	{
 		for (auto button : VM_GUI::Components["bottom_player_controls_controls_left"]->buttons)
 		{
-			if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
+			if (!button->visible || !VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 				continue;
 
 			// PREVIOUS
@@ -669,7 +669,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 	{
 		for (auto button : VM_GUI::Components["bottom_player_controls_left"]->buttons)
 		{
-			if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
+			if (!button->visible || !VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 				continue;
 
 			// PROGRESS: TIME PASSED VS. TIME LEFT
@@ -684,7 +684,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 	{
 		for (auto button : VM_GUI::Components["bottom_player_controls_middle"]->buttons)
 		{
-			if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
+			if (!button->visible || !VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 				continue;
 
 			// SEEK BAR
@@ -831,7 +831,7 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 	// SCROLL TABLE
 	for (auto button : table->scrollBar->buttons)
 	{
-		if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
+		if (!button->visible || !VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 			continue;
 
 		int scrollAmount = 0;
@@ -857,7 +857,7 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 	{
 		for (int i = 1; i < (int)table->buttons.size() - 1; i++)
 		{
-			if (!VM_Graphics::ButtonPressed(mouseEvent, table->buttons[i]->backgroundArea) || (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE))
+			if (!table->buttons[i]->visible || !VM_Graphics::ButtonPressed(mouseEvent, table->buttons[i]->backgroundArea) || (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE))
 				continue;
 
 			table->sort(table->buttons[i]->id);
@@ -884,7 +884,7 @@ bool System::VM_EventManager::isClickedTableBottom(SDL_Event* mouseEvent, VM_Com
 
 	for (auto button : bottomPanel->buttons)
 	{
-		if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
+		if (!button->visible || !VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 			continue;
 
 		if (button->id == "list_offset_start")
@@ -916,6 +916,9 @@ bool System::VM_EventManager::isClickedTextInput(SDL_Event* mouseEvent, VM_Compo
 
 	for (auto component : inputPanel->buttons)
 	{
+		if (!component->visible)
+			continue;
+
 		VM_Button* button = dynamic_cast<VM_Button*>(component);
 
 		if (button->id.find("_input") != String::npos)
@@ -977,7 +980,7 @@ bool System::VM_EventManager::isClickedTop(SDL_Event* mouseEvent)
 
 	for (auto button : VM_GUI::Components["top"]->buttons)
 	{
-		if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
+		if (!button->visible || !VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 			continue;
 
 		VM_Top::SelectType(VM_Top::IdToMediaType(button->id));
@@ -1000,6 +1003,9 @@ bool System::VM_EventManager::isClickedTopBar(SDL_Event* mouseEvent)
 
 	for (auto component : VM_GUI::Components["top_bar"]->buttons)
 	{
+		if (!component->visible)
+			continue;
+
 		if (VM_Graphics::ButtonPressed(mouseEvent, component->backgroundArea))
 		{
 			VM_Button* button = dynamic_cast<VM_Button*>(component);

@@ -67,7 +67,7 @@
           </panel>
 
           <panel id="bottom_player_controls_middle" valign="middle">
-            <button id="bottom_player_controls_middle_bar" height="80%"></button>
+            <button id="bottom_player_controls_middle_bar" height="80%" width="100%"></button>
             <button id="bottom_player_controls_middle_thumb" height="80%" width="0"></button>
           </panel>
 
@@ -75,21 +75,22 @@
             <button id="bottom_player_controls_duration" halign="center" valign="middle" font-size="8"></button>
           </panel>
         </panel>
+
         <panel id="bottom_player_controls_controls">
           <panel id="bottom_player_controls_controls_left" valign="middle">
-            <button id="bottom_player_controls_prev" halign="center" valign="middle" height="100%" width="25" image-height="35%" image-width="image-height"></button>
-            <button id="bottom_player_controls_play" halign="center" valign="middle" height="100%" width="40" image-height="60%" image-width="image-height"></button>
-            <button id="bottom_player_controls_stop" halign="center" valign="middle" height="100%" width="25" image-height="35%" image-width="image-height"></button>
-            <button id="bottom_player_controls_next" halign="center" valign="middle" height="100%" width="25" image-height="35%" image-width="image-height"></button>
+            <button id="bottom_player_controls_prev" halign="center" valign="middle" height="100%" width="30" image-height="35%" image-width="image-height"></button>
+            <button id="bottom_player_controls_play" halign="center" valign="middle" height="100%" width="height" image-height="60%" image-width="image-height"></button>
+            <button id="bottom_player_controls_stop" halign="center" valign="middle" height="100%" width="30" image-height="35%" image-width="image-height"></button>
+            <button id="bottom_player_controls_next" halign="center" valign="middle" height="100%" width="30" image-height="35%" image-width="image-height"></button>
           </panel>
 
           <panel id="bottom_player_controls_controls_right" halign="right" valign="middle">
-            <button id="bottom_player_controls_settings" halign="center" valign="middle" height="100%" width="25" image-height="35%" image-width="image-height" modal="modal_player_settings"></button>
-            <button id="bottom_player_controls_fullscreen" halign="center" valign="middle" height="100%" width="25" image-height="35%" image-width="image-height"></button>
-            <button id="bottom_player_controls_stretch" halign="center" valign="middle" height="100%" width="25" image-height="35%" image-width="image-height"></button>
-            <button id="bottom_player_controls_rotate" halign="center" valign="middle" height="100%" width="25" image-height="35%" image-width="image-height"></button>
-            <button id="bottom_player_controls_playlist" halign="center" valign="middle" height="100%" width="25" image-height="35%" image-width="image-height"></button>
-            <button id="bottom_player_controls_mute" halign="center" valign="middle" height="100%" width="30" image-height="50%" image-width="image-height"></button>
+            <button id="bottom_player_controls_settings" halign="center" valign="middle" height="100%" width="30" image-height="35%" image-width="image-height" modal="modal_player_settings"></button>
+            <button id="bottom_player_controls_fullscreen" halign="center" valign="middle" height="100%" width="30" image-height="35%" image-width="image-height"></button>
+            <button id="bottom_player_controls_stretch" halign="center" valign="middle" height="100%" width="30" image-height="35%" image-width="image-height"></button>
+            <button id="bottom_player_controls_rotate" halign="center" valign="middle" height="100%" width="30" image-height="35%" image-width="image-height"></button>
+            <button id="bottom_player_controls_playlist" halign="center" valign="middle" height="100%" width="30" image-height="35%" image-width="image-height"></button>
+            <button id="bottom_player_controls_mute" halign="center" valign="middle" height="100%" width="30" image-height="45%" image-width="image-height"></button>
           </panel>
 
           <panel id="bottom_player_controls_volume" valign="middle" width="45">

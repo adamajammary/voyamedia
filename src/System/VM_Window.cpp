@@ -358,6 +358,7 @@ void System::VM_Window::resize()
 		VM_Player::Refresh();
 		VM_PlayerControls::Refresh();
 		VM_PlayerControls::RefreshControls();
+		VM_GUI::LoadComponents(VM_GUI::Components["bottom_player_controls"]);
 	}
 }
 
