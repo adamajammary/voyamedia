@@ -705,8 +705,12 @@ int Graphics::VM_Graphics::CreateThumbITunes(const String &fileName, const Strin
 
 int Graphics::VM_Graphics::CreateThumbThread(void* userData)
 {
-	if (userData == NULL)
+	if (userData == NULL) {
+		VM_GUI::ListTable->removeThumbThread();
+		VM_GUI::ListTable->refreshThumbs();
+
 		return ERROR_INVALID_ARGUMENTS;
+	}
 
 	int  result     = ERROR_UNKNOWN;
 	auto threadData = static_cast<VM_ThreadData*>(userData);
@@ -750,9 +754,7 @@ int Graphics::VM_Graphics::CreateThumbThread(void* userData)
 	DELETE_POINTER(threadData);
 
 	VM_GUI::ListTable->removeThumbThread();
-
-	if ((result == RESULT_OK) && !VM_Window::Quit)
-		VM_GUI::ListTable->refreshThumbs();
+	VM_GUI::ListTable->refreshThumbs();
 
 	return RESULT_OK;
 }

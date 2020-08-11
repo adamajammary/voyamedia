@@ -1303,6 +1303,9 @@ void Graphics::VM_Table::setData()
 		DELETE_POINTER(db);
 	}
 
+	while (!this->thumbThreads.empty())
+		this->thumbThreads.pop();
+
 	// DOWNLOAD/CREATE THUMBS
 	for (auto &row : this->result)
 	{
@@ -1423,15 +1426,18 @@ int Graphics::VM_Table::setRows(bool temp)
 			VM_Button* buttonColumn = new VM_Button(*this->buttons[col]);
 
 			buttonColumn->backgroundArea.y += offsetY;
-			buttonColumn->backgroundColor   = (row % 2 == 0 ? row1Color : row2Color);
-			buttonColumn->borderColor       = { 0x10, 0x10, 0x10, 0xFF };
-			buttonColumn->borderWidth       = VM_Border(2, 0, 0, 0);
-			buttonColumn->id               += ("_" + std::to_string(row) + "_" + std::to_string(col));
-			buttonColumn->highlightColor    = this->getColor("highlight");
-			buttonColumn->mediaID           = std::atoi(this->result[row]["id"].c_str());
-			buttonColumn->mediaID2          = this->result[row]["id"];
-			buttonColumn->mediaURL          = this->result[row]["full_path"];
-			buttonColumn->parent            = this;
+
+			buttonColumn->backgroundColor = (row % 2 == 0 ? row1Color : row2Color);
+			buttonColumn->borderColor     = { 0x10, 0x10, 0x10, 0xFF };
+			buttonColumn->borderWidth     = VM_Border(2, 0, 0, 0);
+
+			buttonColumn->id += ("_" + std::to_string(row) + "_" + std::to_string(col));
+
+			buttonColumn->highlightColor = this->getColor("highlight");
+			buttonColumn->mediaID        = std::atoi(this->result[row]["id"].c_str());
+			buttonColumn->mediaID2       = this->result[row]["id"];
+			buttonColumn->mediaURL       = this->result[row]["full_path"];
+			buttonColumn->parent         = this;
 
 			// FIRST COLUMN - THUMB
 			if ((col == 0) && (this->id == "list_table"))
