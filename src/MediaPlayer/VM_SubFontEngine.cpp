@@ -801,10 +801,11 @@ MediaPlayer::VM_PTS MediaPlayer::VM_SubFontEngine::GetSubPTS(LIB_FFMPEG::AVPacke
 	if ((packet == NULL) || (subStream == NULL))
 		return pts;
 
-	bool useFrame = (packet->dts < subStream->cur_dts);
+	const char* codecName = subStream->codec->codec->name;
+	bool        useFrame  = (packet->dts < subStream->cur_dts);
 
 	// NO DURATION - UPDATE END PTS
-	if (packet->size < MIN_SUB_PACKET_SIZE)
+	if ((strcmp(codecName, "pgssub") == 0) && (packet->size < MIN_SUB_PACKET_SIZE))
 	{
 		if (useFrame)
 			pts.end = (double)((double)subFrame.pts / AV_TIME_BASE_D);
