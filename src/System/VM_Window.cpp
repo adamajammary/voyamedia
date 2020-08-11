@@ -353,7 +353,7 @@ void System::VM_Window::resize()
 		VM_GUI::ListTable->refresh();
 	}
 
-	if (!VM_Player::State.isStopped) {
+	if (!VM_Player::State.isStopped || VM_Player::State.openFile) {
 		VM_Player::Render(VM_PlayerControls::GetSnapshotArea());
 		VM_Player::Refresh();
 		VM_PlayerControls::Refresh();
