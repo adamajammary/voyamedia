@@ -804,7 +804,7 @@ MediaPlayer::VM_PTS MediaPlayer::VM_SubFontEngine::GetSubPTS(LIB_FFMPEG::AVPacke
 	bool useFrame = (packet->dts < subStream->cur_dts);
 
 	// NO DURATION - UPDATE END PTS
-	if ((subFrame.num_rects == 0) && (packet->size > 0))
+	if (packet->size < MIN_SUB_PACKET_SIZE)
 	{
 		if (useFrame)
 			pts.end = (double)((double)subFrame.pts / AV_TIME_BASE_D);

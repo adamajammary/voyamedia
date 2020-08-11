@@ -1381,12 +1381,11 @@ void MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 
 				for (auto subIter2 = subIter; subIter2 != VM_Player::subContext.subs.end(); subIter2++)
 				{
-					SDL_Rect     collRect = {};
 					VM_Subtitle* sub2     = *subIter2;
 					SDL_Rect     sub2Rect = { sub2->subRect->x, sub2->subRect->y, sub2->subRect->w, sub2->subRect->h };
 					SDL_Rect     subRect  = { sub->subRect->x,  sub->subRect->y,  sub->subRect->w,  sub->subRect->h };
 
-					if ((subIter2 != subIter) && SDL_IntersectRect(&sub2Rect, &subRect, &collRect))
+					if ((subIter2 != subIter) && SDL_HasIntersection(&sub2Rect, &subRect))
 					{
 						skipSub      = true;
 						sub->pts.end = VM_Player::ProgressTime;
@@ -2333,13 +2332,8 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		// Some sub types, like PGS, come in pairs:
 		// - The first one with data but without duration or end PTS
 		// - The second one has no data, but contains the end PTS
-		if ((strcmp(codecName, "pgssub") == 0) &&
-			(subFrame.num_rects == 0) && (packet->size > 0) && !VM_Player::subContext.subs.empty())
-		{
-			VM_Player::subContext.subs.back()->pts = VM_SubFontEngine::GetSubPTS(
-				packet, subFrame, VM_Player::subContext.stream
-			);
-		}
+		if ((strcmp(codecName, "pgssub") == 0) && (packet->size < MIN_SUB_PACKET_SIZE) && !VM_Player::subContext.subs.empty())
+			VM_Player::subContext.subs.back()->pts = VM_SubFontEngine::GetSubPTS(packet, subFrame, VM_Player::subContext.stream);
 
 		VM_Player::subContext.available = true;
 		SDL_CondSignal(VM_Player::subContext.subsCondition);
@@ -2398,9 +2392,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		switch (VM_Player::subContext.type) {
 		case LIB_FFMPEG::SUBTITLE_ASS:
 		case LIB_FFMPEG::SUBTITLE_TEXT:
-			textSubs = VM_SubFontEngine::SplitAndFormatSub(
-				subTexts, VM_Player::subContext.styles, VM_Player::subContext.subs
-			);
+			textSubs = VM_SubFontEngine::SplitAndFormatSub(subTexts, VM_Player::subContext.styles, VM_Player::subContext.subs);
 
 			for (auto textSub : textSubs)
 				textSub->pts = VM_PTS(pts.start, pts.end);

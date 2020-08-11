@@ -516,6 +516,7 @@ namespace VoyaMedia
 
 	const int MIN_OUTLINE           = 3;
 	const int MIN_PACKET_QUEUE_SIZE = 25;
+	const int MIN_SUB_PACKET_SIZE   = 100;
 	const int MIN_WINDOW_SIZE       = 360;
 
 	const int ONE_THOUSAND   = 1000;
