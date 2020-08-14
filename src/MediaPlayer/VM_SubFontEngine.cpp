@@ -858,7 +858,6 @@ MediaPlayer::VM_SubStyle* MediaPlayer::VM_SubFontEngine::getSubStyle(const VM_Su
 void MediaPlayer::VM_SubFontEngine::handleSubCollisions(const VM_SubTextureId &subTextures, const VM_SubTexturesId &subs)
 {
 	const size_t MAX_TRIES = subs.size();
-	SDL_Rect     collider  = {};
 
 	for (size_t i = 0; i < MAX_TRIES; i++)
 	{
@@ -866,7 +865,7 @@ void MediaPlayer::VM_SubFontEngine::handleSubCollisions(const VM_SubTextureId &s
 
 		for (const auto &sub : subs)
 		{
-			if ((subTextures.first == sub.first) || !SDL_IntersectRect(&subTextures.second[0]->total, &sub.second[0]->total, &collider))
+			if ((subTextures.first == sub.first) || !SDL_HasIntersection(&subTextures.second[0]->total, &sub.second[0]->total))
 				continue;
 
 			int offsetY = 0;
@@ -877,9 +876,9 @@ void MediaPlayer::VM_SubFontEngine::handleSubCollisions(const VM_SubTextureId &s
 					continue;
 
 				if (subTexture->subtitle->isAlignedTop())
-					subTexture->locationRender.y = (collider.y + collider.h + offsetY);
+					subTexture->locationRender.y = (sub.second[0]->total.y + sub.second[0]->total.h + offsetY);
 				else
-					subTexture->locationRender.y = (collider.y - subTexture->total.h + offsetY);
+					subTexture->locationRender.y = (sub.second[0]->total.y - subTexture->total.h + offsetY);
 
 				subTexture->total.y = subTextures.second[0]->locationRender.y;
 
@@ -1126,8 +1125,6 @@ int MediaPlayer::VM_SubFontEngine::RenderSubText(const VM_Subtitles &subs, TTF_F
 		}
 	}
 
-	VM_Subtitle* prevSub = NULL;
-
 	for (auto sub : subs)
 	{
 		if (sub->skip)
@@ -1154,7 +1151,7 @@ int MediaPlayer::VM_SubFontEngine::RenderSubText(const VM_Subtitles &subs, TTF_F
 
 		// Split the sub if larger than video width
 		if (sub->style != NULL)
-			VM_SubFontEngine::splitSub(sub->textUTF16, sub, prevSub, subStrings16);
+			VM_SubFontEngine::splitSub(sub->textUTF16, sub, subStrings16);
 		else
 			subStrings16.push_back(sub->textUTF16);
 
@@ -1176,8 +1173,6 @@ int MediaPlayer::VM_SubFontEngine::RenderSubText(const VM_Subtitles &subs, TTF_F
 			else
 				VM_SubFontEngine::subsBottom[subFill->subtitle->id].push_back(subFill);
 		}
-
-		prevSub = sub;
 	}
 
 	// Calculate and set the total width for split subs
@@ -1192,14 +1187,12 @@ int MediaPlayer::VM_SubFontEngine::RenderSubText(const VM_Subtitles &subs, TTF_F
 	VM_SubFontEngine::setSubPositionRelative(VM_SubFontEngine::subsTop);
 
 	// Handle sub collisions
+	for (const auto &sub : VM_SubFontEngine::subsTop)
+		VM_SubFontEngine::handleSubCollisions(sub, VM_SubFontEngine::subsBottom);
+
 	for (const auto &sub : VM_SubFontEngine::subsMiddle) {
 		VM_SubFontEngine::handleSubCollisions(sub, VM_SubFontEngine::subsBottom);
 		VM_SubFontEngine::handleSubCollisions(sub, VM_SubFontEngine::subsTop);
-	}
-
-	for (const auto &sub : VM_SubFontEngine::subsTop) {
-		VM_SubFontEngine::handleSubCollisions(sub, VM_SubFontEngine::subsMiddle);
-		VM_SubFontEngine::handleSubCollisions(sub, VM_SubFontEngine::subsBottom);
 	}
 
 	// Calculate and set the absolutely aligned sub positions
@@ -1225,10 +1218,11 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 	for (const auto &subTextures : subs)
 	{
 		VM_SubTextures subsX;
-		int            offsetX     = 0;
-		VM_SubTexture* prevSub     = NULL;
-		SDL_FPoint     subScale    = VM_Player::GetSubScale();
-		int            totalHeight = 0;
+		bool           forceBlankNewLine = false;
+		int            offsetX           = 0;
+		VM_SubTexture* prevSub           = NULL;
+		SDL_FPoint     subScale          = VM_Player::GetSubScale();
+		int            totalHeight       = 0;
 
 		for (auto subTexture : subTextures.second)
 		{
@@ -1276,7 +1270,9 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionAbsolute(const VM_SubTexturesI
 				}
 
 				if (subTexture->subtitle->text2.find("\\fs") == String::npos)
-					subTexture->locationRender.h /= 2;
+					subTexture->locationRender.h = (forceBlankNewLine ? subTexture->locationRender.h / 2 : 0);
+			} else {
+				forceBlankNewLine = true;
 			}
 
 			// ROTATION
@@ -1432,9 +1428,9 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionRelative(const VM_SubTexturesI
 	for (const auto &subTextures : subs)
 	{
 		VM_SubTextures subLine;
-		int maxHeight   = 0;
-		int offsetX     = 0;
-		int totalHeight = 0;
+		bool forceBlankNewLine = false;
+		int  offsetX           = 0;
+		int  totalHeight       = 0;
 
 		for (auto subTexture : subTextures.second)
 		{
@@ -1446,7 +1442,20 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionRelative(const VM_SubTexturesI
 			subTexture->locationRender.w = subTexture->textureData->width;
 			subTexture->locationRender.h = subTexture->textureData->height;
 
-			maxHeight = (subTexture->locationRender.h > maxHeight ? subTexture->locationRender.h : maxHeight);
+			// FORCED BLANK NEW LINES (t1\N\N\Nt2)
+			if (subTexture->subtitle->text == " ")
+			{
+				if (subTexture->subtitle->style != NULL) {
+					subTexture->subtitle->style->blur    = 0;
+					subTexture->subtitle->style->outline = 0;
+					subTexture->subtitle->style->shadow  = {};
+				}
+
+				if (subTexture->subtitle->text2.find("\\fs") == String::npos)
+					subTexture->locationRender.h = (forceBlankNewLine ? subTexture->locationRender.h / 2 : 0);
+			} else {
+				forceBlankNewLine = true;
+			}
 
 			// ROTATION
 			subTexture->subtitle->rotationPoint.x = ((subTexture->total.w / 2) - offsetX);
@@ -1474,9 +1483,8 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionRelative(const VM_SubTexturesI
 				subWord->total.w = subTexture->total.w;
 			}
 
-			totalHeight += maxHeight;
+			totalHeight += subTexture->locationRender.h;
 			offsetX      = 0;
-			maxHeight    = 0;
 
 			subLine.clear();
 		}
@@ -1608,7 +1616,7 @@ void MediaPlayer::VM_SubFontEngine::setTotalWidthRelative(const VM_SubTexturesId
 	}
 }
 
-int MediaPlayer::VM_SubFontEngine::splitSub(uint16_t* subStringUTF16, VM_Subtitle* sub, VM_Subtitle* prevSub, std::vector<uint16_t*> &subStrings16)
+int MediaPlayer::VM_SubFontEngine::splitSub(uint16_t* subStringUTF16, VM_Subtitle* sub, std::vector<uint16_t*> &subStrings16)
 {
 	if ((subStringUTF16 == NULL) || (sub == NULL))
 		return ERROR_UNKNOWN;
@@ -1627,10 +1635,6 @@ int MediaPlayer::VM_SubFontEngine::splitSub(uint16_t* subStringUTF16, VM_Subtitl
 	// Calculate max width available for rendering the sub
 	auto margins  = sub->getMargins();
 	int  maxWidth = (VM_Player::VideoDimensions.w - DEFAULT_MARGIN - DEFAULT_MARGIN - margins.x - margins.y);
-
-	// Split the sub text based on styling formatting tags
-	if ((sub->text3.find("{") != sub->text3.rfind("{")) && VM_Text::IsValidSubtitle(sub->text3) && (sub->text3.find("^") == String::npos))
-		return VM_SubFontEngine::splitSubStyling(subStringUTF16, sub, prevSub, font, maxWidth, subStrings16);
 
 	// Split the sub if it's larger than the available width
 	int  width, height;
@@ -1761,51 +1765,6 @@ void MediaPlayer::VM_SubFontEngine::splitSubDistributeByWidth(const Strings &wor
 		if (i < words.size() - 1)
 			lineString2.append(" " + words[i + 1]);
 	}
-}
-
-int MediaPlayer::VM_SubFontEngine::splitSubStyling(uint16_t* subStringUTF16, VM_Subtitle* sub, VM_Subtitle* prevSub, TTF_Font* font, const int maxWidth, std::vector<uint16_t*> &subStrings16)
-{
-	int      width, height;
-	uint16_t utf16[DEFAULT_CHAR_BUFFER_SIZE];
-	String   text3 = VM_SubFontEngine::RemoveFormatting(sub->text3);
-
-	VM_Text::ToUTF16(text3, utf16, DEFAULT_CHAR_BUFFER_SIZE);
-	TTF_SizeUNICODE(font, utf16, &width, &height);
-
-	if ((width > maxWidth) && (sub->text3.find("\\q2") == String::npos))
-	{
-		int     width2 = 0;
-		Strings split  = VM_Text::Split(sub->text3, "{");
-
-		for (const auto &s : split)
-		{
-			size_t f  = s.rfind("}");
-			String s2 = (f != String::npos ? s.substr(f + 1) : s);
-
-			VM_Text::ToUTF16(s2, utf16, DEFAULT_CHAR_BUFFER_SIZE);
-			TTF_SizeUNICODE(font, utf16, &width, &height);
-
-			width2 += width;
-
-			if (s2 == sub->text)
-				break;
-
-			if (width2 > maxWidth)
-				width2 = width;
-		}
-
-		if (width2 > maxWidth)
-		{
-			sub->offsetY = true; // Absolute position: force new line
-
-			if (prevSub != NULL)
-				prevSub->splitStyling = false; // Relative align: force new line
-		}
-	}
-
-	subStrings16.push_back(subStringUTF16);
-
-	return RESULT_OK;
 }
 
 // http://docs.aegisub.org/3.2/ASS_Tags/

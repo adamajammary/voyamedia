@@ -59,11 +59,10 @@ namespace VoyaMedia
 			static void           setSubPositionRelative(const VM_SubTexturesId &subs);
 			static void           setTotalWidthAbsolute(const VM_SubTexturesId &subs);
 			static void           setTotalWidthRelative(const VM_SubTexturesId &subs);
-			static int            splitSub(uint16_t* subStringUTF16, VM_Subtitle* sub, VM_Subtitle* prevSub, std::vector<uint16_t*> &subStrings16);
+			static int            splitSub(uint16_t* subStringUTF16, VM_Subtitle* sub, std::vector<uint16_t*> &subStrings16);
 			static size_t         splitSubGetNrLines(const Strings &words, TTF_Font* font, const int maxWidth);
 			static int            splitSubDistributeByLines(const Strings &words, size_t nrLines, TTF_Font* font, const int maxWidth, std::vector<uint16_t*> &subStrings16);
 			static void           splitSubDistributeByWidth(const Strings &words, TTF_Font* font, const int maxWidth, std::vector<uint16_t*> &subStrings16);
-			static int            splitSubStyling(uint16_t* subStringUTF16, VM_Subtitle* sub, VM_Subtitle* prevSub, TTF_Font* font, const int maxWidth, std::vector<uint16_t*> &subStrings16);
 
 		};
 	}
