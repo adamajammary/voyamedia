@@ -785,7 +785,7 @@ int Graphics::VM_Modal::updateLabelsDetailsVideo(int mediaID, const String &file
 
 		for (uint32_t i = 0; i < min(formatContext->nb_streams, 7); i++)
 		{
-			String            streamDesc = "";
+			String                streamDesc = "";
 			LIB_FFMPEG::AVStream* stream     = VM_FileSystem::GetMediaStreamByIndex(formatContext, i);
 
 			if ((stream != NULL) && (stream->codec != NULL))
@@ -829,22 +829,22 @@ int Graphics::VM_Modal::updateLabelsDetailsVideo(int mediaID, const String &file
 					text.append(streamDesc + "\n");
 			}
 		}
-
-		String duration = "";
-		String path     = "";
-		String size     = "";
-
-		if (VM_Modal::updateMediaDB(formatContext, filePath, mediaID, duration, size, path))
-		{
-			text2.append(!path.empty()                      ? path + "\n" : "");
-			text2.append(!size.empty()                      ? size : "");
-			text2.append(!size.empty() && !duration.empty() ? " (" : "");
-			text2.append(!duration.empty()                  ? duration : "");
-			text2.append(!size.empty() && !duration.empty() ? ")" : "");
-		}
-
-		VM_FileSystem::CloseMediaFormatContext(formatContext, mediaID);
 	}
+
+	String duration = "";
+	String path     = "";
+	String size     = "";
+
+	if (VM_Modal::updateMediaDB(formatContext, filePath, mediaID, duration, size, path))
+	{
+		text2.append(!path.empty()                      ? path + "\n" : "");
+		text2.append(!size.empty()                      ? size : "");
+		text2.append(!size.empty() && !duration.empty() ? " (" : "");
+		text2.append(!duration.empty()                  ? duration : "");
+		text2.append(!size.empty() && !duration.empty() ? ")" : "");
+	}
+
+	VM_FileSystem::CloseMediaFormatContext(formatContext, mediaID);
 
 	if (!text.empty())
 		details->setText(text);
