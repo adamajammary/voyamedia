@@ -888,7 +888,7 @@ int UPNP::VM_UPNP::ScanDevices(void* userData)
 {
 	VM_ThreadManager::Threads[THREAD_UPNP_CLIENT]->completed = false;
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.upnp"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.scan.upnp"];
 
 	// INITIALIZE THE VM_UPNP LIBRARY
 	int result = LIB_UPNP::UpnpInit2(VM_UPNP::ClientIP.c_str(), 0);
@@ -914,7 +914,7 @@ int UPNP::VM_UPNP::ScanDevices(void* userData)
 		if (VM_Window::Quit)
 			break;
 
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "[%d%%] %s [%s]", ((i * 100) / UPNP_SEARCH_MAX_COUNT), VM_Window::Labels["status.scan.upnp"].c_str(), VM_UPNP::ClientIP.c_str());
+		VM_Window::StatusString = VM_Text::Format("[%d%%] %s [%s]", ((i * 100) / UPNP_SEARCH_MAX_COUNT), VM_Window::Labels["status.scan.upnp"].c_str(), VM_UPNP::ClientIP.c_str());
 
 		if (LIB_UPNP::UpnpSearchAsync(VM_UPNP::Client, UPNP_SEARCH_TIMEOUT, "upnp:rootdevice", NULL) != UPNP_E_SUCCESS)
 			break;
@@ -928,7 +928,7 @@ int UPNP::VM_UPNP::ScanDevices(void* userData)
 		return UPNP_E_SUCCESS;
 	}
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "[100%%] %s [%s]", VM_Window::Labels["status.scan.upnp"].c_str(), VM_UPNP::ClientIP.c_str());
+	VM_Window::StatusString = VM_Text::Format("[100%%] %s [%s]", VM_Window::Labels["status.scan.upnp"].c_str(), VM_UPNP::ClientIP.c_str());
 
 	if (VM_UPNP::Devices.empty()) {
 		VM_UPNP::stopClient(UPNP_E_NO_WEB_SERVER);
@@ -943,7 +943,7 @@ int UPNP::VM_UPNP::ScanDevices(void* userData)
 
 	if (!VM_UPNP::Device.empty())
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s %s [UPnP]", VM_Window::Labels["status.scan"].c_str(), VM_Text::GetUrlRoot(VM_UPNP::Device).c_str());
+		VM_Window::StatusString = VM_Text::Format("%s %s [UPnP]", VM_Window::Labels["status.scan"].c_str(), VM_Text::GetUrlRoot(VM_UPNP::Device).c_str());
 
 		if (VM_UPNP::scanFiles(VM_UPNP::Device.c_str()) <= 0) {
 			VM_UPNP::stopClient(UPNP_E_FILE_NOT_FOUND);
@@ -967,7 +967,7 @@ int UPNP::VM_UPNP::scanFiles(const char* mediaURL)
 	String           server      = VM_Text::GetUrlRoot(mediaURL);
 	VM_XmlNodes      services    = VM_XML::GetNodes("/root/device/serviceList/service", xmlDocument);
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s %s [UPnP]", VM_Window::Labels["status.scan"].c_str(), String(deviceName + " (" + server + ")").c_str());
+	VM_Window::StatusString = VM_Text::Format("%s %s [UPnP]", VM_Window::Labels["status.scan"].c_str(), String(deviceName + " (" + server + ")").c_str());
 
 	for (auto service : services)
 	{
@@ -1038,7 +1038,7 @@ int UPNP::VM_UPNP::scanFiles(const char* mediaURL)
 				if (!VM_FileSystem::IsMediaFile(path))
 					continue;
 
-				snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.adding"].c_str(), path.c_str());
+				VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.adding"].c_str(), path.c_str());
 
 				db = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
 
@@ -1050,7 +1050,7 @@ int UPNP::VM_UPNP::scanFiles(const char* mediaURL)
 				DELETE_POINTER(db);
 
 				if (mediaID > 0) {
-					snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.already_added"].c_str(), path.c_str());
+					VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.already_added"].c_str(), path.c_str());
 					continue;
 				}
 
@@ -1082,7 +1082,7 @@ int UPNP::VM_UPNP::scanFiles(const char* mediaURL)
 				}
 
 				if (!validMedia) {
-					snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), path.c_str());
+					VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), path.c_str());
 					continue;
 				}
 
@@ -1100,9 +1100,9 @@ int UPNP::VM_UPNP::scanFiles(const char* mediaURL)
 				{
 					filesAdded++;
 
-					snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
+					VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
 				} else {
-					snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
+					VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
 				}
 			}
 
@@ -1124,7 +1124,7 @@ int UPNP::VM_UPNP::Start(void* userData)
 {
 	VM_ThreadManager::Threads[THREAD_UPNP_SERVER]->completed = false;
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s UPnP Server [%s] ...", VM_Window::Labels["upnp.starting"].c_str(), VM_UPNP::ServerIP.c_str());
+	VM_Window::StatusString = VM_Text::Format("%s UPnP Server [%s] ...", VM_Window::Labels["upnp.starting"].c_str(), VM_UPNP::ServerIP.c_str());
 
 	// INITIALIZE THE UPNP LIBRARY
 	int result = LIB_UPNP::UpnpInit2(VM_UPNP::ServerIP.c_str(), 0);
@@ -1198,7 +1198,7 @@ int UPNP::VM_UPNP::Start(void* userData)
 	while (VM_ThreadManager::Threads[THREAD_UPNP_SERVER]->start && !VM_Window::Quit)
 	{
 		if (VM_ThreadManager::Threads[THREAD_UPNP_CLIENT]->completed)
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "UPnP Server %s [%s:%u]", VM_Window::Labels["upnp.running"].c_str(), LIB_UPNP::UpnpGetServerIpAddress(), LIB_UPNP::UpnpGetServerPort());
+			VM_Window::StatusString = VM_Text::Format("UPnP Server %s [%s:%u]", VM_Window::Labels["upnp.running"].c_str(), LIB_UPNP::UpnpGetServerIpAddress(), LIB_UPNP::UpnpGetServerPort());
 
 		SDL_Delay(DELAY_TIME_BACKGROUND);
 	}
@@ -1221,13 +1221,13 @@ int UPNP::VM_UPNP::stopClient(int result)
 	VM_UPNP::ClientIP = "";
 
 	if (result == UPNP_E_FILE_NOT_FOUND)
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_upnp_items"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["error.no_upnp_items"];
 	else if (result == UPNP_E_NO_WEB_SERVER)
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_upnp"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["error.no_upnp"];
 	else if (result == UPNP_E_SUCCESS)
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.finished"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["status.scan.finished"];
 	else
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s %s", VM_Window::Labels["error.init_upnp"].c_str(), LIB_UPNP::UpnpGetErrorMessage(result));
+		VM_Window::StatusString = VM_Text::Format("%s %s", VM_Window::Labels["error.init_upnp"].c_str(), LIB_UPNP::UpnpGetErrorMessage(result));
 
 	VM_ThreadManager::Threads[THREAD_UPNP_CLIENT]->start     = false;
 	VM_ThreadManager::Threads[THREAD_UPNP_CLIENT]->completed = true;
@@ -1251,11 +1251,11 @@ int UPNP::VM_UPNP::stopServer(int result)
 	VM_UPNP::deviceUDN = "";
 
 	if (result == UPNP_E_FILE_NOT_FOUND)
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.share_no_files"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["error.share_no_files"];
 	else if (result != UPNP_E_SUCCESS)
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s UPnP Server: %s", VM_Window::Labels["error.start"].c_str(), LIB_UPNP::UpnpGetErrorMessage(result));
+		VM_Window::StatusString = VM_Text::Format("%s UPnP Server: %s", VM_Window::Labels["error.start"].c_str(), LIB_UPNP::UpnpGetErrorMessage(result));
 	else
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "UPnP Server %s", VM_Window::Labels["upnp.stopped"].c_str());
+		VM_Window::StatusString = VM_Text::Format("UPnP Server %s", VM_Window::Labels["upnp.stopped"].c_str());
 
 	VM_ThreadManager::Threads[THREAD_UPNP_SERVER]->start     = false;
 	VM_ThreadManager::Threads[THREAD_UPNP_SERVER]->completed = true;

@@ -427,7 +427,7 @@ int System::VM_EventManager::HandleMediaPlayer()
 				mediaID = row[1]->mediaID2;
 			}
 
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.open"].c_str(), file.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.open"].c_str(), file.c_str());
 			VM_Modal::ShowMessage(VM_Window::StatusString);
 
 			if (YOUTUBE_IS_SELECTED && !mediaID.empty())
@@ -454,8 +454,8 @@ int System::VM_EventManager::HandleMediaPlayer()
 			VM_Player::FullScreenExit();
 
 		if (!errorMessage.empty()) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", errorMessage.c_str());
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), VM_Window::StatusString, NULL);
+			VM_Window::StatusString = errorMessage;
+			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, APP_NAME.c_str(), VM_Window::StatusString.c_str(), NULL);
 		}
 	}
 
@@ -544,7 +544,7 @@ bool System::VM_EventManager::isClickedBottomControls(SDL_Event* mouseEvent)
 		{
 			// INVALID MEDIA TYPE
 			if (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE) {
-				snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.share_invalid"].c_str());
+				VM_Window::StatusString = VM_Window::Labels["error.share_invalid"];
 				VM_Modal::ShowMessage(VM_Window::StatusString);
 			// VALID
 			} else {
@@ -555,7 +555,7 @@ bool System::VM_EventManager::isClickedBottomControls(SDL_Event* mouseEvent)
 		{
 			// NO INTERNET
 			if (!VM_FileSystem::HasInternetConnection()) {
-				snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_nics"].c_str());
+				VM_Window::StatusString = VM_Window::Labels["error.no_nics"];
 				VM_Modal::ShowMessage(VM_Window::StatusString);
 			// VALID
 			} else {
@@ -589,31 +589,34 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 			if (button->id == "bottom_player_controls_mute")
 			{
 				VM_Player::MuteToggle();
+				VM_PlayerControls::Refresh(REFRESH_VOLUME);
 			}
 			else if (!VM_Player::State.isStopped)
 			{
 				// SETTINGS
-				if (button->id == "bottom_player_controls_settings")
+				if (button->id == "bottom_player_controls_settings") {
 					VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));
 				// FULLSCREEN
-				else if (button->id == "bottom_player_controls_fullscreen")
+				} else if (button->id == "bottom_player_controls_fullscreen") {
 					#if defined _android || defined _ios
 						VM_PlayerControls::Hide();
 					#else
 						VM_Player::FullScreenToggle(false);
 					#endif
 				// STRETCH
-				else if (button->id == "bottom_player_controls_stretch")
+				} else if (button->id == "bottom_player_controls_stretch") {
 					VM_Player::KeepAspectRatioToggle();
+					VM_PlayerControls::Refresh(REFRESH_STRETCH);
 				// ROTATE
-				else if (button->id == "bottom_player_controls_rotate")
+				} else if (button->id == "bottom_player_controls_rotate") {
 					VM_Player::RotatePicture();
-				// PLAYLIST
-				else if (button->id == "bottom_player_controls_playlist")
+					VM_PlayerControls::Refresh(REFRESH_ROTATE);
+				// LOOP TYPE
+				} else if (button->id == "bottom_player_controls_loop") {
 					VM_Player::PlaylistLoopTypeToggle();
+					VM_PlayerControls::Refresh(REFRESH_LOOP);
+				}
 			}
-
-			VM_PlayerControls::Refresh();
 
 			return true;
 		}
@@ -627,10 +630,10 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 				continue;
 
 			// VOLUME
-			if (button->id == "bottom_player_controls_volume_bar")
+			if (button->id == "bottom_player_controls_volume_bar") {
 				VM_PlayerControls::SetVolume(mouseEvent);
-
-			VM_PlayerControls::Refresh();
+				VM_PlayerControls::Refresh(REFRESH_VOLUME);
+			}
 
 			return true;
 		}
@@ -647,19 +650,19 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 				continue;
 
 			// PREVIOUS
-			if (button->id == "bottom_player_controls_prev")
+			if (button->id == "bottom_player_controls_prev") {
 				VM_Player::OpenPrevious(true);
 			// NEXT
-			else if (button->id == "bottom_player_controls_next")
+			} else if (button->id == "bottom_player_controls_next") {
 				VM_Player::OpenNext(true);
 			// PLAY/PAUSE
-			else if (button->id == "bottom_player_controls_play")
+			} else if (button->id == "bottom_player_controls_play") {
 				VM_Player::PlayPauseToggle();
+				VM_PlayerControls::Refresh(REFRESH_PLAY);
 			// STOP
-			else if (button->id == "bottom_player_controls_stop")
+			} else if (button->id == "bottom_player_controls_stop") {
 				VM_Player::FullScreenExit(true);
-
-			VM_PlayerControls::Refresh();
+			}
 
 			return true;
 		}
@@ -673,8 +676,10 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 				continue;
 
 			// PROGRESS: TIME PASSED VS. TIME LEFT
-			if ((button->id == "bottom_player_controls_progress") && !VM_Player::State.isStopped && !SHOUTCAST_IS_SELECTED)
+			if ((button->id == "bottom_player_controls_progress") && !VM_Player::State.isStopped && !SHOUTCAST_IS_SELECTED) {
 				VM_PlayerControls::ToggleProgressTimeLeft();
+				VM_PlayerControls::Refresh(REFRESH_PROGRESS);
+			}
 
 			return true;
 		}
@@ -708,8 +713,6 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 			if (VM_Player::State.isPaused && (VM_Player::State.fullscreenEnter || VM_Player::State.fullscreenExit))
 				VM_Player::Play();
 
-			VM_PlayerControls::Refresh();
-
 			return true;
 		}
 		else
@@ -718,7 +721,8 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 		if (VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea))
 		{
 			VM_Player::PlayPauseToggle();
-			VM_PlayerControls::Refresh();
+			VM_PlayerControls::Refresh(REFRESH_PLAY);
+
 			return true;
 		}
 	}

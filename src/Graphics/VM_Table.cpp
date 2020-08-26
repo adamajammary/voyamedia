@@ -119,7 +119,7 @@ VM_DBResult Graphics::VM_Table::getResult()
 
 		// NO NICS
 		if (result.empty()) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_nics"].c_str());
+			VM_Window::StatusString = VM_Window::Labels["error.no_nics"];
 			VM_Modal::ShowMessage(VM_Window::StatusString);
 		}
 

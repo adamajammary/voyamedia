@@ -56,7 +56,7 @@ void MediaPlayer::VM_Player::Init()
 		{
 			VM_Player::State.isMuted         = (isMuted == "1");
 			VM_Player::State.audioVolume     = (VM_Player::State.isMuted ? 0 : std::atoi(db->getSettings("audio_volume").c_str()));
-			VM_Player::State.loopType        = (VM_PlayType)std::atoi(db->getSettings("playlist_loop_type").c_str());
+			VM_Player::State.loopType        = (VM_LoopType)std::atoi(db->getSettings("playlist_loop_type").c_str());
 			VM_Player::State.keepAspectRatio = (db->getSettings("keep_aspect_ratio") == "1");
 		}
 		else
@@ -629,8 +629,8 @@ int MediaPlayer::VM_Player::Open()
 	// PLAY
 	VM_Player::Play();
 
-	VM_Window::StatusString[0] = '\0';
-	VM_Player::State.openFile  = false;
+	VM_Window::StatusString   = "";
+	VM_Player::State.openFile = false;
 
 	return RESULT_OK;
 }
@@ -810,22 +810,22 @@ int MediaPlayer::VM_Player::openPlaylist(bool stop, bool next)
 
 	if (next) {
 		switch (VM_Player::State.loopType) {
-			case PLAY_TYPE_NORMAL:  VM_GUI::ListTable->selectNext();     break;
-			case PLAY_TYPE_LOOP:    VM_GUI::ListTable->selectNext(true); break;
-			case PLAY_TYPE_SHUFFLE: VM_GUI::ListTable->selectRandom();   break;
+			case LOOP_TYPE_NORMAL:  VM_GUI::ListTable->selectNext();     break;
+			case LOOP_TYPE_LOOP:    VM_GUI::ListTable->selectNext(true); break;
+			case LOOP_TYPE_SHUFFLE: VM_GUI::ListTable->selectRandom();   break;
 		}
 	} else {
 		switch (VM_Player::State.loopType) {
-			case PLAY_TYPE_NORMAL:  VM_GUI::ListTable->selectPrev();     break;
-			case PLAY_TYPE_LOOP:    VM_GUI::ListTable->selectPrev(true); break;
-			case PLAY_TYPE_SHUFFLE: VM_GUI::ListTable->selectRandom();   break;
+			case LOOP_TYPE_NORMAL:  VM_GUI::ListTable->selectPrev();     break;
+			case LOOP_TYPE_LOOP:    VM_GUI::ListTable->selectPrev(true); break;
+			case LOOP_TYPE_SHUFFLE: VM_GUI::ListTable->selectRandom();   break;
 		}
 	}
 
 	String nextFile = VM_GUI::ListTable->getSelectedFile();
 
 	if (nextFile.empty() ||
-		((VM_Player::State.loopType != PLAY_TYPE_SHUFFLE) && (nextFile != REFRESH_PENDING) && 
+		((VM_Player::State.loopType != LOOP_TYPE_SHUFFLE) && (nextFile != REFRESH_PENDING) &&
 		((nextFile == VM_Player::State.filePath) || (nextFile == previousFile))))
 	{
 		return ERROR_UNKNOWN;
@@ -1148,8 +1148,6 @@ int MediaPlayer::VM_Player::Pause()
 	if (!PICTURE_IS_SELECTED)
 		SDL_PauseAudioDevice(VM_Player::audioContext.deviceID, 1);
 
-	VM_PlayerControls::Refresh();
-
 	return RESULT_OK;
 }
 
@@ -1170,8 +1168,6 @@ int MediaPlayer::VM_Player::Play()
 	else
 		VM_Player::pictureProgressTime = SDL_GetTicks();
 
-	VM_PlayerControls::Refresh();
-
 	return RESULT_OK;
 }
 
@@ -1188,14 +1184,14 @@ int MediaPlayer::VM_Player::PlayPauseToggle()
 int MediaPlayer::VM_Player::PlaylistLoopTypeToggle()
 {
 	if (YOUTUBE_IS_SELECTED || SHOUTCAST_IS_SELECTED) {
-		VM_Player::State.loopType = PLAY_TYPE_NORMAL;
+		VM_Player::State.loopType = LOOP_TYPE_NORMAL;
 		return RESULT_OK;
 	}
 
 	switch (VM_Player::State.loopType) {
-		case PLAY_TYPE_NORMAL:  VM_Player::State.loopType = PLAY_TYPE_LOOP;    break;
-		case PLAY_TYPE_LOOP:    VM_Player::State.loopType = PLAY_TYPE_SHUFFLE; break;
-		case PLAY_TYPE_SHUFFLE: VM_Player::State.loopType = PLAY_TYPE_NORMAL;  break;
+		case LOOP_TYPE_NORMAL:  VM_Player::State.loopType = LOOP_TYPE_LOOP;    break;
+		case LOOP_TYPE_LOOP:    VM_Player::State.loopType = LOOP_TYPE_SHUFFLE; break;
+		case LOOP_TYPE_SHUFFLE: VM_Player::State.loopType = LOOP_TYPE_NORMAL;  break;
 		default: return ERROR_UNKNOWN;
 	}
 
@@ -1266,7 +1262,7 @@ void MediaPlayer::VM_Player::renderPicture()
 		VM_Player::pictureProgressTime = (uint32_t)(VM_Player::ProgressTime * (double)ONE_SECOND_MS);
 		VM_Player::seekRequested       = false;
 
-		VM_PlayerControls::Refresh();
+		VM_PlayerControls::Refresh(REFRESH_PROGRESS);
 	}
 
 	if (VM_Player::State.isPlaying)
@@ -1293,6 +1289,16 @@ int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
 	if (!VM_Player::subContext.available)
 		SDL_CondWait(VM_Player::subContext.subsCondition, VM_Player::subContext.subsMutex);
 
+	if (VM_Player::seekRequested)
+	{
+		for (auto sub : VM_Player::subContext.subs) {
+			VM_SubFontEngine::RemoveSubs(sub->id);
+			DELETE_POINTER(sub);
+		}
+
+		VM_Player::subContext.subs.clear();
+	}
+
 	// REMOVE EXPIRED SUBS
 	for (auto sub = VM_Player::subContext.subs.begin(); sub != VM_Player::subContext.subs.end();)
 	{
@@ -1301,6 +1307,7 @@ int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
 		{
 			#if defined _DEBUG
 				auto delay = (VM_Player::ProgressTime - (*sub)->pts.end);
+
 				if (delay > 0) {
 					LOG("VM_Player::renderSub:\n");
 					LOG("\tREMOVE_SUB: %s\n", (*sub)->text.c_str());
@@ -1753,8 +1760,6 @@ int MediaPlayer::VM_Player::Seek(int64_t seekTime)
 
 void MediaPlayer::VM_Player::seek()
 {
-	//SDL_Delay(DELAY_TIME_DEFAULT);
-
 	int seekFlags = AV_SEEK_FLAGS(VM_Player::FormatContext->iformat);
 
 	if (avformat_seek_file(VM_Player::FormatContext, -1, INT64_MIN, VM_Player::seekToPosition, INT64_MAX, seekFlags) >= 0)
@@ -1762,24 +1767,9 @@ void MediaPlayer::VM_Player::seek()
 		if (VM_Player::subContext.index >= SUB_STREAM_EXTERNAL)
 			avformat_seek_file(VM_Player::formatContextExternal, -1, INT64_MIN, VM_Player::seekToPosition, INT64_MAX, seekFlags);
 
-		//SDL_Delay(DELAY_TIME_DEFAULT);
-
 		VM_Player::packetsClear(VM_Player::audioContext.packets, VM_Player::audioContext.mutex, VM_Player::audioContext.condition, VM_Player::audioContext.packetsAvailable);
 		VM_Player::packetsClear(VM_Player::subContext.packets,   VM_Player::subContext.mutex,   VM_Player::subContext.condition,   VM_Player::subContext.packetsAvailable);
 		VM_Player::packetsClear(VM_Player::videoContext.packets, VM_Player::videoContext.mutex, VM_Player::videoContext.condition, VM_Player::videoContext.packetsAvailable);
-				
-		SDL_LockMutex(VM_Player::subContext.subsMutex);
-		VM_Player::subContext.available = false;
-
-		for (auto sub : VM_Player::subContext.subs) {
-			VM_SubFontEngine::RemoveSubs(sub->id);
-			DELETE_POINTER(sub);
-		}
-		VM_Player::subContext.subs.clear();
-
-		VM_Player::subContext.available = true;
-		SDL_CondSignal(VM_Player::subContext.subsCondition);
-		SDL_UnlockMutex(VM_Player::subContext.subsMutex);
 
 		VM_Player::audioContext.bufferOffset    = 0;
 		VM_Player::audioContext.bufferRemaining = 0;
@@ -1788,7 +1778,7 @@ void MediaPlayer::VM_Player::seek()
 		VM_Player::ProgressTime                 = (double)((double)VM_Player::seekToPosition / AV_TIME_BASE_D);
 		VM_Player::videoContext.pts             = 0.0;
 
-		VM_PlayerControls::Refresh();
+		VM_PlayerControls::Refresh(REFRESH_PROGRESS);
 	}
 
 	VM_Player::seekRequested = false;

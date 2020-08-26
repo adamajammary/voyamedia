@@ -44,11 +44,11 @@ int System::VM_FileSystem::addMediaFile(const String &fullPath)
 	
 	String fileName = VM_FileSystem::GetFileName(fullPath, false);
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.adding"].c_str(), fileName.c_str());
+	VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.adding"].c_str(), fileName.c_str());
 
 	// FILE IS VALID - ALREADY ADDED
 	if (mediaID > 0) {
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.already_added"].c_str(), fileName.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.already_added"].c_str(), fileName.c_str());
 		return RESULT_OK;
 	}
 
@@ -118,9 +118,9 @@ int System::VM_FileSystem::addMediaFile(const String &fullPath)
 			VM_FileSystem::FileBookmarkSave(fullPath, mediaID);
 		#endif
 
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
 	} else {
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
 		return ERROR_UNKNOWN;
 	}
 
@@ -218,7 +218,7 @@ int System::VM_FileSystem::CleanDB(void* userData)
 {
 	VM_ThreadManager::Threads[THREAD_CLEAN_DB]->completed = false;
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.clean.db"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.clean.db"];
 
 	VM_DBResult rows;
 	int         dbResult;
@@ -275,7 +275,7 @@ int System::VM_FileSystem::CleanDB(void* userData)
 
 	if (!VM_Window::Quit)
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.clean.db.finished"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["status.clean.db.finished"];
 
 		VM_GUI::ListTable->refreshRows();
 		VM_FileSystem::RefreshMetaData();
@@ -296,7 +296,7 @@ int System::VM_FileSystem::CleanThumbs(void* userData)
 {
 	VM_ThreadManager::Threads[THREAD_CLEAN_THUMBS]->completed = false;
 	
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.clean.thumbs"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.clean.thumbs"];
 	
 	#if defined _windows
 		String thumbsDir = VM_Text::ToUTF8(VM_FileSystem::GetPathThumbnailsDirW().c_str());
@@ -316,7 +316,7 @@ int System::VM_FileSystem::CleanThumbs(void* userData)
 		remove(String(thumbsDir + PATH_SEPERATOR + thumbFiles[i]).c_str());
 	}
 	
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.clean.thumbs.finished"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.clean.thumbs.finished"];
 
 	if (!thumbFiles.empty() && !VM_Window::Quit)
 	{
@@ -2843,7 +2843,7 @@ Strings System::VM_FileSystem::GetYouTubeVideos(const String &videoID)
 		error = error.substr(0, error.find("&"));
 		error = VM_Text::Replace(error, "+", " ");
 
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", error.c_str());
+		VM_Window::StatusString = error;
 	}
 
 	if ((response.find("status=ok") == String::npos) || (response.find("signature=True") != String::npos))
@@ -3413,7 +3413,7 @@ int System::VM_FileSystem::OpenFile(const String &filePath)
 	if (VM_FileSystem::isFile(fileStruct.st_mode))
 	{
 		if (VM_FileSystem::addMediaFile(file) != RESULT_OK) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), file.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), file.c_str());
 			return ERROR_UNKNOWN;
 		}
 
@@ -3429,7 +3429,7 @@ int System::VM_FileSystem::OpenFile(const String &filePath)
 	// UNKNOWN
 	else
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), file.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), file.c_str());
 		return ERROR_UNKNOWN;
 	}
 
@@ -3682,7 +3682,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 {
 	VM_ThreadManager::Threads[THREAD_SCAN_DROPBOX]->completed = false;
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.validate_dropbox"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.validate_dropbox"];
 
 	int    dbResult;
 	auto   db    = new VM_Database(dbResult, DATABASE_SETTINGSv3);
@@ -3699,7 +3699,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 	// CHECK IF TOKEN IS EXPIRED - RE-AUTHENTICATE
 	if (token.empty() || VM_FileSystem::isExpiredDropboxTokenOAuth2(token))
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.validate_dropbox"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["error.validate_dropbox"];
 
 		VM_ThreadManager::Threads[THREAD_SCAN_DROPBOX]->start     = false;
 		VM_ThreadManager::Threads[THREAD_SCAN_DROPBOX]->completed = true;
@@ -3707,7 +3707,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 		return ERROR_UNKNOWN;
 	}
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.validate_dropbox.finished"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.validate_dropbox.finished"];
 
 	// https://www.dropbox.com/developers/documentation/http/documentation#files-list_folder
 
@@ -3716,7 +3716,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 	String            response = VM_FileSystem::PostData(VM_FileSystem::GetURL(URL_DROPBOX_FILES), data, headers);
 	LIB_JSON::json_t* document = VM_JSON::Parse(response.c_str());
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.dropbox"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.scan.dropbox"];
 
 	std::vector<LIB_JSON::json_t*> entryItems;
 	LIB_JSON::json_t*              entries      = VM_JSON::GetItem(document, "entries");
@@ -3738,7 +3738,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 		name = ("[Dropbox] " + name);
 
 		if (!VM_FileSystem::IsMediaFile(name)) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
 			continue;
 		}
 
@@ -3748,11 +3748,11 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 		String mediaURL  = VM_FileSystem::GetDropboxURL(path);
 
 		if (mediaURL.empty()) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
 			continue;
 		}
 
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.adding"].c_str(), name.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.adding"].c_str(), name.c_str());
 
 		db = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
 
@@ -3764,7 +3764,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 		DELETE_POINTER(db);
 
 		if (mediaID > 0) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.already_added"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.already_added"].c_str(), name.c_str());
 			continue;
 		}
 
@@ -3793,7 +3793,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 		}
 
 		if (!validMedia) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
 			continue;
 		}
 
@@ -3805,14 +3805,14 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 		DELETE_POINTER(db);
 
 		if (DB_RESULT_OK(dbResult))
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.added"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.added"].c_str(), name.c_str());
 		else
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
 	}
 
 	if (!VM_Window::Quit)
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.finished"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["status.scan.finished"];
 
 		VM_GUI::ListTable->refreshRows();
 	}
@@ -4012,7 +4012,7 @@ int System::VM_FileSystem::ScanMediaFiles(void* userData)
 
 	VM_FileSystem::InitFFMPEG();
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.scan"];
 
 	VM_ThreadManager::Threads[THREAD_SCAN_FILES]->start = true;
 
@@ -4029,12 +4029,12 @@ int System::VM_FileSystem::ScanMediaFiles(void* userData)
 			continue;
 
 		if (VM_FileSystem::AddMediaFilesRecursively(filePath) != RESULT_OK)
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add_dir"].c_str(), filePath.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add_dir"].c_str(), filePath.c_str());
 	}
 
 	if (!VM_Window::Quit)
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.finished"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["status.scan.finished"];
 
 		VM_GUI::ListTable->refreshRows();
 	}

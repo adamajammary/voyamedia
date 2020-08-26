@@ -172,7 +172,7 @@ namespace VoyaMedia
 			bool        isPlaying;
 			bool        isStopped;
 			bool        keepAspectRatio;
-			VM_PlayType loopType;
+			VM_LoopType loopType;
 			bool        openFile;
 			bool        quit;
 			Strings     urls;

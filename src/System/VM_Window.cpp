@@ -22,7 +22,7 @@ bool             System::VM_Window::ResetRenderer       = false;
 uint32_t         System::VM_Window::ResizeTimestamp     = 0;
 bool             System::VM_Window::SaveToDB            = false;
 int              System::VM_Window::StatusBarHeight     = 0;
-char             System::VM_Window::StatusString[DEFAULT_CHAR_BUFFER_SIZE];
+String           System::VM_Window::StatusString        = "";
 bool             System::VM_Window::SystemLocale        = false;
 String           System::VM_Window::WorkingDirectory    = "";
 WString          System::VM_Window::WorkingDirectoryW   = L"";
@@ -91,7 +91,6 @@ int System::VM_Window::Open(const char* guiXML, const char* title)
 {
 	VM_ThreadManager::AddThreads();
 
-	memset(VM_Window::StatusString, 0, DEFAULT_CHAR_BUFFER_SIZE);
 	srand((uint32_t)time(NULL));
 
 	if ((VM_FileSystem::SetWorkingDirectory() != RESULT_OK) || VM_Window::WorkingDirectory.empty()) {
@@ -221,24 +220,34 @@ int System::VM_Window::Render()
 			// SNAPSHOT IMAGE
 			if (!VM_Player::State.isStopped && (snapshot != NULL))
 			{
-				VM_ThreadManager::Mutex.lock();
-
-				if ((VM_GUI::ListTable != NULL) && !VM_GUI::ListTable->rows.empty() && (snapshot->imageData == NULL))
+				if ((snapshot->imageData == NULL) && (VM_GUI::ListTable != NULL) && !VM_GUI::ListTable->rows.empty())
 				{
 					#if defined _ios
 					String mediaURL = (VM_Player::State.isStopped ? VM_GUI::ListTable->getSelectedMediaURL() : VM_Player::SelectedRow.mediaURL);
-
-					if (VM_FileSystem::IsITunes(mediaURL) && PICTURE_IS_SELECTED)
-						snapshot->setImage(mediaURL, true);
-					else
 					#endif
-					if (PICTURE_IS_SELECTED || YOUTUBE_IS_SELECTED || SHOUTCAST_IS_SELECTED)
-						snapshot->setImage((VM_Player::State.isStopped ? VM_GUI::ListTable->getSelectedMediaURL() : VM_Player::SelectedRow.mediaURL), true);
-					else if (AUDIO_IS_SELECTED)
-						snapshot->setImage(std::to_string(VM_Player::State.isStopped ? VM_GUI::ListTable->getSelectedMediaID() : VM_Player::SelectedRow.mediaID), true);
-				}
 
-				VM_ThreadManager::Mutex.unlock();
+					if (AUDIO_IS_SELECTED)
+					{
+						VM_ThreadManager::Mutex.lock();
+						snapshot->setImage(std::to_string(VM_Player::State.isStopped ? VM_GUI::ListTable->getSelectedMediaID() : VM_Player::SelectedRow.mediaID), true);
+						VM_ThreadManager::Mutex.unlock();
+					}
+					#if defined _ios
+					else if (PICTURE_IS_SELECTED && VM_FileSystem::IsITunes(mediaURL))
+					{
+						VM_ThreadManager::Mutex.lock();
+						snapshot->setImage(mediaURL, true);
+						VM_ThreadManager::Mutex.unlock();
+					}
+					#endif
+					//else if (PICTURE_IS_SELECTED || YOUTUBE_IS_SELECTED || SHOUTCAST_IS_SELECTED)
+					else if (PICTURE_IS_SELECTED || SHOUTCAST_IS_SELECTED)
+					{
+						VM_ThreadManager::Mutex.lock();
+						snapshot->setImage((VM_Player::State.isStopped ? VM_GUI::ListTable->getSelectedMediaURL() : VM_Player::SelectedRow.mediaURL), true);
+						VM_ThreadManager::Mutex.unlock();
+					}
+				}
 
 				VM_Player::Render(snapshot->backgroundArea);
 			}
@@ -396,8 +405,8 @@ void System::VM_Window::saveToDB()
 
 void System::VM_Window::SetStatusProgress(uint32_t current, uint32_t total, const String &label)
 {
-	uint32_t percent = ((uint32_t)(current * 100) / total);
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "[%u%%] %s (%u/%u)", percent, label.c_str(), current, total);
+	const uint32_t percent  = ((uint32_t)(current * 100) / total);
+	VM_Window::StatusString = VM_Text::Format("[%u%%] %s (%u/%u)", percent, label.c_str(), current, total);
 }
 
 void System::VM_Window::showVersionMessage(VM_Version version)

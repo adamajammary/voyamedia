@@ -34,7 +34,7 @@ namespace VoyaMedia
 			static uint32_t             ResizeTimestamp;
 			static bool                 SaveToDB;
 			static int                  StatusBarHeight;
-			static char                 StatusString[DEFAULT_CHAR_BUFFER_SIZE];
+			static String               StatusString;
 			static bool                 SystemLocale;
 			static String               WorkingDirectory;
 			static WString              WorkingDirectoryW;

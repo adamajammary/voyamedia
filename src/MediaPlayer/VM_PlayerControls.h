@@ -16,19 +16,19 @@ namespace VoyaMedia
 			~VM_PlayerControls() {}
 
 		private:
-			static VM_MediaTime durationTime;
-			static float        progressPercent;
-			static VM_MediaTime progressTime;
-			static bool         progressTimeLeft;
-			static bool         refreshPending;
-			static bool         visible;
+			static VM_MediaTime   durationTime;
+			static float          progressPercent;
+			static VM_MediaTime   progressTime;
+			static bool           progressTimeLeft;
+			static VM_RefreshType refreshType;
+			static bool           visible;
 
 		public:
 			static SDL_Rect GetSnapshotArea();
 			static int      Init();
 			static bool     IsVisible();
 			static int      Hide();
-			static void     Refresh();
+			static void     Refresh(VM_RefreshType refreshType = REFRESH_ALL);
 			static int      RefreshControls();
 			static int      RefreshProgressBar();
 			static int      RefreshTime(time_t time);
@@ -36,6 +36,9 @@ namespace VoyaMedia
 			static int      Seek(SDL_Event* mouseEvent);
 			static int      SetVolume(SDL_Event* mouseEvent);
 			static int      ToggleProgressTimeLeft();
+
+		private:
+			static void refreshVolume();
 
 		};
 	}

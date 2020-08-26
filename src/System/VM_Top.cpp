@@ -82,11 +82,11 @@ int System::VM_Top::Refresh()
 int System::VM_Top::SelectType(VM_MediaType mediaType)
 {
 	// CHECK INTERNET CONNECTION
-	VM_Window::StatusString[0] = '\0';
+	VM_Window::StatusString = "";
 
 	if ((mediaType >= MEDIA_TYPE_YOUTUBE) && !VM_FileSystem::HasInternetConnection())
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_nics"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["error.no_nics"];
 		VM_Modal::ShowMessage(VM_Window::StatusString);
 
 		return ERROR_UNKNOWN;

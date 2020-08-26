@@ -257,6 +257,11 @@ namespace VoyaMedia
 		FONT_MERGED, FONT_CJK, NR_OF_FONTS
 	};
 
+	enum VM_LoopType
+	{
+		LOOP_TYPE_NORMAL, LOOP_TYPE_LOOP, LOOP_TYPE_SHUFFLE
+	};
+
 	enum VM_MediaType
 	{
 		MEDIA_TYPE_UNKNOWN = -1,
@@ -274,9 +279,16 @@ namespace VoyaMedia
 		NR_OF_MEDIA_TYPES
 	};
 
-	enum VM_PlayType
+	enum VM_RefreshType
 	{
-		PLAY_TYPE_NORMAL, PLAY_TYPE_LOOP, PLAY_TYPE_SHUFFLE
+		REFRESH_NONE,
+		REFRESH_ALL,
+		REFRESH_LOOP,
+		REFRESH_PLAY,
+		REFRESH_PROGRESS,
+		REFRESH_ROTATE,
+		REFRESH_STRETCH,
+		REFRESH_VOLUME
 	};
 
 	enum VM_SubAlignment
@@ -454,7 +466,7 @@ namespace VoyaMedia
 	const float        DEFAULT_FONT_DPI_RATIO    = 0.75f; // (72.0 / 96.0)
 	const int          DEFAULT_FONT_SIZE         = 11;
 	const int          DEFAULT_FONT_SIZE_SUB     = 48;
-	const VM_PlayType  DEFAULT_LOOP_TYPE         = PLAY_TYPE_NORMAL;
+	const VM_LoopType  DEFAULT_LOOP_TYPE         = LOOP_TYPE_NORMAL;
 	const VM_MediaType DEFAULT_MEDIA_TYPE        = MEDIA_TYPE_AUDIO;
 	const int          DEFAULT_SCALE_FILTER      = SWS_LANCZOS;
 	const SDL_Point    DEFAULT_SUB_SCREEN_SIZE   = { 384, 288 };
@@ -471,7 +483,7 @@ namespace VoyaMedia
 
 	const int    DELAY_TIME_BACKGROUND = 200;
 	const int    DELAY_TIME_DEFAULT    = 15;
-	const int    DELAY_TIME_GUI_RENDER = 300;
+	const int    DELAY_TIME_GUI_RENDER = 200;
 	const int    DELAY_TIME_ONE_MS     = 1;
 	const double DELAY_TIME_SUB_RENDER = 0.1;
 

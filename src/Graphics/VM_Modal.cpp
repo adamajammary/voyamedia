@@ -115,7 +115,7 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 			}
 			#endif
 		} else {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_nics"].c_str());
+			VM_Window::StatusString = VM_Window::Labels["error.no_nics"];
 		}
 	}
 	// UPNP - DEVICES
@@ -126,7 +126,7 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 		if (!device.empty())
 			VM_UPNP::Device = device;
 		else
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_upnp"].c_str());
+			VM_Window::StatusString = VM_Window::Labels["error.no_upnp"];
 	}
 	// SETTINGS
 	else if (VM_Modal::File == "modal_settings")
@@ -165,7 +165,7 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 				name    = selectedGuiRow[1]->getText();
 			}
 
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.removing"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.removing"].c_str(), name.c_str());
 
 			int  dbResult;
 			auto db = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
@@ -176,9 +176,9 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 			DELETE_POINTER(db);
 
 			if ((mediaID > 0) && DB_RESULT_OK(dbResult))
-				snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.removed"].c_str(), name.c_str());
+				VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.removed"].c_str(), name.c_str());
 			else
-				snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.remove"].c_str(), name.c_str());
+				VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.remove"].c_str(), name.c_str());
 		}
 		else if ((buttonID == "modal_right_click_tmbd_movie") || (buttonID == "modal_right_click_tmbd_tv"))
 		{
