@@ -837,7 +837,7 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 		return false;
 
 	// SCROLL TABLE
-	/*for (auto button : table->scrollBar->buttons)
+	for (auto button : table->scrollBar->buttons)
 	{
 		if (!button->visible || !VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 			continue;
@@ -875,16 +875,12 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 	}
 
 	// SELECT TABLE ROW
-	#if defined _android
-		table->refreshRows();
-	#endif
-
 	table->selectRow(mouseEvent);
 
 	if (VM_Graphics::ButtonPressed(mouseEvent, table->backgroundArea)) {
 		VM_TextInput::SetActive(false);
 		return true;
-	}*/
+	}
 
 	return false;
 }
