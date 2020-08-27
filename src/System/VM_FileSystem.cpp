@@ -3660,12 +3660,12 @@ int System::VM_FileSystem::ScanAndroid(void* userData)
 
 	VM_FileSystem::InitFFMPEG();
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.local"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.scan.local"];
 
 	if (VM_FileSystem::AddMediaFilesRecursively(VM_Window::AndroidStoragePath) == RESULT_OK)
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.finished"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["status.scan.finished"];
 	else
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), VM_Window::AndroidStoragePath.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), VM_Window::AndroidStoragePath.c_str());
 
 	VM_GUI::ListTable->refreshRows();
 
@@ -3830,7 +3830,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 {
 	VM_ThreadManager::Threads[THREAD_SCAN_ITUNES]->completed = false;
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.itunes"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.scan.itunes"];
 
 	NSAutoreleasePool*                autoreleasePool = [[NSAutoreleasePool alloc] init];
 	MPMediaQuery*                     query           = [[MPMediaQuery      alloc] init];
@@ -3843,7 +3843,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 
 	if (authStatus != MPMediaLibraryAuthorizationStatusAuthorized)
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.failed"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["status.scan.failed"];
 
 		VM_ThreadManager::Threads[THREAD_SCAN_ITUNES]->start     = false;
 		VM_ThreadManager::Threads[THREAD_SCAN_ITUNES]->completed = true;
@@ -3876,7 +3876,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 		fileName   = (fileNameNS != nil ? String([fileNameNS UTF8String]) : "");
 		mimeType   = VM_FileSystem::GetFileMIME(url2);
 
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.adding"].c_str(), fileName.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.adding"].c_str(), fileName.c_str());
 
 		db     = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
 		int id = 0;
@@ -3887,7 +3887,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 		DELETE_POINTER(db);
 
 		if (id > 0) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.already_added"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.already_added"].c_str(), fileName.c_str());
 			continue;
 		}
 
@@ -3902,7 +3902,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 			mediaType = MEDIA_TYPE_PICTURE;
 
 		if (mediaType == MEDIA_TYPE_UNKNOWN) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
 			continue;
 		}
 
@@ -3914,9 +3914,9 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 		DELETE_POINTER(db);
 
 		if (DB_RESULT_OK(dbResult))
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
 		else
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
 	}
 
 	[PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {}];
@@ -3930,7 +3930,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 
 	if (authStatusPhotos != PHAuthorizationStatusAuthorized)
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.failed"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["status.scan.failed"];
 
 		VM_ThreadManager::Threads[THREAD_SCAN_ITUNES]->start     = false;
 		VM_ThreadManager::Threads[THREAD_SCAN_ITUNES]->completed = true;
@@ -3963,7 +3963,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 		fileName   = (fileNameNS != nil ? String([fileNameNS UTF8String]) : "");
 		mimeType   = VM_FileSystem::GetFileMIME(fileName);
 
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.adding"].c_str(), fileName.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.adding"].c_str(), fileName.c_str());
 
 		db     = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
 		int id = 0;
@@ -3971,28 +3971,26 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 		if (DB_RESULT_OK(dbResult))
 			id = db->getID(url);
 
-		if (id > 0)
-		{
+		if (id > 0) {
 			DELETE_POINTER(db);
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.already_added"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.already_added"].c_str(), fileName.c_str());
 			continue;
 		}
 
 		dbResult = db->addFile(url, ("[iTunes] " + fileName), "[iTunes]", 0, MEDIA_TYPE_PICTURE, mimeType);
 
 		if (DB_RESULT_OK(dbResult))
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
 		else
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
 
 		DELETE_POINTER(db);
 	}
 
 	[autoreleasePool release];
 
-	if (!VM_Window::Quit)
-	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.finished"].c_str());
+	if (!VM_Window::Quit) {
+		VM_Window::StatusString = VM_Window::Labels["status.scan.finished"];
 
 		VM_GUI::ListTable->refreshRows();
 	}
