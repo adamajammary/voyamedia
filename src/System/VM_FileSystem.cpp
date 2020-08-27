@@ -2957,8 +2957,8 @@ int System::VM_FileSystem::InitLibraries()
 	SDL_setenv("SDL_VIDEO_YUV_HWACCEL", "1", 1);
 
 	SDL_SetHint(SDL_HINT_AUDIO_RESAMPLING_MODE,        "3");
-	SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED,       "0");
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,         "2");
+	SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED,       "0");
 	SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 
 	// SDL
