@@ -875,6 +875,10 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 	}
 
 	// SELECT TABLE ROW
+	#if defined _android
+		table->refreshRows();
+	#endif
+
 	table->selectRow(mouseEvent);
 
 	if (VM_Graphics::ButtonPressed(mouseEvent, table->backgroundArea)) {

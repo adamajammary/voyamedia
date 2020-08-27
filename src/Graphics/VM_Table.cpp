@@ -1146,6 +1146,7 @@ void Graphics::VM_Table::selectRow(int row)
 		row = ((int)this->rows.size() - 1);
 
 	this->states[VM_Top::Selected].selectedRow = row;
+
 	this->refreshSelected();
 
 	if (this->id == "list_table")
@@ -1180,11 +1181,11 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 		int positionY = mouseEvent->button.y;
 	#endif
 
-	int offset      = this->states[VM_Top::Selected].scrollOffset;
-	int rowHeight   = this->getRowHeight();
-	int startY      = (this->backgroundArea.y + rowHeight);
-	int offsetY     = (rowHeight * offset);
-	int row         = ((positionY + offsetY - startY) / rowHeight);
+	int offset    = this->states[VM_Top::Selected].scrollOffset;
+	int rowHeight = this->getRowHeight();
+	int startY    = (this->backgroundArea.y + rowHeight);
+	int offsetY   = (rowHeight * offset);
+	int row       = ((positionY + offsetY - startY) / rowHeight);
 
 	if ((row < 0) || (row >= (int)this->rows.size()))
 		return false;
@@ -1475,16 +1476,16 @@ int Graphics::VM_Table::setRows(bool temp)
 	if (((int)this->rows.size() < this->limit) && (this->maxRows > (this->states[VM_Top::Selected].offset + (int)this->rows.size())))
 		this->maxRows = (this->states[VM_Top::Selected].offset + (int)this->rows.size());
 
-	char detailsText[DEFAULT_CHAR_BUFFER_SIZE];
+	String detailsText;
 
 	if (temp)
-		snprintf(detailsText, DEFAULT_CHAR_BUFFER_SIZE, "[ Loading ... ]");
+		detailsText = "[ Loading ... ]";
 	else if ((int)this->rows.size() < this->maxRows)
-		snprintf(detailsText, DEFAULT_CHAR_BUFFER_SIZE, "[ %d - %d / %d ]", (this->states[VM_Top::Selected].offset + 1), (this->states[VM_Top::Selected].offset + (int)this->rows.size()), this->maxRows);
+		detailsText = VM_Text::Format("[ %d - %d / %d ]", (this->states[VM_Top::Selected].offset + 1), (this->states[VM_Top::Selected].offset + (int)this->rows.size()), this->maxRows);
 	else if (!this->rows.empty())
-		snprintf(detailsText, DEFAULT_CHAR_BUFFER_SIZE, "[ %d ]", (int)this->rows.size());
+		detailsText = VM_Text::Format("[ %d ]", (int)this->rows.size());
 	else
-		snprintf(detailsText, DEFAULT_CHAR_BUFFER_SIZE, "[ 0 ]");
+		detailsText = "[ 0 ]";
 
 	if ((this->id == "list_table") && !temp && (this->maxRows > 0) &&
 		(this->states[VM_Top::Selected].offset >= this->maxRows))
