@@ -77,17 +77,17 @@ int System::VM_EventManager::HandleEvents()
 		//	break;
 		case SDL_FINGERDOWN:
 			VM_Player::CursorLastVisible = SDL_GetTicks();
-			VM_PlayerControls::Show();
+			//VM_PlayerControls::Show();
 
 			VM_EventManager::touchDownTimestamp = event.tfinger.timestamp;
 
-			if (!VM_Player::State.isStopped)
-				break;
+			//if (!VM_Player::State.isStopped)
+			//	break;
 
 			break;
 		case SDL_FINGERUP:
 			VM_Player::CursorLastVisible = SDL_GetTicks();
-			VM_PlayerControls::Show();
+			//VM_PlayerControls::Show();
 
 			VM_EventManager::TouchEvent = TOUCH_EVENT_UNKNOWN;
 
