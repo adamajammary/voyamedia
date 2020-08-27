@@ -2940,10 +2940,9 @@ void System::VM_FileSystem::InitFFMPEG()
 
 int System::VM_FileSystem::InitLibraries()
 {
-	//#if defined _android
-	//	SDL_SetHint(SDL_HINT_ANDROID_BLOCK_ON_PAUSE, "0");
-	//#elif defined _ios
-	#if defined _ios
+	#if defined _android
+		SDL_SetHint(SDL_HINT_ANDROID_BLOCK_ON_PAUSE, "0");
+	#elif defined _ios
 		SDL_SetHint(SDL_HINT_AUDIO_CATEGORY, "AVAudioSessionCategoryPlayback");
 	#elif defined _macosx
 		SDL_SetHint(SDL_HINT_MAC_CTRL_CLICK_EMULATE_RIGHT_CLICK, "1");
