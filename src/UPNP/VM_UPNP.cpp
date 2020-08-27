@@ -187,11 +187,8 @@ String UPNP::VM_UPNP::getItemXML(const VM_UpnpFile* item, const String &itemType
 		return "";
 
 	VM_MediaTime durationTime = VM_MediaTime((double)item->duration);
-
-	char duration[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(duration, DEFAULT_CHAR_BUFFER_SIZE, "%02d:%02d:%02d", durationTime.hours, durationTime.minutes, durationTime.seconds);
-
-	String xml = "";
+	String       duration     = VM_Text::Format("%02d:%02d:%02d", durationTime.hours, durationTime.minutes, durationTime.seconds);
+	String       xml          = "";
 
 	xml.append("<item id=\"" + item->id + "\" parentID=\"" + parentID + "\" restricted=\"1\">");
 	xml.append("<dc:title>" + item->title + "</dc:title>");
@@ -1150,8 +1147,7 @@ int UPNP::VM_UPNP::Start(void* userData)
 	}
 
 	// GENERATE THE SERVER DESCRIPTION URL
-	char mediaURL[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(mediaURL, DEFAULT_CHAR_BUFFER_SIZE, "http://%s:%d/description.xml", LIB_UPNP::UpnpGetServerIpAddress(), LIB_UPNP::UpnpGetServerPort());
+	String mediaURL = VM_Text::Format("http://%s:%d/description.xml", LIB_UPNP::UpnpGetServerIpAddress(), LIB_UPNP::UpnpGetServerPort());
 
 	// LET EVERYONE KNOW THE FILES HAVE BEEN UPDATED
 	VM_UPNP::updateID++;
@@ -1165,7 +1161,7 @@ int UPNP::VM_UPNP::Start(void* userData)
 	}
 
 	// TRY STARTING THE VM_UPNP MEDIA SERVER
-	result = LIB_UPNP::UpnpRegisterRootDevice(mediaURL, VM_UPNP::handleEvents, NULL, &VM_UPNP::server);
+	result = LIB_UPNP::UpnpRegisterRootDevice(mediaURL.c_str(), VM_UPNP::handleEvents, NULL, &VM_UPNP::server);
 
 	if (result != UPNP_E_SUCCESS) {
 		VM_UPNP::stopServer(result);

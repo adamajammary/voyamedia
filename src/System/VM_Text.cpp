@@ -162,24 +162,24 @@ bool System::VM_Text::FontSupportsLanguage(const TTF_Font* font, const String &t
 
 String System::VM_Text::GetFileSizeString(const size_t fileSize)
 {
-	char fileSizeString[DEFAULT_CHAR_BUFFER_SIZE];
-
 	if (fileSize == 0ll)
 		return "N/A";
 
+	String fileSizeString;
+
 	if (fileSize > TERRA_BYTE) {
-		snprintf(fileSizeString, DEFAULT_CHAR_BUFFER_SIZE, "%.2f TB", (float)((float)fileSize / (float)TERRA_BYTE));
+		fileSizeString = VM_Text::Format("%.2f TB", (float)((float)fileSize / (float)TERRA_BYTE));
 	} else if (fileSize > GIGA_BYTE) {
-		snprintf(fileSizeString, DEFAULT_CHAR_BUFFER_SIZE, "%.2f GB", (float)((float)fileSize / (float)GIGA_BYTE));
+		fileSizeString = VM_Text::Format("%.2f GB", (float)((float)fileSize / (float)GIGA_BYTE));
 	} else if (fileSize > MEGA_BYTE) {
-		snprintf(fileSizeString, DEFAULT_CHAR_BUFFER_SIZE, "%.2f MB", (float)((float)fileSize / (float)MEGA_BYTE));
+		fileSizeString = VM_Text::Format("%.2f MB", (float)((float)fileSize / (float)MEGA_BYTE));
 	} else if (fileSize > KILO_BYTE) {
-		snprintf(fileSizeString, DEFAULT_CHAR_BUFFER_SIZE, "%.2f KB", (float)((float)fileSize / (float)KILO_BYTE));
+		fileSizeString = VM_Text::Format("%.2f KB", (float)((float)fileSize / (float)KILO_BYTE));
 	} else {
-		snprintf(fileSizeString, DEFAULT_CHAR_BUFFER_SIZE, "%zu bytes", fileSize);
+		fileSizeString = VM_Text::Format("%zu bytes", fileSize);
 	}
 
-	return String(fileSizeString);
+	return fileSizeString;
 }
 
 String System::VM_Text::GetFormattedSeparator(const String &number, const String &separator, int partLength)
@@ -368,17 +368,17 @@ String System::VM_Text::GetMediaBitRateString(const int bitRate)
 	if (bitRate <= 0)
 		return "N/A";
 
-	char bitRateString[DEFAULT_CHAR_BUFFER_SIZE];
+	String bitRateString;
 
 	if (bitRate > ONE_MILLION) {
-		snprintf(bitRateString, DEFAULT_CHAR_BUFFER_SIZE, "%.1f Mbps", (float)((float)bitRate / (float)ONE_MILLION));
+		bitRateString = VM_Text::Format("%.1f Mbps", (float)((float)bitRate / (float)ONE_MILLION));
 	} else if (bitRate > ONE_THOUSAND) {
-		snprintf(bitRateString, DEFAULT_CHAR_BUFFER_SIZE, "%.0f kbps", (float)((float)bitRate / (float)ONE_THOUSAND));
+		bitRateString = VM_Text::Format("%.0f kbps", (float)((float)bitRate / (float)ONE_THOUSAND));
 	} else {
-		snprintf(bitRateString, DEFAULT_CHAR_BUFFER_SIZE, "%d bps", bitRate);
+		bitRateString = VM_Text::Format("%d bps", bitRate);
 	}
 
-	return String(bitRateString);
+	return bitRateString;
 }
 
 String System::VM_Text::GetMediaFrameRateString(const int frameRate)
@@ -386,28 +386,25 @@ String System::VM_Text::GetMediaFrameRateString(const int frameRate)
 	if (frameRate <= 0)
 		return "N/A";
 
-	char frameRateString[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(frameRateString, DEFAULT_CHAR_BUFFER_SIZE, "%d fps", frameRate);
-
-	return String(frameRateString);
+	return VM_Text::Format("%d fps", frameRate);
 }
 
 String System::VM_Text::GetMediaSampleRateString(const int sampleRate)
 {
-	char sampleRateString[DEFAULT_CHAR_BUFFER_SIZE];
-
 	if (sampleRate <= 0)
 		return "N/A";
 
+	String sampleRateString;
+
 	if (sampleRate > 1000000) {
-		snprintf(sampleRateString, DEFAULT_CHAR_BUFFER_SIZE, "%.1f MHz", (float)((float)sampleRate / (float)ONE_MILLION));
+		sampleRateString = VM_Text::Format("%.1f MHz", (float)((float)sampleRate / (float)ONE_MILLION));
 	} else if (sampleRate > 1000) {
-		snprintf(sampleRateString, DEFAULT_CHAR_BUFFER_SIZE, "%.1f kHz", (float)((float)sampleRate / (float)ONE_THOUSAND));
+		sampleRateString = VM_Text::Format("%.1f kHz", (float)((float)sampleRate / (float)ONE_THOUSAND));
 	} else {
-		snprintf(sampleRateString, DEFAULT_CHAR_BUFFER_SIZE, "%d Hz", sampleRate);
+		sampleRateString = VM_Text::Format("%d Hz", sampleRate);
 	}
 
-	return String(sampleRateString);
+	return sampleRateString;
 }
 
 String System::VM_Text::GetNewLine(const String &text)
@@ -760,29 +757,27 @@ String System::VM_Text::ToDuration(int64_t duration)
 	if (duration == 0)
 		return "N/A";
 
-	char      durationStringBuffer[DEFAULT_CHAR_BUFFER_SIZE];
-	VM_MediaTime durationObject;
-
-	durationObject = VM_MediaTime((double)duration);
+	String       durationStringBuffer;
+	VM_MediaTime durationObject = VM_MediaTime((double)duration);
 
 	if (durationObject.hours > 0)
 	{
 		if (durationObject.seconds > 0)
-			snprintf(durationStringBuffer, DEFAULT_CHAR_BUFFER_SIZE, "%dh %dm %ds", durationObject.hours, durationObject.minutes, durationObject.seconds);
+			durationStringBuffer = VM_Text::Format("%dh %dm %ds", durationObject.hours, durationObject.minutes, durationObject.seconds);
 		else
-			snprintf(durationStringBuffer, DEFAULT_CHAR_BUFFER_SIZE, "%dh %dm", durationObject.hours, durationObject.minutes);
+			durationStringBuffer = VM_Text::Format("%dh %dm", durationObject.hours, durationObject.minutes);
 	}
 	else if (durationObject.minutes > 0)
 	{
 		if (durationObject.seconds > 0)
-			snprintf(durationStringBuffer, DEFAULT_CHAR_BUFFER_SIZE, "%dm %ds", durationObject.minutes, durationObject.seconds);
+			durationStringBuffer = VM_Text::Format("%dm %ds", durationObject.minutes, durationObject.seconds);
 		else
-			snprintf(durationStringBuffer, DEFAULT_CHAR_BUFFER_SIZE, "%dm", durationObject.minutes);
+			durationStringBuffer = VM_Text::Format("%dm", durationObject.minutes);
 	} else {
-		snprintf(durationStringBuffer, DEFAULT_CHAR_BUFFER_SIZE, "%llds", duration);
+		durationStringBuffer = VM_Text::Format("%llds", duration);
 	}
 
-	return String(durationStringBuffer);
+	return durationStringBuffer;
 }
 
 String System::VM_Text::ToDuration(const String &text)
@@ -805,25 +800,25 @@ String System::VM_Text::ToDuration(const String &text)
 
 String System::VM_Text::ToViewCount(int64_t views)
 {
-	char duration[DEFAULT_CHAR_BUFFER_SIZE];
+	String duration;
 
 	if (views >= 0)
 	{
 		if (views > TERRA)
-			snprintf(duration, DEFAULT_CHAR_BUFFER_SIZE, "%.1fT", (float)((float)views / (float)TERRA));
+			duration = VM_Text::Format("%.1fT", (float)((float)views / (float)TERRA));
 		else if (views > GIGA)
-			snprintf(duration, DEFAULT_CHAR_BUFFER_SIZE, "%.1fG", (float)((float)views / (float)GIGA));
+			duration = VM_Text::Format("%.1fG", (float)((float)views / (float)GIGA));
 		else if (views > MEGA)
-			snprintf(duration, DEFAULT_CHAR_BUFFER_SIZE, "%.1fM", (float)((float)views / (float)MEGA));
+			duration = VM_Text::Format("%.1fM", (float)((float)views / (float)MEGA));
 		else if (views > KILO)
-			snprintf(duration, DEFAULT_CHAR_BUFFER_SIZE, "%.1fK", (float)((float)views / (float)KILO));
+			duration = VM_Text::Format("%.1fK", (float)((float)views / (float)KILO));
 		else
-			snprintf(duration, DEFAULT_CHAR_BUFFER_SIZE, "%lld", views);
+			duration = VM_Text::Format("%lld", views);
 	} else {
-		snprintf(duration, DEFAULT_CHAR_BUFFER_SIZE, "N/A");
+		duration = "N/A";
 	}
 
-	return String(duration);
+	return duration;
 }
 
 String System::VM_Text::ToLower(const String &text)

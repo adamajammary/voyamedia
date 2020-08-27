@@ -1392,10 +1392,7 @@ String System::VM_FileSystem::getMediaResolutionStringVideo(LIB_FFMPEG::AVStream
 	if ((stream == NULL) || (stream->codec == NULL))
 		return "";
 
-	char resolution[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(resolution, DEFAULT_CHAR_BUFFER_SIZE, "%dp (%dx%d)", stream->codec->height, stream->codec->width, stream->codec->height);
-
-	return String(resolution);
+	return VM_Text::Format("%dp (%dx%d)", stream->codec->height, stream->codec->width, stream->codec->height);
 }
 
 LIB_FFMPEG::AVStream* System::VM_FileSystem::GetMediaStreamBest(LIB_FFMPEG::AVFormatContext* formatContext, VM_MediaType mediaType)
@@ -1416,7 +1413,7 @@ LIB_FFMPEG::AVStream* System::VM_FileSystem::GetMediaStreamBest(LIB_FFMPEG::AVFo
 		{
 			switch (mediaType) {
 			case MEDIA_TYPE_AUDIO:
-				quality = (stream->codec->channels * stream->codec->sample_rate);
+				quality = ((int64_t)stream->codec->channels * (int64_t)stream->codec->sample_rate);
 
 				if ((bestStream == NULL) || (quality > bestQuality)) {
 					bestStream  = stream;
@@ -1425,7 +1422,7 @@ LIB_FFMPEG::AVStream* System::VM_FileSystem::GetMediaStreamBest(LIB_FFMPEG::AVFo
 
 				break;
 			case MEDIA_TYPE_VIDEO:
-				quality = (stream->codec->width * stream->codec->height);
+				quality = ((int64_t)stream->codec->width * (int64_t)stream->codec->height);
 
 				if ((bestStream == NULL) || (quality > bestQuality)) {
 					bestStream  = stream;
@@ -1768,7 +1765,6 @@ Strings System::VM_FileSystem::GetMediaSubFiles(const String &videoFilePath)
 {
 	String  directory, idxFile = "", videoFileName;
 	Strings filesInDirectory, subtitleFiles;
-	char    subtitleFile[DEFAULT_CHAR_BUFFER_SIZE];
 
 	directory        = videoFilePath.substr(0, videoFilePath.rfind(PATH_SEPERATOR));
 	filesInDirectory = VM_FileSystem::GetDirectoryFiles(directory);
@@ -1784,8 +1780,7 @@ Strings System::VM_FileSystem::GetMediaSubFiles(const String &videoFilePath)
 			continue;
 		}
 
-		snprintf(subtitleFile, DEFAULT_CHAR_BUFFER_SIZE, "%s%s%s", directory.c_str(), PATH_SEPERATOR, file.c_str());
-		subtitleFiles.push_back(subtitleFile);
+		subtitleFiles.push_back(VM_Text::Format("%s%s%s", directory.c_str(), PATH_SEPERATOR, file.c_str()));
 
 		if (VM_FileSystem::GetFileExtension(file, true) == "IDX")
 			idxFile = VM_Text::ToUpper(VM_FileSystem::GetFileName(file, true));
@@ -2357,18 +2352,12 @@ Strings System::VM_FileSystem::getOpticalFileDVD(const String &path)
 
 String System::VM_FileSystem::GetPathDatabase()
 {
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%cdb%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-
-	return String(path);
+	return VM_Text::Format("%s%cdb%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 String System::VM_FileSystem::GetPathFont()
 {
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%cfonts%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return String(path);
+	return VM_Text::Format("%s%cfonts%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 String System::VM_FileSystem::GetPathFontArial()
@@ -2388,34 +2377,22 @@ String System::VM_FileSystem::GetPathFontArial()
 
 String System::VM_FileSystem::GetPathGUI()
 {
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%cgui%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return String(path);
+	return VM_Text::Format("%s%cgui%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 String System::VM_FileSystem::GetPathImages()
 {
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%cimg%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return path;
+	return VM_Text::Format("%s%cimg%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 String System::VM_FileSystem::GetPathLanguages()
 {
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%clang%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return String(path);
+	return VM_Text::Format("%s%clang%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 String System::VM_FileSystem::GetPathThumbnailsDir()
 {
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%cthumbs", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C);
-
-	return String(path);
+	return VM_Text::Format("%s%cthumbs", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C);
 }
 
 String System::VM_FileSystem::GetPathThumbnails(int mediaID)
@@ -2423,10 +2400,7 @@ String System::VM_FileSystem::GetPathThumbnails(int mediaID)
 	if (mediaID < 1)
 		return "";
 
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%c%d.jpg", VM_FileSystem::GetPathThumbnailsDir().c_str(), PATH_SEPERATOR_C, mediaID);
-	
-	return String(path);
+	return VM_Text::Format("%s%c%d.jpg", VM_FileSystem::GetPathThumbnailsDir().c_str(), PATH_SEPERATOR_C, mediaID);
 }
 
 String System::VM_FileSystem::GetPathThumbnails(const String &fileName)
@@ -2434,27 +2408,18 @@ String System::VM_FileSystem::GetPathThumbnails(const String &fileName)
 	if (fileName.empty())
 		return "";
 
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%c%s.jpg", VM_FileSystem::GetPathThumbnailsDir().c_str(), PATH_SEPERATOR_C, fileName.c_str());
-	
-	return String(path);
+	return VM_Text::Format("%s%c%s.jpg", VM_FileSystem::GetPathThumbnailsDir().c_str(), PATH_SEPERATOR_C, fileName.c_str());
 }
 
 #if defined _windows
 WString System::VM_FileSystem::GetPathDatabaseW()
 {
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, L"%s%cdb%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return WString(path);
+	return VM_Text::FormatW(L"%s%cdb%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 WString System::VM_FileSystem::GetPathFontW()
 {
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, L"%s%cfonts%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return WString(path);
+	return VM_Text::FormatW(L"%s%cfonts%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 WString System::VM_FileSystem::GetPathFontArialW()
@@ -2464,34 +2429,22 @@ WString System::VM_FileSystem::GetPathFontArialW()
 
 WString System::VM_FileSystem::GetPathGUIW()
 {
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, L"%s%cgui%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-
-	return WString(path);
+	return VM_Text::FormatW(L"%s%cgui%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 WString System::VM_FileSystem::GetPathImagesW()
 {
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, DEFAULT_CHAR_BUFFER_SIZE, L"%s%cimg%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return WString(path);
+	return VM_Text::FormatW(L"%s%cimg%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 WString System::VM_FileSystem::GetPathLanguagesW()
 {
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, DEFAULT_CHAR_BUFFER_SIZE, L"%s%clang%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return WString(path);
+	return VM_Text::FormatW(L"%s%clang%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 WString System::VM_FileSystem::GetPathThumbnailsDirW()
 {
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, DEFAULT_CHAR_BUFFER_SIZE, L"%s%cthumbs", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C);
-
-	return WString(path);
+	return VM_Text::FormatW(L"%s%cthumbs", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C);
 }
 
 WString System::VM_FileSystem::GetPathThumbnailsW(int mediaID)
@@ -2499,10 +2452,7 @@ WString System::VM_FileSystem::GetPathThumbnailsW(int mediaID)
 	if (mediaID < 1)
 		return L"";
 
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, DEFAULT_CHAR_BUFFER_SIZE, L"%s%c%d.jpg", VM_FileSystem::GetPathThumbnailsDirW().c_str(), PATH_SEPERATOR_C, mediaID);
-	
-	return WString(path);
+	return VM_Text::FormatW(L"%s%c%d.jpg", VM_FileSystem::GetPathThumbnailsDirW().c_str(), PATH_SEPERATOR_C, mediaID);
 }
 
 WString System::VM_FileSystem::GetPathThumbnailsW(const WString &fileName)
@@ -2510,10 +2460,7 @@ WString System::VM_FileSystem::GetPathThumbnailsW(const WString &fileName)
 	if (fileName.empty())
 		return L"";
 
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, DEFAULT_CHAR_BUFFER_SIZE, L"%s%c%s.jpg", VM_FileSystem::GetPathThumbnailsDirW().c_str(), PATH_SEPERATOR_C, fileName.c_str());
-	
-	return WString(path);
+	return VM_Text::FormatW(L"%s%c%s.jpg", VM_FileSystem::GetPathThumbnailsDirW().c_str(), PATH_SEPERATOR_C, fileName.c_str());
 }
 #endif
 
@@ -2696,14 +2643,11 @@ StringMap System::VM_FileSystem::GetTmdbDetails(int mediaID, VM_MediaType mediaT
 		details["date"] = std::to_string(std::atoi(VM_JSON::GetValueString(VM_JSON::GetItem(document, "first_air_date")).c_str()));
 
 	// RATING
-	char              rating[DEFAULT_CHAR_BUFFER_SIZE];
 	const signed char star[4] = { 0xE2 - 256, 0x98 - 256, 0x85 - 256, 0 };
 	double            voteAvg = VM_JSON::GetValueNumber(VM_JSON::GetItem(document, "vote_average"));
 	int64_t           votes   = (int64_t)VM_JSON::GetValueNumber(VM_JSON::GetItem(document, "vote_count"));
 
-	snprintf(rating, DEFAULT_CHAR_BUFFER_SIZE, "%s %.1f/10 (%lld %s)", star, voteAvg, votes, VM_Window::Labels["votes"].c_str());
-
-	details["rating"] = String(rating);
+	details["rating"] = VM_Text::Format("%s %.1f/10 (%lld %s)", star, voteAvg, votes, VM_Window::Labels["votes"].c_str());
 
 	// DURATION
 	if (mediaType == MEDIA_TYPE_TMDB_TV)
@@ -2806,13 +2750,10 @@ StringMap System::VM_FileSystem::GetYouTubeDetails(const String &mediaID)
 			{
 				details["views"] = VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "viewCount"));
 
-				char   likes[DEFAULT_CHAR_BUFFER_SIZE];
 				String likeCount    = VM_Text::ToViewCount(std::atoll(VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "likeCount")).c_str()));
 				String dislikeCount = VM_Text::ToViewCount(std::atoll(VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "dislikeCount")).c_str()));
 
-				snprintf(likes, DEFAULT_CHAR_BUFFER_SIZE, "%s likes   %s dislikes", likeCount.c_str(), dislikeCount.c_str());
-
-				details["likes"] = String(likes);
+				details["likes"] = VM_Text::Format("%s likes   %s dislikes", likeCount.c_str(), dislikeCount.c_str());
 
 			}
 		}

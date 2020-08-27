@@ -226,20 +226,13 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotAudioJFIF(const St
 	if (audioFile.empty())
 		return NULL;
 
-	char tempFile[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(tempFile, DEFAULT_CHAR_BUFFER_SIZE, "%s_TEMP_IMAGE_.JPG", VM_FileSystem::GetPathImages().c_str());
+	FILE*  fileIn;
+	String tempFile2 = "";
+	String tempFile  = VM_Text::Format("%s_TEMP_IMAGE_.JPG", VM_FileSystem::GetPathImages().c_str());
 
-	FILE* fileIn;
-	char  tempFile2[DEFAULT_CHAR_BUFFER_SIZE] = "";
-
-	if (VM_FileSystem::IsHttp(audioFile))
-	{
-		snprintf(
-			tempFile2, DEFAULT_CHAR_BUFFER_SIZE, "%s_TEMP_AUDIO_.%s",
-			VM_FileSystem::GetPathImages().c_str(), VM_FileSystem::GetFileExtension(audioFile, true).c_str()
-		);
-
-		fileIn = VM_FileSystem::DownloadToFile(audioFile, tempFile2);
+	if (VM_FileSystem::IsHttp(audioFile)) {
+		tempFile2 = VM_Text::Format("%s_TEMP_AUDIO_.%s", VM_FileSystem::GetPathImages().c_str(), VM_FileSystem::GetFileExtension(audioFile, true).c_str());
+		fileIn    = VM_FileSystem::DownloadToFile(audioFile, tempFile2);
 	} else {
 		fileIn = fopen(audioFile.c_str(), "rb");
 	}
@@ -257,7 +250,7 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotAudioJFIF(const St
 				(std::fgetc(fileIn) == 0xFF) && (std::fgetc(fileIn) == 0xD8) && 
 				(std::fgetc(fileIn) == 0xFF) && (std::fgetc(fileIn) == 0xE0)) 
 			{
-				fileOut = fopen(tempFile, "wb");
+				fileOut = fopen(tempFile.c_str(), "wb");
 
 				if (fileOut == NULL)
 					break;
@@ -295,7 +288,7 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotAudioJFIF(const St
 	
 	LIB_FREEIMAGE::FIBITMAP* image = NULL;
 
-	fileOut = fopen(tempFile, "rb");
+	fileOut = fopen(tempFile.c_str(), "rb");
 
 	if (fileOut != NULL)
 	{
@@ -314,10 +307,10 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotAudioJFIF(const St
 		CLOSE_FILE(fileOut);
 	}
 
-	std::remove(tempFile);
+	std::remove(tempFile.c_str());
 	
 	if (VM_FileSystem::IsHttp(audioFile))
-		std::remove(tempFile2);
+		std::remove(tempFile2.c_str());
 
 	return image;
 }
@@ -1072,10 +1065,7 @@ StringMap Graphics::VM_Graphics::getImageMeta(LIB_FREEIMAGE::FIBITMAP* image, LI
 
 String Graphics::VM_Graphics::GetImageResolutionString(int width, int height)
 {
-	char resolution[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(resolution, DEFAULT_CHAR_BUFFER_SIZE, "%.2f MegaPixels (%dx%d)", (float)((float)(width * height) / (float)ONE_MILLION), width, height);
-
-	return String(resolution);
+	return VM_Text::Format("%.2f MegaPixels (%dx%d)", (float)((float)(width * height) / (float)ONE_MILLION), width, height);
 }
 
 SDL_Rect Graphics::VM_Graphics::GetScaledSize(int width, int height)
