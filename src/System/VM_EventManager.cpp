@@ -879,12 +879,12 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 		table->refreshRows();
 	#endif
 
-	table->selectRow(mouseEvent);*/
+	table->selectRow(mouseEvent);
 
 	if (VM_Graphics::ButtonPressed(mouseEvent, table->backgroundArea)) {
 		VM_TextInput::SetActive(false);
 		return true;
-	}
+	}*/
 
 	return false;
 }
