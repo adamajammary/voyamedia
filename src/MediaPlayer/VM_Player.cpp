@@ -316,7 +316,7 @@ int MediaPlayer::VM_Player::FullScreenEnter()
 	{
 		VM_Window::FullScreenMaximized = true;
 
-		#if !defined _android && !defined _ios
+		#if defined _linux || defined _macosx || defined _windows
 			int mouseX, mouseY;
 			SDL_GetGlobalMouseState(&mouseX, &mouseY);
 			SDL_SetWindowFullscreen(VM_Window::MainWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
@@ -352,7 +352,7 @@ int MediaPlayer::VM_Player::FullScreenExit()
 
 	if (VM_Window::FullScreenMaximized)
 	{
-		#if !defined _android && !defined _ios
+		#if defined _linux || defined _macosx || defined _windows
 			int mouseX, mouseY;
 			SDL_GetGlobalMouseState(&mouseX, &mouseY);
 

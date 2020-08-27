@@ -21,7 +21,7 @@ SDL_Rect MediaPlayer::VM_PlayerControls::GetSnapshotArea()
 	snapshot->backgroundArea.w = VM_Window::Dimensions.w;
 	snapshot->backgroundArea.h = VM_Window::Dimensions.h;
 
-	if (VM_PlayerControls::visible) {
+	if (VM_PlayerControls::IsVisible()) {
 		VM_Component* bottom = VM_GUI::Components["bottom"];
 		VM_Component* topBar = VM_GUI::Components["top_bar"];
 
@@ -63,7 +63,7 @@ int MediaPlayer::VM_PlayerControls::Init()
 	VM_PlayerControls::progressTime    = {};
 	VM_PlayerControls::progressPercent = 0;
 
-	if (VM_PlayerControls::visible)
+	if (VM_PlayerControls::IsVisible())
 		VM_PlayerControls::Refresh();
 
 	return RESULT_OK;
