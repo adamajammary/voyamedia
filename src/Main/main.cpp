@@ -66,7 +66,9 @@ int main(const int argc, char* argv[])
 				VM_GUI::ListTable->refresh();
 
 			// Release allocated resources for the graphics renderer
-			//FREE_RENDERER(VM_Window::Renderer);
+			#if defined _android
+				FREE_RENDERER(VM_Window::Renderer);
+			#endif
 
 			// Sleep to save system resource usage
 			SDL_Delay(DELAY_TIME_BACKGROUND);
@@ -77,6 +79,10 @@ int main(const int argc, char* argv[])
 		#if defined _android
 		if (VM_Window::StopWakeLock)
 			VM_EventManager::WakeLockStop();
+
+		// Reset the graphics renderer and reload the GUI XML if requested by main UI thread (window resized etc.)
+		if (VM_Window::ResetRenderer && !VM_Window::PauseRendering)
+			VM_Window::Reset(mainXML, (APP_NAME + " " + APP_VERSION).c_str());
 		#endif
 
 		// Manage threads: Check if registered threads need to be recreated or freed etc.
@@ -85,9 +91,11 @@ int main(const int argc, char* argv[])
 		// Manage images: Create and rescale images in background thread if requested by main UI thread
 		VM_ThreadManager::HandleImages();
 
+		#if !defined _android
 		// Reset the graphics renderer and reload the GUI XML if requested by main UI thread (window resized etc.)
 		if (VM_Window::ResetRenderer && !VM_Window::PauseRendering)
 			VM_Window::Reset(mainXML, (APP_NAME + " " + APP_VERSION).c_str());
+		#endif
 
 		// Enter fullscreen mode in main UI thread (can be requested from other threads)
 		if (VM_Player::State.fullscreenEnter)
