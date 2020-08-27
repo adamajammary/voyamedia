@@ -91,7 +91,7 @@ int System::VM_EventManager::HandleEvents()
 			if (VM_Window::Inactive)
 				VM_Window::Refresh();
 
-			if (!VM_PlayerControls::IsVisible())
+			if (!VM_Player::State.isStopped && !VM_PlayerControls::IsVisible())
 				VM_PlayerControls::Show();
 
 			VM_EventManager::TouchEvent = TOUCH_EVENT_UNKNOWN;
