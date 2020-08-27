@@ -231,8 +231,14 @@ int System::VM_EventManager::HandleEvents()
 			}
 			break;
 		case SDL_DROPFILE:
-			VM_FileSystem::OpenFile(VM_Text::ToUTF16(event.drop.file));
+			#if defined _windows
+				VM_FileSystem::OpenFile(VM_Text::ToUTF16(event.drop.file));
+			#else
+				VM_FileSystem::OpenFile(event.drop.file);
+			#endif
+
 			SDL_free(event.drop.file);
+
 			break;
 		case SDL_TEXTINPUT:
 			VM_TextInput::Update(event.text.text);
@@ -589,7 +595,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 			if (button->id == "bottom_player_controls_mute")
 			{
 				VM_Player::MuteToggle();
-				VM_PlayerControls::Refresh(REFRESH_VOLUME);
+				VM_PlayerControls::Refresh(REFRESH_VOLUME_AND_MUTE);
 			}
 			else if (!VM_Player::State.isStopped)
 			{
@@ -630,10 +636,8 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 				continue;
 
 			// VOLUME
-			if (button->id == "bottom_player_controls_volume_bar") {
+			if (button->id == "bottom_player_controls_volume_bar")
 				VM_PlayerControls::SetVolume(mouseEvent);
-				VM_PlayerControls::Refresh(REFRESH_VOLUME);
-			}
 
 			return true;
 		}

@@ -81,16 +81,17 @@ void MediaPlayer::VM_PlayerControls::Refresh(VM_RefreshType refreshType)
 
 int MediaPlayer::VM_PlayerControls::RefreshControls()
 {
-	if (VM_PlayerControls::refreshType == REFRESH_NONE)
+	const VM_RefreshType refresh = VM_PlayerControls::refreshType;
+
+	if (refresh == REFRESH_NONE)
 		return RESULT_OK;
 
 	VM_ThreadManager::Mutex.lock();
 
 	VM_Button* button;
 
-
 	// PLAY/PAUSE
-	if ((VM_PlayerControls::refreshType == REFRESH_PLAY) || (VM_PlayerControls::refreshType == REFRESH_ALL))
+	if ((refresh == REFRESH_PLAY) || (refresh == REFRESH_ALL))
 	{
 		button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_play"]);
 
@@ -102,7 +103,7 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 	}
 
 	// LOOP TYPE
-	if ((VM_PlayerControls::refreshType == REFRESH_LOOP) || (VM_PlayerControls::refreshType == REFRESH_ALL))
+	if ((refresh == REFRESH_LOOP) || (refresh == REFRESH_ALL))
 	{
 		button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_loop"]);
 
@@ -111,8 +112,8 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 			String imageFile = "";
 
 			if (YOUTUBE_IS_SELECTED || SHOUTCAST_IS_SELECTED) {
+				button->visible           = false;
 				VM_Player::State.loopType = LOOP_TYPE_NORMAL;
-				imageFile = "loop-7-512.png";
 			} else {
 				switch (VM_Player::State.loopType) {
 					case LOOP_TYPE_NORMAL:  imageFile = "loop-1-512.png"; break;
@@ -121,13 +122,13 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 				}
 			}
 
-			if (!imageFile.empty())
+			if (button->visible && !imageFile.empty())
 				button->setImage(imageFile, false);
 		}
 	}
 
 	// MUTE
-	if ((VM_PlayerControls::refreshType == REFRESH_VOLUME) || (VM_PlayerControls::refreshType == REFRESH_ALL))
+	if ((refresh == REFRESH_VOLUME_AND_MUTE) || (refresh == REFRESH_ALL))
 	{
 		button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_mute"]);
 
@@ -140,7 +141,7 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 	}
 
 	// ROTATE
-	if ((VM_PlayerControls::refreshType == REFRESH_ROTATE) || (VM_PlayerControls::refreshType == REFRESH_ALL))
+	if ((refresh == REFRESH_ROTATE) || (refresh == REFRESH_ALL))
 	{
 		button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_rotate"]);
 
@@ -153,7 +154,7 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 	}
 
 	// STRETCH / ASPECT-RATIO
-	if ((VM_PlayerControls::refreshType == REFRESH_STRETCH) || (VM_PlayerControls::refreshType == REFRESH_ALL))
+	if ((refresh == REFRESH_STRETCH) || (refresh == REFRESH_ALL))
 	{
 		button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_stretch"]);
 
@@ -165,7 +166,7 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 		}
 	}
 
-	if (VM_PlayerControls::refreshType == REFRESH_ALL)
+	if (refresh == REFRESH_ALL)
 	{
 		// PREV
 		button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_prev"]);
@@ -204,10 +205,10 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 
 	VM_ThreadManager::Mutex.unlock();
 
-	if ((VM_PlayerControls::refreshType == REFRESH_VOLUME) || (VM_PlayerControls::refreshType == REFRESH_ALL))
+	if ((refresh == REFRESH_VOLUME) || (refresh == REFRESH_VOLUME_AND_MUTE) || (refresh == REFRESH_ALL))
 		VM_PlayerControls::refreshVolume();
 
-	if (VM_PlayerControls::refreshType == REFRESH_ALL)
+	if (refresh == REFRESH_ALL)
 	{
 		// DURATION
 		button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_duration"]);

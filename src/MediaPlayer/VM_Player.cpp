@@ -1786,6 +1786,8 @@ void MediaPlayer::VM_Player::seek()
 
 int MediaPlayer::VM_Player::SetAudioVolume(int volume)
 {
+	bool muteState = VM_Player::State.isMuted;
+
 	if (volume <= 5) {
 		VM_Player::State.audioVolume = 0;
 		VM_Player::State.isMuted     = true;
@@ -1796,6 +1798,11 @@ int MediaPlayer::VM_Player::SetAudioVolume(int volume)
 		VM_Player::State.audioVolume = volume;
 		VM_Player::State.isMuted     = false;
 	}
+
+	if (VM_Player::State.isMuted == muteState)
+		VM_PlayerControls::Refresh(REFRESH_VOLUME);
+	else
+		VM_PlayerControls::Refresh(REFRESH_VOLUME_AND_MUTE);
 
 	int  dbResult;
 	auto db = new VM_Database(dbResult, DATABASE_SETTINGSv3);
