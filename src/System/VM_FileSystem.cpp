@@ -1813,72 +1813,25 @@ VM_MediaType System::VM_FileSystem::GetMediaType(LIB_FFMPEG::AVFormatContext* fo
 Strings System::VM_FileSystem::GetNetworkInterfaces()
 {
 	Strings interfaces;
-	String  ipAddress;
 
-	#if defined _android
-		jclass    jniClass       = VM_Window::JNI->getClass();
-		JNIEnv*   jniEnvironment = VM_Window::JNI->getEnvironment();
-		jmethodID jniGetIP       = jniEnvironment->GetStaticMethodID(jniClass, "GetIP", "()Ljava/lang/String;");
-
-		if (jniGetIP == NULL)
-			return interfaces;
-
-		jstring     jString = (jstring)jniEnvironment->CallStaticObjectMethod(jniClass, jniGetIP);
-		const char* cString = jniEnvironment->GetStringUTFChars(jString, NULL);
-
-		ipAddress = String(cString);
-
-		jniEnvironment->ReleaseStringUTFChars(jString, cString);
-
-		if ((ipAddress != "127.0.0.1") && (ipAddress != "0.0.0.0") && (ipAddress.substr(0, 8) != "169.254."))
-			interfaces.push_back(ipAddress);
-	/*#elif defined _ios || defined _macosx
-		NSString* ip;
-
-		#ifdef _ios
-			LIB_UPNP::ifaddrs* addresses = NULL, *address;
-		#else
-			ifaddrs* addresses = NULL, *address;
-		#endif
-
-		if (getifaddrs(&addresses) == 0)
-		{
-			for (address = addresses; address != NULL; address = address->ifa_next)
-			{
-				if ((address->ifa_addr == NULL) || (address->ifa_addr->sa_family != AF_INET))
-					continue;
-
-				#ifdef _ios
-					ip = [NSString stringWithUTF8String:LIB_UPNP::inet_ntoa(((sockaddr_in*)address->ifa_addr)->sin_addr)];
-				#else
-					ip = [NSString stringWithUTF8String:inet_ntoa(((sockaddr_in*)address->ifa_addr)->sin_addr)];
-				#endif
-
-				ipAddress = String([ip UTF8String]);
-
-				if ((ipAddress != "127.0.0.1") && (ipAddress != "0.0.0.0") && (ipAddress.substr(0, 8) != "169.254."))
-					interfaces.push_back(ipAddress);
-			}
-		}
-
-		freeifaddrs(addresses);*/
-	#elif defined _windows
+	#if defined _windows
 		WSADATA winSockData;
 
 		if (WSAStartup(MAKEWORD(2, 2), &winSockData) != 0)
 			return interfaces;
 
 		const ULONG MAX_ITERATIONS = 3;
+		const ULONG FLAGS          = (GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_UNICAST);
 
-		ULONG                 flags      = (GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_UNICAST);
-		PIP_ADAPTER_ADDRESSES addresses  = NULL;
-		ULONG                 bufferSize = 15 * KILO_BYTE;
-		ULONG                 iteration  = 0;
-		DWORD                 result     = 0;
+		ULONG bufferSize = 15 * KILO_BYTE;
+		ULONG iteration  = 0;
+
+		PIP_ADAPTER_ADDRESSES addresses;
+		DWORD                 result;
 
 		do {
 			addresses = (IP_ADAPTER_ADDRESSES*)malloc(bufferSize);
-			result    = GetAdaptersAddresses(AF_INET, flags, NULL, addresses, &bufferSize);
+			result    = GetAdaptersAddresses(AF_INET, FLAGS, NULL, addresses, &bufferSize);
 
 			iteration++;
 
@@ -1899,19 +1852,14 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 
 		WSACleanup();
 	#else
-		String ifName;
-
-		#if defined _ios
-			LIB_UPNP::ifaddrs* addresses = NULL, *address;
-		#else
-			ifaddrs* addresses = NULL, *address;
-		#endif
+		String   ifName;
+		ifaddrs* addresses = NULL, *address;
 
 		if (getifaddrs(&addresses) == 0)
 		{
 			for (address = addresses; address != NULL; address = address->ifa_next)
 			{
-				if ((address->ifa_name == NULL) || (address->ifa_addr->sa_family != AF_INET))
+				if ((address->ifa_name == NULL) || (address->ifa_addr == NULL) || (address->ifa_addr->sa_family != AF_INET))
 					continue;
 
 				#if defined _ios || defined _macosx
@@ -1920,7 +1868,7 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 					ifName = String(address->ifa_name);
 				#endif
 
-				if (ifName != "lo")
+				if (ifName.substr(0, 2) != "lo")
 					interfaces.push_back(ifName);
 			}
 		}
