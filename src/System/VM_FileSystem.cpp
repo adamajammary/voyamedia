@@ -1870,11 +1870,12 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 
 		const ULONG MAX_ITERATIONS = 3;
 
-		ULONG                 flags      = (GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_UNICAST);
-		PIP_ADAPTER_ADDRESSES addresses  = NULL;
-		ULONG                 bufferSize = 15 * KILO_BYTE;
-		ULONG                 iteration  = 0;
-		DWORD                 result     = 0;
+		ULONG flags      = (GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_UNICAST);
+		ULONG bufferSize = 15 * KILO_BYTE;
+		ULONG iteration  = 0;
+
+		PIP_ADAPTER_ADDRESSES addresses;
+		DWORD                 result;
 
 		do {
 			addresses = (IP_ADAPTER_ADDRESSES*)malloc(bufferSize);
@@ -1906,7 +1907,7 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 		{
 			for (address = addresses; address != NULL; address = address->ifa_next)
 			{
-				if ((address->ifa_name == NULL) || (address->ifa_addr->sa_family != AF_INET))
+				if ((address->ifa_name == NULL) || (address->ifa_addr == NULL) || (address->ifa_addr->sa_family != AF_INET))
 					continue;
 
 				#if defined _ios || defined _macosx
