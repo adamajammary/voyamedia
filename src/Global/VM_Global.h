@@ -142,6 +142,10 @@ namespace LIB_UPNP
 
 namespace VoyaMedia
 {
+	#if defined _ios || defined _linux || defined _macosx
+		#include <ifaddrs.h> // ifaddrs, getifaddrs(x)
+	#endif
+
 	#if defined _android
 		#define fstat       lstat64
 		#define stat_t      struct stat64
