@@ -66,11 +66,9 @@ extern "C"
 #elif defined _macosx
 	#include <ifaddrs.h>                           // ifaddrs, getifaddrs(x)
 	#include <netdb.h>                             // addrinfo, gethostname(x)
-	//#include <arpa/inet.h>                         // ?
 	#include <AppKit/AppKit.h>                     // NSOpenPanel*
 	#include <Foundation/Foundation.h>             // NSString, NSArray, NSURL
 	#include <sys/dir.h>                           // opendir(x)
-	//#include <sys/socket.h>                        // sockaddr, socket(x), bind(x), connect(x)
 	#include <sys/stat.h>                          // mkdir(x), stat64, lstat64(x), _stat64, _stat64(x)
 #elif defined _windows
 	#include <Commdlg.h>                           // GetOpenFileNameA(x)
