@@ -54,6 +54,7 @@ extern "C"
 	#include <Foundation/Foundation.h>             // NSString, NSArray, NSURL, NSUUID
 	#include <MediaPlayer/Mediaplayer.h>           // MPMediaItem, MPMediaItemArtwork, MPMediaQuery
 	#include <Photos/Photos.h>                     // PHAsset, PHFetchResult, PHFetchOptions
+	#include <sys/socket.h>                        // sockaddr, socket(x), bind(x), connect(x)
 	#include <sys/stat.h>                          // stat64, lstat64(x), _stat64, _stat64(x)
 	#include <os/log.h>                            // os_log(x)
 #elif defined _linux
@@ -64,6 +65,7 @@ extern "C"
 #elif defined _macosx
 	#include <AppKit/AppKit.h>                     // NSOpenPanel*
 	#include <Foundation/Foundation.h>             // NSString, NSArray, NSURL
+	#include <sys/socket.h>                        // sockaddr, socket(x), bind(x), connect(x)
 	#include <sys/dir.h>                           // opendir(x)
 	#include <sys/stat.h>                          // mkdir(x), stat64, lstat64(x), _stat64, _stat64(x)
 #elif defined _windows
