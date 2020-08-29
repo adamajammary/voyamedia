@@ -1899,13 +1899,8 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 
 		WSACleanup();
 	#else
-		String ifName;
-
-		#if defined _ios
-			LIB_UPNP::ifaddrs* addresses = NULL, *address;
-		#else
-			ifaddrs* addresses = NULL, *address;
-		#endif
+		String             ifName;
+		LIB_UPNP::ifaddrs* addresses = NULL, *address;
 
 		if (getifaddrs(&addresses) == 0)
 		{
