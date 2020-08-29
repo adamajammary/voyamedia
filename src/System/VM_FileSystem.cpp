@@ -1813,7 +1813,7 @@ VM_MediaType System::VM_FileSystem::GetMediaType(LIB_FFMPEG::AVFormatContext* fo
 Strings System::VM_FileSystem::GetNetworkInterfaces()
 {
 	Strings interfaces;
-	String  ipAddress;
+	/*String  ipAddress;
 
 	#if defined _android
 		jclass    jniClass       = VM_Window::JNI->getClass();
@@ -1832,7 +1832,7 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 
 		if ((ipAddress != "127.0.0.1") && (ipAddress != "0.0.0.0") && (ipAddress.substr(0, 8) != "169.254."))
 			interfaces.push_back(ipAddress);
-	/*#elif defined _ios || defined _macosx
+	#elif defined _ios || defined _macosx
 		NSString* ip;
 
 		#ifdef _ios
@@ -1862,7 +1862,7 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 		}
 
 		freeifaddrs(addresses);*/
-	#elif defined _windows
+	#if defined _windows
 		WSADATA winSockData;
 
 		if (WSAStartup(MAKEWORD(2, 2), &winSockData) != 0)
