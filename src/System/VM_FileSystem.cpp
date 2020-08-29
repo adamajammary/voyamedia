@@ -1899,6 +1899,14 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 
 		WSACleanup();
 	#else
+		LIB_FFMPEG::ifaddrs* a;
+		LIB_FREEIMAGE::ifaddrs* b;
+		LIB_XML::ifaddrs* c;
+		LIB_JSON::ifaddrs* d;
+		LIB_SQLITE::ifaddrs* e;
+		LIB_UPNP::ifaddrs* f;
+		VoyaMedia::ifaddrs* g;
+
 		String   ifName;
 		ifaddrs* addresses = NULL, *address;
 
