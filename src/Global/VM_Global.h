@@ -43,14 +43,15 @@ extern "C"
 #if defined _android
 	#include <dirent.h>								// mkdir(x), opendir(x)
 	#include <fcntl.h>								// fcntl(x)
-	#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
+	//#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
 	#include <unistd.h>								// chdir(x)
 	#include <android/asset_manager_jni.h>			// VM_FileSystem::GetAndroidAssets(x)
 	#include <android/native_activity.h>			// VM_FileSystem::GetAndroidAssets(x)
 	#include <sys/stat.h>							// stat64, lstat64(x), _stat64, _stat64(x)
 #elif defined _ios
 	#include <dirent.h>								// mkdir(x),  opendir(x)
-	#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
+	#include <ifaddrs.h>							// ifaddrs, getifaddrs(x)
+	//#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
 	#include <AVFoundation/AVAssetExportSession.h>	// AVAssetExportSession*
 	#include <AVFoundation/AVFoundation.h>			// AVAudioSession
 	#include <Foundation/Foundation.h>				// NSString, NSArray, NSURL, NSUUID
@@ -60,6 +61,7 @@ extern "C"
 	#include <os/log.h>								// os_log(x)
 #elif defined _linux
 	#include <dirent.h>								// opendir(x)
+	#include <ifaddrs.h>							// ifaddrs, getifaddrs(x)
 	#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
 	#include <arpa/inet.h>							// inet_addr(x), inet_ntoa(x)
 	#include <gtk/gtk.h>							// gtk_file_chooser_dialog_new(x), gtk_dialog_run(x), gtk_file_chooser_get_uri(x)
@@ -68,9 +70,9 @@ extern "C"
 	#include <sys/stat.h>							// mkdir(x), stat64, lstat64(x), _stat64, _stat64(x)
 	#include <sys/utsname.h>						// uname(x)
 #elif defined _macosx
-	#include <ifaddrs.h>
-	#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
-	#include <arpa/inet.h>							// inet_addr(x), inet_ntoa(x)
+	#include <ifaddrs.h>							// ifaddrs, getifaddrs(x)
+	//#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
+	//#include <arpa/inet.h>							// inet_addr(x), inet_ntoa(x)
 	#include <AppKit/AppKit.h>						// NSOpenPanel*
 	#include <Foundation/Foundation.h>				// NSString, NSArray, NSURL
 	#include <sys/dir.h>							// opendir(x)
