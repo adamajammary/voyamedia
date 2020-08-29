@@ -24,8 +24,12 @@
 extern "C"
 {
 	// C
-	#include <ctime>   // time_t, time(x)
-	#include <clocale> // setlocale(x)
+	#include <ctime>     // time_t, time(x)
+	#include <clocale>   // setlocale(x)
+
+	#if defined _ios || defined _linux || defined _macosx
+		#include <ifaddrs.h> // ifaddrs, getifaddrs(x)
+	#endif
 
 	// SDL2
 	#include <SDL2/SDL.h>
@@ -62,8 +66,8 @@ extern "C"
 #elif defined _linux
 	#include <dirent.h>								// opendir(x)
 	//#include <ifaddrs.h>							// ifaddrs, getifaddrs(x)
-	#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
-	#include <arpa/inet.h>							// inet_addr(x), inet_ntoa(x)
+	//#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
+	//#include <arpa/inet.h>							// inet_addr(x), inet_ntoa(x)
 	#include <gtk/gtk.h>							// gtk_file_chooser_dialog_new(x), gtk_dialog_run(x), gtk_file_chooser_get_uri(x)
 	#include <sys/fcntl.h>							// fcntl(x)
 	#include <sys/socket.h>							// socket(x), bind(x), connect(x)
@@ -142,10 +146,6 @@ namespace LIB_UPNP
 
 namespace VoyaMedia
 {
-	#if defined _ios || defined _linux || defined _macosx
-		#include <ifaddrs.h> // ifaddrs, getifaddrs(x)
-	#endif
-
 	#if defined _android
 		#define fstat       lstat64
 		#define stat_t      struct stat64
