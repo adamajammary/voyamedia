@@ -5,7 +5,7 @@
 #ifndef VM_FILESYSTEM_H
 #define VM_FILESYSTEM_H
 
-#if defined _linux
+#if defined _android || defined _linux
 	#include <ifaddrs.h> // ifaddrs, getifaddrs(x)
 	#include <netdb.h>   // addrinfo, gethostname(x)
 #endif

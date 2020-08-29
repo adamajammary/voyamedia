@@ -42,7 +42,6 @@ extern "C"
 // Platform-specific APIs
 #if defined _android
 	#include <dirent.h>                            // mkdir(x), opendir(x)
-	#include <ifaddrs.h>                           // ifaddrs, getifaddrs(x)
 	#include <fcntl.h>                             // fcntl(x)
 	#include <unistd.h>                            // chdir(x)
 	#include <android/asset_manager_jni.h>         // VM_FileSystem::GetAndroidAssets(x)
@@ -50,13 +49,11 @@ extern "C"
 	#include <sys/stat.h>                          // stat64, lstat64(x), _stat64, _stat64(x)
 #elif defined _ios
 	#include <dirent.h>                            // mkdir(x),  opendir(x)
-	//#include <ifaddrs.h>                           // ifaddrs, getifaddrs(x)
 	#include <AVFoundation/AVAssetExportSession.h> // AVAssetExportSession*
 	#include <AVFoundation/AVFoundation.h>         // AVAudioSession
 	#include <Foundation/Foundation.h>             // NSString, NSArray, NSURL, NSUUID
 	#include <MediaPlayer/Mediaplayer.h>           // MPMediaItem, MPMediaItemArtwork, MPMediaQuery
 	#include <Photos/Photos.h>                     // PHAsset, PHFetchResult, PHFetchOptions
-	//#include <sys/socket.h>                        // sockaddr, socket(x), bind(x), connect(x)
 	#include <sys/stat.h>                          // stat64, lstat64(x), _stat64, _stat64(x)
 	#include <os/log.h>                            // os_log(x)
 #elif defined _linux
@@ -65,10 +62,8 @@ extern "C"
 	#include <sys/fcntl.h>                         // fcntl(x)
 	#include <sys/stat.h>                          // mkdir(x), stat64, lstat64(x), _stat64, _stat64(x)
 #elif defined _macosx
-	//#include <ifaddrs.h>                           // ifaddrs, getifaddrs(x)
 	#include <AppKit/AppKit.h>                     // NSOpenPanel*
 	#include <Foundation/Foundation.h>             // NSString, NSArray, NSURL
-	//#include <sys/socket.h>                        // sockaddr, socket(x), bind(x), connect(x)
 	#include <sys/dir.h>                           // opendir(x)
 	#include <sys/stat.h>                          // mkdir(x), stat64, lstat64(x), _stat64, _stat64(x)
 #elif defined _windows
