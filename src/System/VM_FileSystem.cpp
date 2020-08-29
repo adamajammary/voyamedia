@@ -1810,6 +1810,15 @@ VM_MediaType System::VM_FileSystem::GetMediaType(LIB_FFMPEG::AVFormatContext* fo
 	return MEDIA_TYPE_UNKNOWN;
 }
 
+//namespace System
+//{
+	#if defined _ios || defined _linux || defined _macosx
+		#include <ifaddrs.h> // ifaddrs, getifaddrs(x)
+		//#include <netdb.h> // addrinfo, gethostname(x)
+		//#include <sys/socket.h> // socket(x), bind(x), connect(x)
+	#endif
+//}
+
 Strings System::VM_FileSystem::GetNetworkInterfaces()
 {
 	Strings interfaces;
