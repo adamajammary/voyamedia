@@ -27,10 +27,6 @@ extern "C"
 	#include <ctime>     // time_t, time(x)
 	#include <clocale>   // setlocale(x)
 
-	#if defined _ios || defined _linux || defined _macosx
-		#include <ifaddrs.h> // ifaddrs, getifaddrs(x)
-	#endif
-
 	// SDL2
 	#include <SDL2/SDL.h>
 	#include <SDL2/SDL_syswm.h>
