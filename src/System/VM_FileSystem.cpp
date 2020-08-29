@@ -1862,13 +1862,11 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 		}
 
 		freeifaddrs(addresses);
-	#else
-		#if defined _windows
+	#elif defined _windows
 		WSADATA winSockData;
 
 		if (WSAStartup(MAKEWORD(2, 2), &winSockData) != 0)
 			return interfaces;
-		#endif
 
 		const ULONG MAX_ITERATIONS = 3;
 
@@ -1899,10 +1897,37 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 
 		FREE_POINTER(addresses);
 
-		#if defined _windows
-			WSACleanup();
-		#endif
-		
+		WSACleanup();
+	#else
+		char      hostName[DEFAULT_CHAR_BUFFER_SIZE];
+		addrinfo* addresses = NULL;
+		addrinfo* address   = NULL;
+		addrinfo  hints     = {};
+
+		hints.ai_family   = AF_INET;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_protocol = IPPROTO_TCP;
+
+		if (gethostname(hostName, DEFAULT_CHAR_BUFFER_SIZE) == 0)
+		{
+			if (getaddrinfo(hostName, "", &hints, &addresses) == 0)
+			{
+				for (address = addresses; address != NULL; address = address->ai_next)
+				{
+					if (address->ai_family != AF_INET)
+						continue;
+
+					ipAddress = String(inet_ntoa(((sockaddr_in*)address->ai_addr)->sin_addr));
+
+					if ((ipAddress == "127.0.0.1") || (ipAddress == "0.0.0.0") || (ipAddress.substr(0, 8) == "169.254."))
+						continue;
+
+					interfaces.push_back(ipAddress);
+				}
+			}
+
+			freeaddrinfo(addresses);
+		}
 	#endif
 
 	return interfaces;
