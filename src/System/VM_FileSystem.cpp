@@ -1832,7 +1832,7 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 
 		if ((ipAddress != "127.0.0.1") && (ipAddress != "0.0.0.0") && (ipAddress.substr(0, 8) != "169.254."))
 			interfaces.push_back(ipAddress);
-	#elif defined _ios || defined _macosx
+	/*#elif defined _ios || defined _macosx
 		NSString* ip;
 
 		#ifdef _ios
@@ -1861,7 +1861,7 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 			}
 		}
 
-		freeifaddrs(addresses);
+		freeifaddrs(addresses);*/
 	#elif defined _windows
 		WSADATA winSockData;
 
@@ -1899,35 +1899,33 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 
 		WSACleanup();
 	#else
-		char      hostName[DEFAULT_CHAR_BUFFER_SIZE];
-		addrinfo* addresses = NULL;
-		addrinfo* address   = NULL;
-		addrinfo  hints     = {};
+		String ifName;
 
-		hints.ai_family   = AF_INET;
-		hints.ai_socktype = SOCK_STREAM;
-		hints.ai_protocol = IPPROTO_TCP;
+		#if defined _ios
+			LIB_UPNP::ifaddrs* addresses = NULL, *address;
+		#else
+			ifaddrs* addresses = NULL, *address;
+		#endif
 
-		if (gethostname(hostName, DEFAULT_CHAR_BUFFER_SIZE) == 0)
+		if (getifaddrs(&addresses) == 0)
 		{
-			if (getaddrinfo(hostName, "", &hints, &addresses) == 0)
+			for (address = addresses; address != NULL; address = address->ifa_next)
 			{
-				for (address = addresses; address != NULL; address = address->ai_next)
-				{
-					if (address->ai_family != AF_INET)
-						continue;
+				if ((address->ifa_name == NULL) || (address->ifa_addr->sa_family != AF_INET))
+					continue;
 
-					ipAddress = String(inet_ntoa(((sockaddr_in*)address->ai_addr)->sin_addr));
+				#if defined _ios || defined _macosx
+					ifName = String([[NSString stringWithUTF8String:address->ifa_name] UTF8String]);
+				#else
+					ifName = String(address->ifa_name);
+				#endif
 
-					if ((ipAddress == "127.0.0.1") || (ipAddress == "0.0.0.0") || (ipAddress.substr(0, 8) == "169.254."))
-						continue;
-
-					interfaces.push_back(ipAddress);
-				}
+				if (ifName != "lo")
+					interfaces.push_back(ifName);
 			}
-
-			freeaddrinfo(addresses);
 		}
+
+		freeifaddrs(addresses);
 	#endif
 
 	return interfaces;
