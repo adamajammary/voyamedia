@@ -41,54 +41,42 @@ extern "C"
 
 // Platform-specific APIs
 #if defined _android
-	#include <dirent.h>								// mkdir(x), opendir(x)
-	#include <fcntl.h>								// fcntl(x)
-	//#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
-	#include <unistd.h>								// chdir(x)
-	#include <android/asset_manager_jni.h>			// VM_FileSystem::GetAndroidAssets(x)
-	#include <android/native_activity.h>			// VM_FileSystem::GetAndroidAssets(x)
-	#include <sys/stat.h>							// stat64, lstat64(x), _stat64, _stat64(x)
+	#include <dirent.h>                            // mkdir(x), opendir(x)
+	#include <fcntl.h>                             // fcntl(x)
+	#include <unistd.h>                            // chdir(x)
+	#include <android/asset_manager_jni.h>         // VM_FileSystem::GetAndroidAssets(x)
+	#include <android/native_activity.h>           // VM_FileSystem::GetAndroidAssets(x)
+	#include <sys/stat.h>                          // stat64, lstat64(x), _stat64, _stat64(x)
 #elif defined _ios
-	#include <dirent.h>								// mkdir(x),  opendir(x)
-	//#include <ifaddrs.h>								// ifaddrs, getifaddrs(x)
-	//#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
-	#include <AVFoundation/AVAssetExportSession.h>	// AVAssetExportSession*
-	#include <AVFoundation/AVFoundation.h>			// AVAudioSession
-	#include <Foundation/Foundation.h>				// NSString, NSArray, NSURL, NSUUID
-	#include <MediaPlayer/Mediaplayer.h>			// MPMediaItem, MPMediaItemArtwork, MPMediaQuery
-	#include <Photos/Photos.h>						// PHAsset, PHFetchResult, PHFetchOptions
-	#include <sys/stat.h>							// stat64, lstat64(x), _stat64, _stat64(x)
-	#include <os/log.h>								// os_log(x)
+	#include <dirent.h>                            // mkdir(x),  opendir(x)
+	#include <AVFoundation/AVAssetExportSession.h> // AVAssetExportSession*
+	#include <AVFoundation/AVFoundation.h>         // AVAudioSession
+	#include <Foundation/Foundation.h>             // NSString, NSArray, NSURL, NSUUID
+	#include <MediaPlayer/Mediaplayer.h>           // MPMediaItem, MPMediaItemArtwork, MPMediaQuery
+	#include <Photos/Photos.h>                     // PHAsset, PHFetchResult, PHFetchOptions
+	#include <sys/stat.h>                          // stat64, lstat64(x), _stat64, _stat64(x)
+	#include <os/log.h>                            // os_log(x)
 #elif defined _linux
-	#include <dirent.h>								// opendir(x)
-	//#include <ifaddrs.h>								// ifaddrs, getifaddrs(x)
-	//#include <netdb.h>                              // addrinfo, gethostname(x)
-	//#include <arpa/inet.h>							// inet_addr(x), inet_ntoa(x)
-	#include <gtk/gtk.h>							// gtk_file_chooser_dialog_new(x), gtk_dialog_run(x), gtk_file_chooser_get_uri(x)
-	#include <sys/fcntl.h>							// fcntl(x)
-	//#include <sys/socket.h>							// socket(x), bind(x), connect(x)
-	#include <sys/stat.h>							// mkdir(x), stat64, lstat64(x), _stat64, _stat64(x)
-	//#include <sys/utsname.h>							// uname(x)
+	#include <dirent.h>                            // opendir(x)
+	#include <gtk/gtk.h>                           // gtk_file_chooser_dialog_new(x), gtk_dialog_run(x), gtk_file_chooser_get_uri(x)
+	#include <sys/fcntl.h>                         // fcntl(x)
+	#include <sys/stat.h>                          // mkdir(x), stat64, lstat64(x), _stat64, _stat64(x)
 #elif defined _macosx
-	#include <sys/dir.h>							// opendir(x)
-	//#include <ifaddrs.h>								// ifaddrs, getifaddrs(x)
-	//#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
-	//#include <arpa/inet.h>							// inet_addr(x), inet_ntoa(x)
-	#include <AppKit/AppKit.h>						// NSOpenPanel*
-	#include <Foundation/Foundation.h>				// NSString, NSArray, NSURL
-	//#include <sys/socket.h>							// socket(x), bind(x), connect(x)
-	#include <sys/stat.h>							// mkdir(x), stat64, lstat64(x), _stat64, _stat64(x)
+	#include <sys/dir.h>                           // opendir(x)
+	#include <AppKit/AppKit.h>                     // NSOpenPanel*
+	#include <Foundation/Foundation.h>             // NSString, NSArray, NSURL
+	#include <sys/stat.h>                          // mkdir(x), stat64, lstat64(x), _stat64, _stat64(x)
 #elif defined _windows
-	#include <Commdlg.h>							// GetOpenFileNameA(x)
-	#include <direct.h>								// mkdir(x)
-	#include <dirent.h>								// opendir(x)
-	#include <iphlpapi.h>                           // GetAdaptersAddresses
-	#include <Shellapi.h>							// ShellExecuteA(x)
-	#include <Shlobj.h>								// SHBrowseForFolder(), SHGetPathFromIDListA
+	#include <Commdlg.h>                           // GetOpenFileNameA(x)
+	#include <direct.h>                            // mkdir(x)
+	#include <dirent.h>                            // opendir(x)
+	#include <iphlpapi.h>                          // GetAdaptersAddresses
+	#include <Shellapi.h>                          // ShellExecuteA(x)
+	#include <Shlobj.h>                            // SHBrowseForFolder(), SHGetPathFromIDListA
 #endif
 
 #if defined _ios || defined _macosx
-	#include <SystemConfiguration/SCNetworkReachability.h>	// SCNetworkReachability
+	#include <SystemConfiguration/SCNetworkReachability.h> // SCNetworkReachability
 #endif
 
 namespace LIB_FFMPEG

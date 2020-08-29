@@ -5,6 +5,12 @@
 #ifndef VM_FILESYSTEM_H
 #define VM_FILESYSTEM_H
 
+#if defined _ios || defined _linux || defined _macosx
+	#include <ifaddrs.h> // ifaddrs, getifaddrs(x)
+	#include <netdb.h>   // addrinfo, gethostname(x)
+	//#include <sys/socket.h> // socket(x), bind(x), connect(x)
+#endif
+
 namespace VoyaMedia
 {
 	namespace System
