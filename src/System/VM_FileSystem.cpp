@@ -1814,7 +1814,7 @@ VM_MediaType System::VM_FileSystem::GetMediaType(LIB_FFMPEG::AVFormatContext* fo
 //{
 	#if defined _ios || defined _linux || defined _macosx
 		#include <ifaddrs.h> // ifaddrs, getifaddrs(x)
-		//#include <netdb.h> // addrinfo, gethostname(x)
+		#include <netdb.h> // addrinfo, gethostname(x)
 		//#include <sys/socket.h> // socket(x), bind(x), connect(x)
 	#endif
 //}
