@@ -1810,6 +1810,8 @@ VM_MediaType System::VM_FileSystem::GetMediaType(LIB_FFMPEG::AVFormatContext* fo
 	return MEDIA_TYPE_UNKNOWN;
 }
 
+#include <ifaddrs.h>
+
 Strings System::VM_FileSystem::GetNetworkInterfaces()
 {
 	Strings interfaces;
@@ -1899,10 +1901,6 @@ Strings System::VM_FileSystem::GetNetworkInterfaces()
 
 		WSACleanup();
 	#else
-		std::ifaddrs* a;
-		::ifaddrs* b;
-		ifaddrs* c;
-
 		String   ifName;
 		ifaddrs* addresses = NULL, *address;
 
