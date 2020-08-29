@@ -62,7 +62,7 @@ extern "C"
 #elif defined _linux
 	#include <dirent.h>								// opendir(x)
 	//#include <ifaddrs.h>								// ifaddrs, getifaddrs(x)
-	//#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
+	#include <netdb.h>                              // addrinfo, gethostname(x)
 	//#include <arpa/inet.h>							// inet_addr(x), inet_ntoa(x)
 	#include <gtk/gtk.h>							// gtk_file_chooser_dialog_new(x), gtk_dialog_run(x), gtk_file_chooser_get_uri(x)
 	#include <sys/fcntl.h>							// fcntl(x)
@@ -146,7 +146,6 @@ namespace VoyaMedia
 	{
 		#if defined _ios || defined _linux || defined _macosx
 			#include <ifaddrs.h> // ifaddrs, getifaddrs(x)
-			#include <netdb.h>   // addrinfo, gethostname(x)
 			//#include <sys/socket.h> // socket(x), bind(x), connect(x)
 		#endif
 	}
