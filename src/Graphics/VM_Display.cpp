@@ -18,30 +18,13 @@ SDL_Rect Graphics::VM_Display::getDimensions()
 {
 	SDL_Rect dimensions;
 
-	SDL_GetWindowPosition(VM_Window::MainWindow,  &dimensions.x, &dimensions.y);
+	SDL_GetWindowPosition(VM_Window::MainWindow, &dimensions.x, &dimensions.y);
 
 	#if defined _ios
 		SDL_GetRendererOutputSize(VM_Window::Renderer, &dimensions.w, &dimensions.h);
 	#else
 		SDL_GL_GetDrawableSize(VM_Window::MainWindow, &dimensions.w, &dimensions.h);
 	#endif
-	
-	SDL_Rect rect;
-
-	SDL_GetWindowSize(VM_Window::MainWindow, &rect.w, &rect.h);
-	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetWindowSize: %d, %d", rect.w, rect.h));
-
-	SDL_GL_GetDrawableSize(VM_Window::MainWindow, &rect.w, &rect.h);
-	VM_Modal::ShowMessage(VM_Text::Format("SDL_GL_GetDrawableSize: %d, %d", rect.w, rect.h));
-
-	SDL_GetDisplayBounds(SDL_GetWindowDisplayIndex(VM_Window::MainWindow), &rect);
-	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetDisplayBounds: %d, %d", rect.w, rect.h));
-
-	SDL_GetDisplayUsableBounds(this->displayIndex, &rect);
-	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetDisplayUsableBounds: %d, %d", rect.w, rect.h));
-
-	SDL_GetRendererOutputSize(VM_Window::Renderer, &rect.w, &rect.h);
-	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetRendererOutputSize: %d, %d", rect.w, rect.h));
 
 	return dimensions;
 }
@@ -52,7 +35,6 @@ float Graphics::VM_Display::getDPI()
 	SDL_GetDisplayDPI(this->displayIndex, &this->dDPI, &this->hDPI, &this->vDPI);
 
 	float dpi = max(max(this->hDPI, this->vDPI), this->dDPI);
-	VM_Modal::ShowMessage(VM_Text::Format("dpi: %.2f, %.2f, %.2f, %.2f, wh: %d, %d", dpi, this->hDPI, this->vDPI, this->dDPI, this->display.w, this->display.h));
 
 	#if defined _android
 	if (dpi < 1.0f)
@@ -87,11 +69,9 @@ int Graphics::VM_Display::setDisplayMode()
 		this->scaleFactor = this->scaleFactorDPI;
     #elif defined _macosx || defined _windows
         this->scaleFactor = this->scaleFactorRes;
-	// TODO: iOS? Linux?
 	#else
 		this->scaleFactor = (this->scaleFactorRes * this->scaleFactorDPI);
 	#endif
 
-	VM_Modal::ShowMessage(VM_Text::Format("setDisplayMode: %.2f, %.2f, %.2f", this->scaleFactor, this->scaleFactorDPI, this->scaleFactorRes));
 	return RESULT_OK;
 }
