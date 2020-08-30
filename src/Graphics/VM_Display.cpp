@@ -21,7 +21,7 @@ SDL_Rect Graphics::VM_Display::getDimensions()
 	SDL_GetWindowPosition(VM_Window::MainWindow,  &dimensions.x, &dimensions.y);
 
 	#if defined _ios
-		SDL_GetWindowSize(VM_Window::MainWindow, &dimensions.w, &dimensions.h);
+		SDL_GetRendererOutputSize(VM_Window::Renderer, &dimensions.w, &dimensions.h);
 	#else
 		SDL_GL_GetDrawableSize(VM_Window::MainWindow, &dimensions.w, &dimensions.h);
 	#endif
