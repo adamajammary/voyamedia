@@ -37,21 +37,11 @@ SDL_Rect Graphics::VM_Display::getDimensions()
 	SDL_GetDisplayBounds(SDL_GetWindowDisplayIndex(VM_Window::MainWindow), &rect);
 	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetDisplayBounds: %d, %d", rect.w, rect.h));
 
-	SDL_GetDisplayUsableBounds(SDL_GetWindowDisplayIndex(VM_Window::MainWindow), &rect);
+	SDL_GetDisplayUsableBounds(this->displayIndex, &rect);
 	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetDisplayUsableBounds: %d, %d", rect.w, rect.h));
 
 	SDL_GetRendererOutputSize(VM_Window::Renderer, &rect.w, &rect.h);
 	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetRendererOutputSize: %d, %d", rect.w, rect.h));
-
-	SDL_GetWindowMaximumSize(VM_Window::MainWindow, &rect.w, &rect.h);
-	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetWindowMaximumSize: %d, %d", rect.w, rect.h));
-
-	SDL_GetWindowMinimumSize(VM_Window::MainWindow, &rect.w, &rect.h);
-	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetWindowMinimumSize: %d, %d", rect.w, rect.h));
-
-	int t, l, b, r;
-	SDL_GetWindowBordersSize(VM_Window::MainWindow, &t, &l, &b, &r);
-	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetWindowBordersSize: %d, %d, %d, %d", t, l, b, r));
 
 	return dimensions;
 }
@@ -62,6 +52,7 @@ float Graphics::VM_Display::getDPI()
 	SDL_GetDisplayDPI(this->displayIndex, &this->dDPI, &this->hDPI, &this->vDPI);
 
 	float dpi = max(max(this->hDPI, this->vDPI), this->dDPI);
+	VM_Modal::ShowMessage(VM_Text::Format("dpi: %.2f, %.2f, %.2f, %.2f, wh: %d, %d", dpi, this->hDPI, this->vDPI, this->dDPI, this->display.w, this->display.h));
 
 	#if defined _android
 	if (dpi < 1.0f)
@@ -101,5 +92,6 @@ int Graphics::VM_Display::setDisplayMode()
 		this->scaleFactor = (this->scaleFactorRes * this->scaleFactorDPI);
 	#endif
 
+	VM_Modal::ShowMessage(VM_Text::Format("setDisplayMode: %.2f, %.2f, %.2f", this->scaleFactor, this->scaleFactorDPI, this->scaleFactorRes));
 	return RESULT_OK;
 }
