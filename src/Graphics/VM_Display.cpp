@@ -19,7 +19,39 @@ SDL_Rect Graphics::VM_Display::getDimensions()
 	SDL_Rect dimensions;
 
 	SDL_GetWindowPosition(VM_Window::MainWindow,  &dimensions.x, &dimensions.y);
-	SDL_GL_GetDrawableSize(VM_Window::MainWindow, &dimensions.w, &dimensions.h);
+
+	#if defined _ios
+		SDL_GetWindowSize(VM_Window::MainWindow, &dimensions.w, &dimensions.h);
+	#else
+		SDL_GL_GetDrawableSize(VM_Window::MainWindow, &dimensions.w, &dimensions.h);
+	#endif
+	
+	SDL_Rect rect;
+
+	SDL_GetWindowSize(VM_Window::MainWindow, &rect.w, &rect.h);
+	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetWindowSize: %d, %d", rect.w, rect.h));
+
+	SDL_GL_GetDrawableSize(VM_Window::MainWindow, &rect.w, &rect.h);
+	VM_Modal::ShowMessage(VM_Text::Format("SDL_GL_GetDrawableSize: %d, %d", rect.w, rect.h));
+
+	SDL_GetDisplayBounds(SDL_GetWindowDisplayIndex(VM_Window::MainWindow), &rect);
+	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetDisplayBounds: %d, %d", rect.w, rect.h));
+
+	SDL_GetDisplayUsableBounds(SDL_GetWindowDisplayIndex(VM_Window::MainWindow), &rect);
+	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetDisplayUsableBounds: %d, %d", rect.w, rect.h));
+
+	SDL_GetRendererOutputSize(VM_Window::Renderer, &rect.w, &rect.h);
+	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetRendererOutputSize: %d, %d", rect.w, rect.h));
+
+	SDL_GetWindowMaximumSize(VM_Window::MainWindow, &rect.w, &rect.h);
+	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetWindowMaximumSize: %d, %d", rect.w, rect.h));
+
+	SDL_GetWindowMinimumSize(VM_Window::MainWindow, &rect.w, &rect.h);
+	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetWindowMinimumSize: %d, %d", rect.w, rect.h));
+
+	int t, l, b, r;
+	SDL_GetWindowBordersSize(VM_Window::MainWindow, &t, &l, &b, &r);
+	VM_Modal::ShowMessage(VM_Text::Format("SDL_GetWindowBordersSize: %d, %d, %d, %d", t, l, b, r));
 
 	return dimensions;
 }
