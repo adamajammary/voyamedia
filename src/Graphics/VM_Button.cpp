@@ -192,7 +192,7 @@ int Graphics::VM_Button::render()
 		SDL_RenderCopy(VM_Window::Renderer, this->imageData->data, NULL, &this->imageArea);
 
 	// OVERLAY
-	if (&this->overlayColor.a > 0)
+	if (this->overlayColor.a > 0)
 		VM_Graphics::FillArea(&this->overlayColor, &area);
 
 	return RESULT_OK;
