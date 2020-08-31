@@ -126,6 +126,7 @@ namespace VoyaMedia
 			void          setSearch(const String &searchString, bool saveDB = false);
 			int           setRows(bool temp);
 			void          sort(const String &buttonID);
+			void          updateNavigation();
 			void          updateSearchInput();
 
 		private:
@@ -143,6 +144,7 @@ namespace VoyaMedia
 			void                  resetRows();
 			void                  resetScrollPane();
 			void                  setRows();
+			void                  updateDetailsText(bool temp);
 
 		};
 	}

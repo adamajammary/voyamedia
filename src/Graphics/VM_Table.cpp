@@ -912,12 +912,14 @@ int Graphics::VM_Table::render()
 			{
 				this->playIcon     = new VM_Button(*dynamic_cast<VM_Component*>(this->rows[row][0]));
 				this->playIcon->id = "list_table_play_icon";
-				int height         = (int)((float)this->playIcon->backgroundArea.h / VM_Window::Display.scaleFactor * 0.3f);
 
 				this->playIcon->backgroundColor = { 0, 0, 0, 0xA0 };
 
 				VM_ThreadManager::Mutex.lock();
+
+				const int height = (int)((float)this->playIcon->backgroundArea.h / VM_Window::Display.scaleFactor * 0.3f);
 				this->playIcon->setImage("play-3-64.png", false, height, height);
+
 				VM_ThreadManager::Mutex.unlock();
 			}
 
@@ -1476,19 +1478,7 @@ int Graphics::VM_Table::setRows(bool temp)
 	if (((int)this->rows.size() < this->limit) && (this->maxRows > (this->states[VM_Top::Selected].offset + (int)this->rows.size())))
 		this->maxRows = (this->states[VM_Top::Selected].offset + (int)this->rows.size());
 
-	String detailsText;
-
-	if (temp)
-		detailsText = "[ Loading ... ]";
-	else if ((int)this->rows.size() < this->maxRows)
-		detailsText = VM_Text::Format("[ %d - %d / %d ]", (this->states[VM_Top::Selected].offset + 1), (this->states[VM_Top::Selected].offset + (int)this->rows.size()), this->maxRows);
-	else if (!this->rows.empty())
-		detailsText = VM_Text::Format("[ %d ]", (int)this->rows.size());
-	else
-		detailsText = "[ 0 ]";
-
-	if ((this->id == "list_table") && !temp && (this->maxRows > 0) &&
-		(this->states[VM_Top::Selected].offset >= this->maxRows))
+	if ((this->id == "list_table") && !temp && (this->maxRows > 0) && (this->states[VM_Top::Selected].offset >= this->maxRows))
 	{
 		this->resetState(false);
 		this->refreshRows();
@@ -1496,18 +1486,13 @@ int Graphics::VM_Table::setRows(bool temp)
 		return ERROR_UNKNOWN;
 	}
 
-	VM_Button* button = NULL;
+	this->updateDetailsText(temp);
 
-	if (this->id == "list_table")
-		button = dynamic_cast<VM_Button*>(VM_GUI::Components["list_details_text"]);
-	else
-		button = dynamic_cast<VM_Button*>(VM_Modal::Components["list_details_text"]);
+	if (!temp) {
+		this->updateNavigation();
 
-	if (button != NULL)
-		button->setText(detailsText);
-
-	if (!temp)
 		this->states[VM_Top::Selected].dataIsReady = false;
+	}
 
 	return RESULT_OK;
 }
@@ -1563,6 +1548,52 @@ void Graphics::VM_Table::sort(const String &buttonID)
 		}
 
 		DELETE_POINTER(db);
+	}
+}
+
+void Graphics::VM_Table::updateDetailsText(bool temp)
+{
+	VM_Button* button;
+	String     detailsText;
+
+	if (temp)
+		detailsText = "[ Loading ... ]";
+	else if ((int)this->rows.size() < this->maxRows)
+		detailsText = VM_Text::Format("[ %d - %d / %d ]", (this->states[VM_Top::Selected].offset + 1), (this->states[VM_Top::Selected].offset + (int)this->rows.size()), this->maxRows);
+	else if (!this->rows.empty())
+		detailsText = VM_Text::Format("[ %d ]", (int)this->rows.size());
+	else
+		detailsText = "[ 0 ]";
+
+	if (this->id == "list_table")
+		button = dynamic_cast<VM_Button*>(VM_GUI::Components["list_details_text"]);
+	else
+		button = dynamic_cast<VM_Button*>(VM_Modal::Components["list_details_text"]);
+
+	if (button != NULL)
+		button->setText(detailsText);
+}
+
+void Graphics::VM_Table::updateNavigation()
+{
+	VM_Button* button1 = dynamic_cast<VM_Button*>(this->id == "list_table" ? VM_GUI::Components["list_offset_start"] : VM_Modal::Components["list_offset_start"]);
+	VM_Button* button2 = dynamic_cast<VM_Button*>(this->id == "list_table" ? VM_GUI::Components["list_offset_prev"]  : VM_Modal::Components["list_offset_prev"]);
+	bool       enabled = (this->states[VM_Top::Selected].offset >= this->limit);
+
+	if ((button1 != NULL) && (button2 != NULL)) {
+		button1->overlayColor   = VM_Color(button1->backgroundColor);
+		button1->overlayColor.a = (enabled ? 0 : 0xA0);
+		button2->overlayColor   = button1->overlayColor;
+	}
+
+	button1 = dynamic_cast<VM_Button*>(this->id == "list_table" ? VM_GUI::Components["list_offset_end"]  : VM_Modal::Components["list_offset_end"]);
+	button2 = dynamic_cast<VM_Button*>(this->id == "list_table" ? VM_GUI::Components["list_offset_next"] : VM_Modal::Components["list_offset_next"]);
+	enabled = (this->states[VM_Top::Selected].offset < this->maxRows - this->limit);
+
+	if ((button1 != NULL) && (button2 != NULL)) {
+		button1->overlayColor   = VM_Color(button1->backgroundColor);
+		button1->overlayColor.a = (enabled ? 0 : 0xA0);
+		button2->overlayColor   = button1->overlayColor;
 	}
 }
 

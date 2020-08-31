@@ -357,6 +357,7 @@ void System::VM_Window::resize()
 		VM_Window::BottomHeight = VM_GUI::Components["bottom"]->backgroundArea.h;
 
 	if (VM_GUI::ListTable != NULL) {
+		VM_GUI::ListTable->updateNavigation();
 		VM_GUI::ListTable->refreshRows();
 		VM_GUI::ListTable->refreshSelected();
 		VM_GUI::ListTable->refresh();

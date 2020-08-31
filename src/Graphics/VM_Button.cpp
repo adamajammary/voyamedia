@@ -13,6 +13,7 @@ Graphics::VM_Button::VM_Button(const VM_Component &component)
 	this->borderWidth     = component.borderWidth;
 	this->fontSize        = component.fontSize;
 	this->margin          = component.margin;
+	this->overlayColor    = component.overlayColor;
 	this->parent          = component.parent;
 	this->xmlDoc          = component.xmlDoc;
 	this->xmlNode         = component.xmlNode;
@@ -154,16 +155,20 @@ int Graphics::VM_Button::render()
 	if ((this->id == "list_offset_end") && (SHOUTCAST_IS_SELECTED || YOUTUBE_IS_SELECTED))
 		return RESULT_OK;
 
-	// COLOR BACKGROUND
-	if ((this->backgroundColor.a == 0xFF) || (this->parent == NULL) || (this->parent->backgroundColor.a == 0xFF))
-	{
-		if (this->selected)
-			VM_Graphics::FillArea(&this->highlightColor, &this->backgroundArea);
-		else
-			VM_Graphics::FillArea(&this->backgroundColor, &this->backgroundArea);
-	}
+	SDL_Rect area = SDL_Rect(this->backgroundArea);
 
-	// COLOR BORDER
+	area.x += this->borderWidth.left;
+	area.y += this->borderWidth.top;
+	area.w -= (this->borderWidth.left + this->borderWidth.right);
+	area.h -= (this->borderWidth.top  + this->borderWidth.bottom);
+
+	// BACKGROUND
+	if (this->selected)
+		VM_Graphics::FillArea(&this->highlightColor, &area);
+	else
+		VM_Graphics::FillArea(&this->backgroundColor, &area);
+
+	// BORDER
 	if (this->active)
 		VM_Graphics::FillBorder(&this->activeColor, &this->backgroundArea, this->borderWidth);
 	else
@@ -172,8 +177,8 @@ int Graphics::VM_Button::render()
 	// TEXT
 	if ((this->textData != NULL) && (this->textData->data != NULL))
 	{
-		int maxWidth  = (this->backgroundArea.w - this->borderWidth.left - this->borderWidth.right  - this->margin.left - this->margin.right);
-		int maxHeight = (this->backgroundArea.h - this->borderWidth.top  - this->borderWidth.bottom - this->margin.top  - this->margin.bottom);
+		int maxWidth  = (area.w - this->borderWidth.left - this->borderWidth.right  - this->margin.left - this->margin.right);
+		int maxHeight = (area.h - this->borderWidth.top  - this->borderWidth.bottom - this->margin.top  - this->margin.bottom);
 
 		SDL_Rect clip = { 0, 0, min(this->textArea.w, maxWidth), min(this->textArea.h, maxHeight) };
 		SDL_Rect dest = { this->textArea.x, this->textArea.y, clip.w, clip.h };
@@ -184,6 +189,10 @@ int Graphics::VM_Button::render()
 	// IMAGE
 	if ((this->imageData != NULL) && (this->imageData->data != NULL))
 		SDL_RenderCopy(VM_Window::Renderer, this->imageData->data, NULL, &this->imageArea);
+
+	// OVERLAY
+	if (&this->overlayColor.a > 0)
+		VM_Graphics::FillArea(&this->overlayColor, &area);
 
 	return RESULT_OK;
 }
