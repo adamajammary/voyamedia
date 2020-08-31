@@ -20,7 +20,7 @@ namespace VoyaMedia
 			SDL_Rect    imageArea;
 			VM_Texture* imageData;
 			int         mediaID;
-			String      mediaID2;
+			//String      mediaID2;
 			String      mediaURL;
 			SDL_Rect    textArea;
 			VM_Texture* textData;

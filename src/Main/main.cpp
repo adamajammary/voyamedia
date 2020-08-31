@@ -130,7 +130,8 @@ int main(const int argc, char* argv[])
 		VM_Window::Render();
 
 		// Sleep to save system resource usage
-		if ((VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED) && VM_Player::State.isPlaying)
+		//if ((VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED) && VM_Player::State.isPlaying)
+		if (VIDEO_IS_SELECTED && VM_Player::State.isPlaying)
 			SDL_Delay(DELAY_TIME_DEFAULT);
 		else
 			SDL_Delay(DELAY_TIME_GUI_RENDER);

@@ -430,25 +430,25 @@ int System::VM_EventManager::HandleMediaPlayer()
 			VM_Player::State.openFile = false;
 			VM_Player::FullScreenExit(true);
 
-			String mediaID = "";
-			String file    = VM_Player::State.filePath;
+			//String mediaID = "";
+			String file = VM_Player::State.filePath;
 
 			if (!row.empty()) {
-				file    = row[1]->getText();
-				mediaID = row[1]->mediaID2;
+				file = row[1]->getText();
+				//mediaID = row[1]->mediaID2;
 			}
 
 			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.open"].c_str(), file.c_str());
 			VM_Modal::ShowMessage(VM_Window::StatusString);
 
-			if (YOUTUBE_IS_SELECTED && !mediaID.empty())
-				VM_FileSystem::OpenWebBrowser(String("https://www.youtube.com/embed/" + mediaID + "?autoplay=true"));
+			//if (YOUTUBE_IS_SELECTED && !mediaID.empty())
+			//	VM_FileSystem::OpenWebBrowser(String("https://www.youtube.com/embed/" + mediaID + "?autoplay=true"));
 		}
 		// UPDATE SELECTED ROW ON SUCCESS
 		else if ((VM_Player::State.filePath != REFRESH_PENDING) && (row.size() > 1))
 		{
 			VM_Player::SelectedRow.mediaID  = row[1]->mediaID;
-			VM_Player::SelectedRow.mediaID2 = row[1]->mediaID2;
+			//VM_Player::SelectedRow.mediaID2 = row[1]->mediaID2;
 			VM_Player::SelectedRow.mediaURL = row[1]->mediaURL;
 			VM_Player::SelectedRow.title    = row[1]->getText();
 		}
@@ -554,7 +554,8 @@ bool System::VM_EventManager::isClickedBottomControls(SDL_Event* mouseEvent)
 		else if (button->id == "bottom_controls_upnp")
 		{
 			// INVALID MEDIA TYPE
-			if (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE) {
+			//if (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE) {
+			if (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST) {
 				VM_Window::StatusString = VM_Window::Labels["error.share_invalid"];
 				VM_Modal::ShowMessage(VM_Window::StatusString);
 			// VALID
@@ -870,8 +871,13 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 	{
 		for (int i = 1; i < (int)table->buttons.size() - 1; i++)
 		{
-			if (!table->buttons[i]->visible || !VM_Graphics::ButtonPressed(mouseEvent, table->buttons[i]->backgroundArea) || (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE))
+			if (!table->buttons[i]->visible ||
+				!VM_Graphics::ButtonPressed(mouseEvent, table->buttons[i]->backgroundArea) ||
+				//(VM_Top::Selected >= MEDIA_TYPE_YOUTUBE))
+				(VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST))
+			{
 				continue;
+			}
 
 			table->sort(table->buttons[i]->id);
 

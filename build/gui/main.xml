@@ -11,7 +11,7 @@
       <button id="top_audio" orientation="vertical" halign="center" valign="middle" image-file="music-2-512.png" image-height="30%" image-width="image-height" font-size="9">%audio</button>
       <button id="top_picture" orientation="vertical" halign="center" valign="middle" image-file="picture-2-512.png" image-height="30%" image-width="image-height" font-size="9">%pictures</button>
       <button id="top_video" orientation="vertical" halign="center" valign="middle" image-file="video-1-512.png" image-height="30%" image-width="image-height" font-size="9">%video</button>
-      <button id="top_youtube" orientation="vertical" halign="center" valign="middle" image-file="YouTube-social-squircle_red_128px.png" image-height="30%" image-width="image-height" font-size="9">YouTube</button>
+      <!-- <button id="top_youtube" orientation="vertical" halign="center" valign="middle" image-file="YouTube-social-squircle_red_128px.png" image-height="30%" image-width="image-height" font-size="9">YouTube</button> -->
       <button id="top_shoutcast" orientation="vertical" halign="center" valign="middle" image-file="Shoutcast-1-178.png" image-height="30%" image-width="image-height" font-size="9">SHOUTcast</button>
       <button id="top_tmdb_movie" orientation="vertical" halign="center" valign="middle" image-height="30%" image-width="image-height" font-size="9">%movies</button>
       <button id="top_tmdb_tv" orientation="vertical" halign="center" valign="middle" image-height="30%" image-width="image-height" font-size="9">TV</button>

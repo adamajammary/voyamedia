@@ -2680,7 +2680,7 @@ String System::VM_FileSystem::GetURL(VM_UrlType urlType, const String &data)
 	return mediaURL;
 }
 
-StringMap System::VM_FileSystem::GetYouTubeDetails(const String &mediaID)
+/*StringMap System::VM_FileSystem::GetYouTubeDetails(const String &mediaID)
 {
 	StringMap         details;
 	String            apiKey   = VM_Text::Decrypt(YOUTUBE_API_KEY);
@@ -2853,7 +2853,7 @@ String System::VM_FileSystem::GetYouTubeVideo(const String &videoID)
 	VM_Player::State.urls = VM_FileSystem::GetYouTubeVideos(videoID);
 
 	return (!VM_Player::State.urls.empty() ? VM_Player::State.urls[0] : "");
-}
+}*/
 
 bool System::VM_FileSystem::hasFileExtension(const String &filePath)
 {

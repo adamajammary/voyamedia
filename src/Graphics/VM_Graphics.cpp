@@ -715,7 +715,8 @@ int Graphics::VM_Graphics::CreateThumbThread(void* userData)
 	#endif
 
 	// INTERNET MEDIA
-	if (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE)
+	//if (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE)
+	if (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST)
 	{
 		LIB_FREEIMAGE::FIBITMAP* thumbImage = VM_Graphics::OpenImageHTTP(threadData->data["full_path"]);
 		result = VM_Graphics::SaveImage(thumbImage, thumbPath);

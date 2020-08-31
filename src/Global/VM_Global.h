@@ -223,7 +223,7 @@ namespace VoyaMedia
 	#define AUDIO_IS_SELECTED      (VM_Top::Selected == MEDIA_TYPE_AUDIO)
 	#define PICTURE_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_PICTURE)
 	#define VIDEO_IS_SELECTED      (VM_Top::Selected == MEDIA_TYPE_VIDEO)
-	#define YOUTUBE_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_YOUTUBE)
+	//#define YOUTUBE_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_YOUTUBE)
 	#define SHOUTCAST_IS_SELECTED  (VM_Top::Selected == MEDIA_TYPE_SHOUTCAST)
 	#define TMDB_MOVIE_IS_SELECTED (VM_Top::Selected == MEDIA_TYPE_TMDB_MOVIE)
 	#define TMDB_TV_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_TMDB_TV)
@@ -266,7 +266,7 @@ namespace VoyaMedia
 		MEDIA_TYPE_ATTACHMENT,
 		MEDIA_TYPE_NB,
 		MEDIA_TYPE_PICTURE,
-		MEDIA_TYPE_YOUTUBE,
+		//MEDIA_TYPE_YOUTUBE,
 		MEDIA_TYPE_SHOUTCAST,
 		MEDIA_TYPE_TMDB_MOVIE,
 		MEDIA_TYPE_TMDB_TV,
@@ -404,7 +404,8 @@ namespace VoyaMedia
 	const String APP_DESCRIPTION      = "__APP_DESCRIPTION__";
 	const String APP_NAME             = "__APP_NAME__";
 	const String APP_PRIVACY          = (APP_COMPANY + " does not collect any information stored on the local system.");
-	const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libcurl (MIT), libXML2 (MIT), libupnp (BSD), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Dropbox, Google Maps API, Google Noto Fonts (OFL), SHOUTcast Radio Directory API, TMDb API, YouTube Data API";
+	//const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libcurl (MIT), libXML2 (MIT), libupnp (BSD), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Dropbox, Google Maps API, Google Noto Fonts (OFL), SHOUTcast Radio Directory API, TMDb API, YouTube Data API";
+	const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libcurl (MIT), libXML2 (MIT), libupnp (BSD), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Dropbox, Google Maps API, Google Noto Fonts (OFL), SHOUTcast Radio Directory API, TMDb API";
 	const String APP_UPDATE_V3_MSG    = ("Welcome to " + APP_NAME + " 3\n\nWhat's new:\n- Completely refactored the UI-rendering engine\n- UI is now DPI-aware and independent of screen sizes and resolutions\n- Completely restructured the database (*)\n\n(*) Settings have been reset\n(*) Media library is empty (files must to be re-added)!");
 	const String APP_URL              = "__APP_URL__";
 	const String APP_VERSION          = "__APP_VERSION__";
@@ -417,8 +418,8 @@ namespace VoyaMedia
 	const String SHOUTCAST_API_URL    = "https://api.shoutcast.com/legacy/";
 	const String TMDB_API_KEY         = "__TMDB_API_KEY__";
 	const String TMDB_API_URL         = "https://api.themoviedb.org/3/";
-	const String YOUTUBE_API_KEY      = "__YOUTUBE_API_KEY__";
-	const String YOUTUBE_API_URL      = "https://www.googleapis.com/youtube/v3/";
+	//const String YOUTUBE_API_KEY      = "__YOUTUBE_API_KEY__";
+	//const String YOUTUBE_API_URL      = "https://www.googleapis.com/youtube/v3/";
 
 	const int    AUDIO_BUFFER_SIZE      = 768000;
 	const char   GOOGLE_IP[]            = "216.58.211.132";

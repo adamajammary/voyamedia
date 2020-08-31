@@ -557,18 +557,18 @@ int Graphics::VM_Modal::UpdateLabelsDetails()
 	{
 		VM_Modal::updateLabelsDetailsVideo(mediaID, filePath2, filePath);
 	}
-	else if (YOUTUBE_IS_SELECTED)
-	{
-		StringMap details = VM_FileSystem::GetYouTubeDetails(row[1]->mediaID2);
+	//else if (YOUTUBE_IS_SELECTED)
+	//{
+	//	StringMap details = VM_FileSystem::GetYouTubeDetails(row[1]->mediaID2);
 
-		text.append(!details["date"].empty()        ? VM_Text::GetTimeFormatted(details["date"], false, false) + "\n" : "");
-		text.append(!details["channel"].empty()     ? "#" + details["channel"] + "\n" : "");
-		text.append(!details["duration_yt"].empty() ? VM_Text::ToDuration(details["duration_yt"]) + "\n" : "");
-		text.append(!details["views"].empty()       ? VM_Text::ToViewCount(std::atoll(details["views"].c_str())) + " " + VM_Window::Labels["views"] + "\n" : "");
-		text.append(!details["likes"].empty()       ? details["likes"] : "");
+	//	text.append(!details["date"].empty()        ? VM_Text::GetTimeFormatted(details["date"], false, false) + "\n" : "");
+	//	text.append(!details["channel"].empty()     ? "#" + details["channel"] + "\n" : "");
+	//	text.append(!details["duration_yt"].empty() ? VM_Text::ToDuration(details["duration_yt"]) + "\n" : "");
+	//	text.append(!details["views"].empty()       ? VM_Text::ToViewCount(std::atoll(details["views"].c_str())) + " " + VM_Window::Labels["views"] + "\n" : "");
+	//	text.append(!details["likes"].empty()       ? details["likes"] : "");
 
-		text2.append(!details["description"].empty() ? details["description"] : "");
-	}
+	//	text2.append(!details["description"].empty() ? details["description"] : "");
+	//}
 	else if (SHOUTCAST_IS_SELECTED)
 	{
 		StringMap details = VM_FileSystem::GetShoutCastDetails(row[1]->getText(), mediaID);
@@ -622,7 +622,7 @@ int Graphics::VM_Modal::UpdateLabelsDetails()
 	if (!row.empty())
 	{
 		thumbButton->mediaID  = row[0]->mediaID;
-		thumbButton->mediaID2 = row[0]->mediaID2;
+		//thumbButton->mediaID2 = row[0]->mediaID2;
 		thumbButton->mediaURL = row[0]->mediaURL;
 
 		thumbButton->setThumb(VM_GUI::ListTable->id);

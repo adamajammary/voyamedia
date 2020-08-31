@@ -40,8 +40,8 @@ void Graphics::VM_Table::init(const String &id)
 {
 	this->id                    = id;
 	this->maxRows               = 0;
-	this->pageTokenNext         = "";
-	this->pageTokenPrev         = "";
+	//this->pageTokenNext         = "";
+	//this->pageTokenPrev         = "";
 	this->playIcon              = NULL;
 	this->shouldRefreshRows     = false;
 	this->shouldRefreshSelected = false;
@@ -63,7 +63,7 @@ void Graphics::VM_Table::init(const String &id)
 				VM_MediaType mediaType    = (VM_MediaType)i;
 				String       mediaTypeStr = std::to_string(mediaType);
 
-				this->states[mediaType].pageToken     = db->getSettings("list_page_token_" + mediaTypeStr);
+				//this->states[mediaType].pageToken     = db->getSettings("list_page_token_" + mediaTypeStr);
 				this->states[mediaType].offset        = std::atoi(db->getSettings("list_offset_" + mediaTypeStr).c_str());
 				this->states[mediaType].scrollOffset  = std::atoi(db->getSettings("list_scroll_offset_" + mediaTypeStr).c_str());
 				this->states[mediaType].searchString  = db->getSettings("list_search_text_" + mediaTypeStr);
@@ -132,7 +132,8 @@ VM_DBResult Graphics::VM_Table::getResult()
 		{
 			VM_DBRow row = {
 				{"name", "" }, { "id", "" },
-				{ (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE ? "thumb_url" : "full_path"), "" }
+				//{ (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE ? "thumb_url" : "full_path"), "" }
+				{ (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST ? "thumb_url" : "full_path"), "" }
 			};
 
 			result.push_back(row);
@@ -196,9 +197,9 @@ String Graphics::VM_Table::getSelectedMediaURL()
 
 String Graphics::VM_Table::getSelectedFile()
 {
-	if (YOUTUBE_IS_SELECTED)
-		return VM_GUI::ListTable->getSelectedYouTube();
-	else if (SHOUTCAST_IS_SELECTED)
+	//if (YOUTUBE_IS_SELECTED)
+	//	return VM_GUI::ListTable->getSelectedYouTube();
+	if (SHOUTCAST_IS_SELECTED)
 		return VM_GUI::ListTable->getSelectedShoutCast();
 
 	return VM_GUI::ListTable->getSelectedMediaURL();
@@ -217,7 +218,7 @@ String Graphics::VM_Table::getSelectedShoutCast()
 	return mediaID;
 }
 
-String Graphics::VM_Table::getSelectedYouTube()
+/*String Graphics::VM_Table::getSelectedYouTube()
 {
 	if (this->shouldRefreshRows || this->shouldRefreshSelected || this->states[VM_Top::Selected].dataRequested || this->states[VM_Top::Selected].dataIsReady)
 		return REFRESH_PENDING;
@@ -228,7 +229,7 @@ String Graphics::VM_Table::getSelectedYouTube()
 		mediaID2 = VM_FileSystem::GetYouTubeVideo(this->rows[this->states[VM_Top::Selected].selectedRow][0]->mediaID2);
 
 	return mediaID2;
-}
+}*/
 
 Graphics::VM_Buttons Graphics::VM_Table::getSelectedRow()
 {
@@ -600,7 +601,7 @@ VM_DBResult Graphics::VM_Table::getUPNP()
 	return this->getResultLimited(result);
 }
 
-VM_DBResult Graphics::VM_Table::getYouTube()
+/*VM_DBResult Graphics::VM_Table::getYouTube()
 {
 	// https://developers.google.com/youtube/v3/docs/search/list
 	// https://developers.google.com/youtube/v3/docs/videos/list
@@ -718,7 +719,7 @@ VM_DBResult Graphics::VM_Table::getYouTube()
 	FREE_JSON_DOC(document);
 
 	return result;
-}
+}*/
 
 bool Graphics::VM_Table::isRowVisible()
 {
@@ -731,7 +732,8 @@ bool Graphics::VM_Table::isRowVisible()
 
 bool Graphics::VM_Table::offsetEnd()
 {
-	if (SHOUTCAST_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	//if (SHOUTCAST_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	if (SHOUTCAST_IS_SELECTED)
 		return false;
 
 	int remainder = (this->maxRows % this->limit);
@@ -756,8 +758,8 @@ bool Graphics::VM_Table::offsetNext()
 {
 	if (this->states[VM_Top::Selected].offset + this->limit < this->maxRows)
 	{
-		if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
-			this->states[VM_Top::Selected].pageToken = this->pageTokenNext;
+		//if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
+		//	this->states[VM_Top::Selected].pageToken = this->pageTokenNext;
 
 		this->states[VM_Top::Selected].offset      += this->limit;
 		this->states[VM_Top::Selected].scrollOffset = 0;
@@ -776,8 +778,8 @@ bool Graphics::VM_Table::offsetPrev()
 {
 	if (this->states[VM_Top::Selected].offset >= this->limit)
 	{
-		if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
-			this->states[VM_Top::Selected].pageToken = this->pageTokenPrev;
+		//if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
+		//	this->states[VM_Top::Selected].pageToken = this->pageTokenPrev;
 
 		this->states[VM_Top::Selected].offset      -= this->limit;
 		this->states[VM_Top::Selected].scrollOffset = 0;
@@ -797,8 +799,8 @@ bool Graphics::VM_Table::offsetStart()
 
 	if (this->states[VM_Top::Selected].offset >= this->limit)
 	{
-		if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
-			this->states[VM_Top::Selected].pageToken = "";
+		//if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
+		//	this->states[VM_Top::Selected].pageToken = "";
 
 		this->states[VM_Top::Selected].offset       = 0;
 		this->states[VM_Top::Selected].scrollOffset = 0;
@@ -1009,7 +1011,7 @@ int Graphics::VM_Table::resetState(bool resetDataRequest)
 			VM_TableState state    = this->getState();
 			String        selected = std::to_string(VM_Top::Selected);
 
-			db->updateSettings(("list_page_token_"     + selected), state.pageToken);
+			//db->updateSettings(("list_page_token_"     + selected), state.pageToken);
 			db->updateSettings(("list_offset_"         + selected), std::to_string(state.offset));
 			db->updateSettings(("list_scroll_offset_"  + selected), std::to_string(state.scrollOffset));
 			db->updateSettings(("list_selected_row_"   + selected), std::to_string(state.selectedRow));
@@ -1064,8 +1066,8 @@ void Graphics::VM_Table::selectNext(bool loop)
 
 	if ((this->states[VM_Top::Selected].offset + this->limit < this->maxRows) && lastRow)
 	{
-		if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
-			this->states[VM_Top::Selected].pageToken = this->pageTokenNext;
+		//if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
+		//	this->states[VM_Top::Selected].pageToken = this->pageTokenNext;
 
 		this->states[VM_Top::Selected].offset      += this->limit;
 		this->states[VM_Top::Selected].scrollOffset = 0;
@@ -1099,8 +1101,8 @@ void Graphics::VM_Table::selectPrev(bool loop)
 
 	if ((this->states[VM_Top::Selected].offset >= this->limit) && (this->states[VM_Top::Selected].selectedRow == 0))
 	{
-		if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
-			this->states[VM_Top::Selected].pageToken = this->pageTokenPrev;
+		//if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
+		//	this->states[VM_Top::Selected].pageToken = this->pageTokenPrev;
 
 		this->states[VM_Top::Selected].offset      -= this->limit;
 		this->states[VM_Top::Selected].scrollOffset = (this->limit - this->getRowsPerPage());
@@ -1161,7 +1163,7 @@ void Graphics::VM_Table::selectRow(int row)
 			VM_TableState state    = this->getState();
 			String        selected = std::to_string(VM_Top::Selected);
 
-			db->updateSettings(("list_page_token_"    + selected), state.pageToken);
+			//db->updateSettings(("list_page_token_"    + selected), state.pageToken);
 			db->updateSettings(("list_offset_"        + selected), std::to_string(state.offset));
 			db->updateSettings(("list_scroll_offset_" + selected), std::to_string(state.scrollOffset));
 			db->updateSettings(("list_selected_row_"  + selected), std::to_string(state.selectedRow));
@@ -1230,9 +1232,9 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 		// SINGLE-CLICKED PLAY ICON
 		if (thumb->selected && VM_Graphics::ButtonPressed(mouseEvent, areaThumb))
 		{
-			if (YOUTUBE_IS_SELECTED)
-				VM_Player::OpenFilePath(VM_FileSystem::GetYouTubeVideo(thumb->mediaID2));
-			else if (SHOUTCAST_IS_SELECTED)
+			//if (YOUTUBE_IS_SELECTED)
+			//	VM_Player::OpenFilePath(VM_FileSystem::GetYouTubeVideo(thumb->mediaID2));
+			if (SHOUTCAST_IS_SELECTED)
 				VM_Player::OpenFilePath(VM_FileSystem::GetShoutCastStation(thumb->mediaID));
 			else
 				VM_Player::OpenFilePath(thumb->mediaURL);
@@ -1247,16 +1249,17 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 
 				if (VM_Graphics::ButtonPressed(mouseEvent, area, false, true))
 				{
-					if (YOUTUBE_IS_SELECTED)
-						VM_Player::OpenFilePath(VM_FileSystem::GetYouTubeVideo(button->mediaID2));
-					else if (SHOUTCAST_IS_SELECTED)
+					//if (YOUTUBE_IS_SELECTED)
+					//	VM_Player::OpenFilePath(VM_FileSystem::GetYouTubeVideo(button->mediaID2));
+					if (SHOUTCAST_IS_SELECTED)
 						VM_Player::OpenFilePath(VM_FileSystem::GetShoutCastStation(button->mediaID));
 					else
 						VM_Player::OpenFilePath(button->mediaURL);
 				}
 				else if (VM_Graphics::ButtonPressed(mouseEvent, area, true, false))
 				{
-					if (!YOUTUBE_IS_SELECTED && !SHOUTCAST_IS_SELECTED)
+					//if (!YOUTUBE_IS_SELECTED && !SHOUTCAST_IS_SELECTED)
+					if (!SHOUTCAST_IS_SELECTED)
 						VM_Modal::Open("modal_right_click");
 				}
 			}
@@ -1277,8 +1280,8 @@ void Graphics::VM_Table::setData()
 		this->result = this->getTracks(MEDIA_TYPE_SUBTITLE);
 	else if (this->id == "modal_upnp_devices_list_table")
 		this->result = this->getUPNP();
-	else if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
-		this->result = this->getYouTube();
+	//else if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
+	//	this->result = this->getYouTube();
 	else if ((this->id == "list_table") && SHOUTCAST_IS_SELECTED)
 		this->result = this->getShoutCast();
 	else if ((this->id == "list_table") && (TMDB_MOVIE_IS_SELECTED || TMDB_TV_IS_SELECTED))
@@ -1314,9 +1317,9 @@ void Graphics::VM_Table::setData()
 	{
 		String thumbFile = "";
 
-		if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
-			thumbFile = ("youtube_" + row["id"]);
-		else if ((this->id == "list_table") && SHOUTCAST_IS_SELECTED)
+		//if ((this->id == "list_table") && YOUTUBE_IS_SELECTED)
+		//	thumbFile = ("youtube_" + row["id"]);
+		if ((this->id == "list_table") && SHOUTCAST_IS_SELECTED)
 			thumbFile = ("shoutcast_" + row["id"]);
 		else if ((this->id == "list_table") && TMDB_MOVIE_IS_SELECTED)
 			thumbFile = ("tmbd_movie_" + row["id"]);
@@ -1398,7 +1401,8 @@ int Graphics::VM_Table::setRows(bool temp)
 
 		button->setText("");
 
-		if ((this->id == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE) && (col == 1))
+		//if ((this->id == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE) && (col == 1))
+		if ((this->id == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST) && (col == 1))
 		{
 			button->setText(VM_Window::Labels["title"]);
 		}
@@ -1438,7 +1442,7 @@ int Graphics::VM_Table::setRows(bool temp)
 
 			buttonColumn->highlightColor = this->getColor("highlight");
 			buttonColumn->mediaID        = std::atoi(this->result[row]["id"].c_str());
-			buttonColumn->mediaID2       = this->result[row]["id"];
+			//buttonColumn->mediaID2       = this->result[row]["id"];
 			buttonColumn->mediaURL       = this->result[row]["full_path"];
 			buttonColumn->parent         = this;
 

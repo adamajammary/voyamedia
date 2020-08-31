@@ -80,9 +80,9 @@ namespace VoyaMedia
 			static String                       GetShoutCastStation(int stationID);
 			static StringMap                    GetTmdbDetails(int mediaID, VM_MediaType mediaType);
 			static String                       GetURL(VM_UrlType urlType, const String &data = "");
-			static StringMap                    GetYouTubeDetails(const String &mediaID);
-			static Strings                      GetYouTubeVideos(const String &mediaURL);
-			static String                       GetYouTubeVideo(const String &videoID);
+			//static StringMap                    GetYouTubeDetails(const String &mediaID);
+			//static Strings                      GetYouTubeVideos(const String &mediaURL);
+			//static String                       GetYouTubeVideo(const String &videoID);
 			static bool                         HasInternetConnection();
 			static void                         InitFFMPEG();
 			static int                          InitLibraries();

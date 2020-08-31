@@ -498,7 +498,8 @@ bool MediaPlayer::VM_Player::IsYUV(LIB_FFMPEG::AVPixelFormat pixelFormat)
 
 void MediaPlayer::VM_Player::KeepAspectRatioToggle()
 {
-	if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	//if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	if (VIDEO_IS_SELECTED)
 	{
 		VM_Player::State.keepAspectRatio = !VM_Player::State.keepAspectRatio;
 
@@ -751,30 +752,30 @@ int MediaPlayer::VM_Player::openFormatContext()
 {
 	VM_Player::TimeOut = new VM_TimeOut();
 
-	if (YOUTUBE_IS_SELECTED)
-	{
-		VM_Player::FormatContext = VM_FileSystem::GetMediaFormatContext(VM_Player::State.filePath, true);
+	//if (YOUTUBE_IS_SELECTED)
+	//{
+	//	VM_Player::FormatContext = VM_FileSystem::GetMediaFormatContext(VM_Player::State.filePath, true);
 
-		if (VM_Player::FormatContext == NULL)
-		{
-			for (const auto &mediaURL : VM_Player::State.urls)
-			{
-				VM_Player::FormatContext = VM_FileSystem::GetMediaFormatContext(mediaURL, true);
+	//	if (VM_Player::FormatContext == NULL)
+	//	{
+	//		for (const auto &mediaURL : VM_Player::State.urls)
+	//		{
+	//			VM_Player::FormatContext = VM_FileSystem::GetMediaFormatContext(mediaURL, true);
 
-				if ((VM_Player::FormatContext != NULL) && 
-					(VM_FileSystem::GetMediaStreamCount(VM_Player::FormatContext, MEDIA_TYPE_AUDIO) > 0) &&
-					(VM_FileSystem::GetMediaStreamCount(VM_Player::FormatContext, MEDIA_TYPE_VIDEO) > 0))
-				{
-					VM_Player::State.filePath = mediaURL;
-					break;
-				}
+	//			if ((VM_Player::FormatContext != NULL) && 
+	//				(VM_FileSystem::GetMediaStreamCount(VM_Player::FormatContext, MEDIA_TYPE_AUDIO) > 0) &&
+	//				(VM_FileSystem::GetMediaStreamCount(VM_Player::FormatContext, MEDIA_TYPE_VIDEO) > 0))
+	//			{
+	//				VM_Player::State.filePath = mediaURL;
+	//				break;
+	//			}
 
-				VM_Player::closeFormatContext();
-			}
-		}
-	}
+	//			VM_Player::closeFormatContext();
+	//		}
+	//	}
+	//}
 	// DROPBOX
-	else if (VM_FileSystem::IsHttp(VM_Player::State.filePath) && (VM_Player::State.filePath.find("dropbox") != String::npos))
+	if (VM_FileSystem::IsHttp(VM_Player::State.filePath) && (VM_Player::State.filePath.find("dropbox") != String::npos))
 	{
 		if (!VM_FileSystem::FileExists(VM_Player::State.filePath, L""))
 			VM_Player::State.filePath = VM_FileSystem::GetDropboxURL2(VM_Player::State.filePath);
@@ -852,7 +853,8 @@ int MediaPlayer::VM_Player::openStreams()
 		return ERROR_UNKNOWN;
 
 	// VIDEO + SUB STREAMS
-	if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	//if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	if (VIDEO_IS_SELECTED)
 	{
 		VM_Player::videoContext.stream = VM_FileSystem::GetMediaStreamBest(
 			VM_Player::FormatContext, MEDIA_TYPE_VIDEO
@@ -1183,7 +1185,8 @@ int MediaPlayer::VM_Player::PlayPauseToggle()
 
 int MediaPlayer::VM_Player::PlaylistLoopTypeToggle()
 {
-	if (YOUTUBE_IS_SELECTED || SHOUTCAST_IS_SELECTED) {
+	//if (YOUTUBE_IS_SELECTED || SHOUTCAST_IS_SELECTED) {
+	if (SHOUTCAST_IS_SELECTED) {
 		VM_Player::State.loopType = LOOP_TYPE_NORMAL;
 		return RESULT_OK;
 	}
@@ -1240,7 +1243,8 @@ int MediaPlayer::VM_Player::Render(const SDL_Rect &location)
 	{
 		VM_Player::renderPicture();
 	}
-	else if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	//else if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	else if (VIDEO_IS_SELECTED)
 	{
 		if (VM_Player::State.isPaused && (VM_Player::subContext.texture == NULL))
 			VM_Player::refreshSub = true;
