@@ -85,7 +85,7 @@
           </panel>
 
           <panel id="bottom_player_controls_controls_right" halign="right" valign="middle">
-            <button id="bottom_player_controls_settings" halign="center" valign="middle" height="100%" width="30" image-height="35%" image-width="image-height" modal="modal_player_settings"></button>
+            <button id="bottom_player_controls_settings" halign="center" valign="middle" height="100%" width="30" image-height="35%" image-width="image-height"></button>
             <button id="bottom_player_controls_fullscreen" halign="center" valign="middle" height="100%" width="30" image-height="35%" image-width="image-height"></button>
             <button id="bottom_player_controls_stretch" halign="center" valign="middle" height="100%" width="30" image-height="35%" image-width="image-height"></button>
             <button id="bottom_player_controls_rotate" halign="center" valign="middle" height="100%" width="30" image-height="35%" image-width="image-height"></button>

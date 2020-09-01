@@ -197,12 +197,8 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 		// SETTINGS
 		button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_settings"]);
 
-		if (button != NULL) {
-			button->visible = VIDEO_IS_SELECTED;
-
-			if (button->visible)
-				button->setImage("settings-2-512.png", false);
-		}
+		if (button != NULL)
+			button->setImage(VIDEO_IS_SELECTED ? "settings-2-512.png" : "about-1-512.png", false);
 	}
 
 	VM_ThreadManager::Mutex.unlock();

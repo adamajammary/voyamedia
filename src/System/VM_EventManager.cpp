@@ -607,7 +607,10 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 			{
 				// SETTINGS
 				if (button->id == "bottom_player_controls_settings") {
-					VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));
+					if (VIDEO_IS_SELECTED)
+						VM_Modal::Open("modal_player_settings");
+					else
+						VM_Modal::Open("modal_details");
 				// FULLSCREEN
 				} else if (button->id == "bottom_player_controls_fullscreen") {
 					#if defined _android || defined _ios
@@ -819,7 +822,7 @@ bool System::VM_EventManager::isClickedModal(SDL_Event* mouseEvent)
 			{
 				if (VM_Modal::File.find("modal_player_settings_") != String::npos) {
 					VM_Modal::Open("modal_player_settings");
-				} else if ((VM_Modal::File == "modal_details") && !VM_Player::State.isStopped) {
+				} else if ((VM_Modal::File == "modal_details") && !VM_Player::State.isStopped && VIDEO_IS_SELECTED) {
 					VM_Modal::Open("modal_player_settings");
 				} else if (button->id == "modal_playlists_remove") {
 					VM_Modal::Open("modal_playlists");
