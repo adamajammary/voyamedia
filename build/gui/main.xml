@@ -2,7 +2,7 @@
 
 <window x="0" y="0" width="1280" height="720" centered="true" maximized="false" color-theme="dark">
   <panel id="main" orientation="vertical">
-    <panel id="top_bar" height="5%" margin="0 5 10 0">
+    <panel id="top_bar" height="25" margin="0 5 10 0">
       <button id="about" halign="center" valign="middle" height="100%" width="height" image-file="about-1-512.png" image-height="70%" image-width="image-height" modal="modal_about"></button>
       <button id="date_time_text" halign="right" valign="middle" font-size="8"></button>
     </panel>
@@ -41,7 +41,7 @@
       <panel id="list_table_bottom" height="25" valign="middle" border-width="1 0 0 1">
         <button id="list_offset_start" halign="center" valign="middle" height="100%" width="height" image-file="prev-4-512.png" image-width="50%" image-height="image-width"></button>
         <button id="list_offset_prev" halign="center" valign="middle" height="100%" width="height" image-file="prev-2-512.png" image-width="50%" image-height="image-width"></button>
-        <button id="list_details_text" halign="center" valign="middle"></button>
+        <button id="list_details_text" halign="center" valign="middle" font-size="8"></button>
         <button id="list_offset_next" halign="center" valign="middle" height="100%" width="height" image-file="next-2-512.png" image-width="50%" image-height="image-width"></button>
         <button id="list_offset_end" halign="center" valign="middle" height="100%" width="height" image-file="next-4-512.png" image-width="50%" image-height="image-width"></button>
       </panel>

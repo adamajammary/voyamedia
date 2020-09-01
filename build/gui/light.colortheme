@@ -32,6 +32,7 @@ list_table_scrollbar.border-color=#101010FF
 list_table_scrollbar_bar.background-color=#F97F10FF
 
 list_table_bottom.background-color=#F97F10FF
+list_table_bottom.border-color=#101010FF
 
 bottom.background-color=#202020FF
 

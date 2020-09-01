@@ -521,9 +521,9 @@ int Graphics::VM_GUI::setComponentSizeBlank(VM_Component* parent, VM_Components 
 
 			if (height.empty()) {
 				compsY++;
-				sizeY -= (parent->margin.top + parent->margin.bottom);
+				sizeY -= parent->margin.bottom;
 			} else {
-				sizeY -= (component->backgroundArea.h + parent->margin.top + parent->margin.bottom);
+				sizeY -= (component->backgroundArea.h + parent->margin.bottom);
 			}
 		}
 		// HORIZONTAL
@@ -533,12 +533,15 @@ int Graphics::VM_GUI::setComponentSizeBlank(VM_Component* parent, VM_Components 
 
 			if (width.empty()) {
 				compsX++;
-				sizeX -= (parent->margin.left + parent->margin.right);
+				sizeX -= parent->margin.right;
 			} else {
-				sizeX -= (component->backgroundArea.w + parent->margin.left + parent->margin.right);
+				sizeX -= (component->backgroundArea.w + parent->margin.right);
 			}
 		}
 	}
+
+	sizeX -= parent->margin.right;
+	sizeY -= parent->margin.bottom;
 
 	for (auto component : components) {
 		if (component->visible)
@@ -558,12 +561,14 @@ int Graphics::VM_GUI::setComponentPositionAlign(VM_Component* parent, VM_Compone
 	String vAlign      = VM_XML::GetAttribute(parent->xmlNode, "valign");
 	int    offsetX     = (parent->backgroundArea.x + parent->borderWidth.left + parent->margin.left);
 	int    offsetY     = (parent->backgroundArea.y + parent->borderWidth.top  + parent->margin.top);
-	int    maxX        = (parent->backgroundArea.w - parent->borderWidth.left - parent->borderWidth.right);
-	int    maxY        = (parent->backgroundArea.h - parent->borderWidth.top  - parent->borderWidth.bottom);
-	int    remainingX  = maxX;
-	int    remainingY  = maxY;
+	int    maxX        = (parent->backgroundArea.w - parent->borderWidth.left - parent->borderWidth.right  - parent->margin.left - parent->margin.right);
+	int    maxY        = (parent->backgroundArea.h - parent->borderWidth.top  - parent->borderWidth.bottom - parent->margin.top  - parent->margin.bottom);
+	int    remainingX  = (maxX + parent->margin.right);
+	int    remainingY  = (maxY + parent->margin.bottom);
 
-	// LEFT-ALIGN
+	int x, y;
+
+	// TOP-LEFT ALIGN
 	for (auto component : components)
 	{
 		if (!component->visible)
@@ -571,20 +576,16 @@ int Graphics::VM_GUI::setComponentPositionAlign(VM_Component* parent, VM_Compone
 
 		component->setPositionAlign(offsetX, offsetY);
 
-		if (orientation == "vertical")
-			offsetY += (component->backgroundArea.h + parent->margin.bottom + parent->margin.top);
-		else
-			offsetX += (component->backgroundArea.w + parent->margin.right  + parent->margin.left);
-	}
+		x = (component->backgroundArea.w + parent->margin.right);
+		y = (component->backgroundArea.h + parent->margin.bottom);
 
-	// CALCULATE UNUSED SPACE
-	for (auto component : components)
-	{
-		if (!component->visible)
-			continue;
-
-		remainingX -= (parent->margin.left + component->backgroundArea.w + parent->margin.right);
-		remainingY -= (parent->margin.top  + component->backgroundArea.h + parent->margin.bottom);
+		if (orientation == "vertical") {
+			offsetY    += y;
+			remainingY -= y;
+		} else {
+			offsetX    += x;
+			remainingX -= x;
+		}
 	}
 
 	// ALIGN
@@ -607,9 +608,9 @@ int Graphics::VM_GUI::setComponentPositionAlign(VM_Component* parent, VM_Compone
 
 			// H-ALIGN
 			if (hAlign == "center")
-				offsetX += ((maxX - (component->backgroundArea.w + parent->margin.right + parent->margin.left)) / 2);
+				offsetX += ((maxX - component->backgroundArea.w) / 2);
 			else if (hAlign == "right")
-				offsetX += (maxX - (component->backgroundArea.w + parent->margin.right + parent->margin.left));
+				offsetX += (maxX - component->backgroundArea.w);
 		}
 		// HORIZONTAL
 		else
@@ -622,9 +623,9 @@ int Graphics::VM_GUI::setComponentPositionAlign(VM_Component* parent, VM_Compone
 
 			// V-ALIGN
 			if (vAlign == "middle")
-				offsetY += ((maxY - (component->backgroundArea.h + parent->margin.bottom + parent->margin.top)) / 2);
+				offsetY += ((maxY - component->backgroundArea.h) / 2);
 			else if (vAlign == "bottom")
-				offsetY += (maxY - (component->backgroundArea.h + parent->margin.bottom + parent->margin.top));
+				offsetY += (maxY - component->backgroundArea.h);
 		}
 
 		component->setPositionAlign(offsetX, offsetY);

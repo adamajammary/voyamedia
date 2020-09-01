@@ -1561,13 +1561,13 @@ void Graphics::VM_Table::updateDetailsText(bool temp)
 	String     detailsText;
 
 	if (temp)
-		detailsText = "[ Loading ... ]";
+		detailsText = "Loading ...";
 	else if ((int)this->rows.size() < this->maxRows)
-		detailsText = VM_Text::Format("[ %d - %d / %d ]", (this->states[VM_Top::Selected].offset + 1), (this->states[VM_Top::Selected].offset + (int)this->rows.size()), this->maxRows);
+		detailsText = VM_Text::Format("%d - %d / %d", (this->states[VM_Top::Selected].offset + 1), (this->states[VM_Top::Selected].offset + (int)this->rows.size()), this->maxRows);
 	else if (!this->rows.empty())
-		detailsText = VM_Text::Format("[ %d ]", (int)this->rows.size());
+		detailsText = VM_Text::Format("%d", (int)this->rows.size());
 	else
-		detailsText = "[ 0 ]";
+		detailsText = "0";
 
 	if (this->id == "list_table")
 		button = dynamic_cast<VM_Button*>(VM_GUI::Components["list_details_text"]);

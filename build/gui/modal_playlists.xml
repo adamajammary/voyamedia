@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <modal x="0" y="0" width="300" height="300" centered="true">
-  <panel id="modal" orientation="vertical">
-    <panel id="modal_top" height="10%" border-width="1">
+  <panel id="modal" orientation="vertical" border-width="1">
+    <panel id="modal_top" height="10%" border-width="1 0 0 0">
       <button id="modal_desc" halign="center" valign="middle">%playlists</button>
     </panel>
 
-    <panel id="modal_middle" orientation="vertical" halign="center" valign="middle" border-width="1">
+    <panel id="modal_middle" orientation="vertical" halign="center" valign="middle">
       <panel id="list">
         <table id="modal_playlists_list_table">
           <button id="modal_playlists_thumb" height="16%" width="0"></button>
@@ -22,7 +22,7 @@
         </panel>
       </panel>
 
-      <panel id="list_table_bottom" height="25" valign="middle" border-width="0 0 0 1">
+      <panel id="list_table_bottom" height="25" valign="middle" border-width="1 0 0 1">
         <button id="list_offset_start" halign="center" valign="middle" height="100%" width="height" image-file="prev-4-512.png" image-width="50%" image-height="image-width"></button>
         <button id="list_offset_prev" halign="center" valign="middle" height="100%" width="height" image-file="prev-2-512.png" image-width="50%" image-height="image-width"></button>
         <button id="list_details_text" halign="center" valign="middle"></button>
@@ -31,7 +31,7 @@
       </panel>
     </panel>
 
-    <panel id="modal_bottom" halign="center" valign="middle" height="20%" border-width="1" margin="10">
+    <panel id="modal_bottom" halign="center" valign="middle" height="20%" margin="10">
       <button id="modal_ok" halign="center" valign="middle" height="50%" border-width="1">%select</button>
       <button id="modal_playlists_remove" halign="center" valign="middle" height="50%" border-width="1">%remove</button>
       <button id="modal_cancel" halign="center" valign="middle" height="50%" border-width="1">%cancel</button>

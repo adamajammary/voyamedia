@@ -462,6 +462,7 @@ namespace VoyaMedia
 	const float        DEFAULT_FONT_DPI_RATIO    = 0.75f; // (72.0 / 96.0)
 	const int          DEFAULT_FONT_SIZE         = 11;
 	const int          DEFAULT_FONT_SIZE_SUB     = 48;
+	const int          DEFAULT_IMG_TXT_SPACING   = 5;
 	const VM_LoopType  DEFAULT_LOOP_TYPE         = LOOP_TYPE_NORMAL;
 	const VM_MediaType DEFAULT_MEDIA_TYPE        = MEDIA_TYPE_AUDIO;
 	const int          DEFAULT_SCALE_FILTER      = SWS_LANCZOS;

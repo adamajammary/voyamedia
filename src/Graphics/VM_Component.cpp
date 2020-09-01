@@ -58,7 +58,14 @@ int Graphics::VM_Component::render()
 	if (!this->visible)
 		return ERROR_INVALID_ARGUMENTS;
 
-	VM_Graphics::FillArea(&this->backgroundColor, &this->backgroundArea);
+	SDL_Rect area = SDL_Rect(this->backgroundArea);
+
+	area.x += this->borderWidth.left;
+	area.y += this->borderWidth.top;
+	area.w -= (this->borderWidth.left + this->borderWidth.right);
+	area.h -= (this->borderWidth.top  + this->borderWidth.bottom);
+
+	VM_Graphics::FillArea(&this->backgroundColor, &area);
 	VM_Graphics::FillBorder(&this->borderColor, &this->backgroundArea, this->borderWidth);
 
 	for (auto button : this->buttons)

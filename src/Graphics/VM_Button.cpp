@@ -178,10 +178,7 @@ int Graphics::VM_Button::render()
 	// TEXT
 	if ((this->textData != NULL) && (this->textData->data != NULL))
 	{
-		int maxWidth  = (area.w - this->borderWidth.left - this->borderWidth.right  - this->margin.left - this->margin.right);
-		int maxHeight = (area.h - this->borderWidth.top  - this->borderWidth.bottom - this->margin.top  - this->margin.bottom);
-
-		SDL_Rect clip = { 0, 0, min(this->textArea.w, maxWidth), min(this->textArea.h, maxHeight) };
+		SDL_Rect clip = { 0, 0, min(this->textArea.w, area.w), min(this->textArea.h, area.h) };
 		SDL_Rect dest = { this->textArea.x, this->textArea.y, clip.w, clip.h };
 
 		SDL_RenderCopy(VM_Window::Renderer, this->textData->data, &clip, &dest);
@@ -371,8 +368,9 @@ int Graphics::VM_Button::setImageTextAlign()
 	String orientation = VM_XML::GetAttribute(this->xmlNode, "orientation");
 	String hAlign      = VM_XML::GetAttribute(this->xmlNode, "halign");
 	String vAlign      = VM_XML::GetAttribute(this->xmlNode, "valign");
-	int    maxX        = (this->backgroundArea.w - this->borderWidth.left - this->borderWidth.right  - this->margin.left - this->margin.right);
-	int    maxY        = (this->backgroundArea.h - this->borderWidth.top  - this->borderWidth.bottom - this->margin.top  - this->margin.bottom);
+
+	int maxX = (this->backgroundArea.w - this->borderWidth.left - this->borderWidth.right  - this->margin.left - this->margin.right);
+	int maxY = (this->backgroundArea.h - this->borderWidth.top  - this->borderWidth.bottom - this->margin.top  - this->margin.bottom);
 
 	// H-ALIGN
 	if (hAlign == "center") {
@@ -397,12 +395,12 @@ int Graphics::VM_Button::setImageTextAlign()
 	{
 		// VERTICAL
 		if (orientation == "vertical") {
-			this->textArea.y   = (this->imageArea.y + this->imageArea.h + 5);
+			this->textArea.y   = (this->imageArea.y + this->imageArea.h + DEFAULT_IMG_TXT_SPACING);
 			this->imageArea.y -= (this->textArea.h / 2);
 			this->textArea.y  -= (this->textArea.h / 2);
 		// HORIZONTAL
 		} else {
-			this->textArea.x = (this->imageArea.x + this->imageArea.w + 5);
+			this->textArea.x = (this->imageArea.x + this->imageArea.w + DEFAULT_IMG_TXT_SPACING);
 		}
 	}
 

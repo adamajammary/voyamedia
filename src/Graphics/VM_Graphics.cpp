@@ -885,7 +885,7 @@ Graphics::VM_Texture* Graphics::VM_Graphics::GetButtonLabel(const String &label,
 		return NULL;
 	}
 
-	TTF_SetFontHinting(font, TTF_HINTING_LIGHT);
+	//TTF_SetFontHinting(font, TTF_HINTING_LIGHT);
 
 	SDL_Surface* surface = NULL;
 	VM_Texture*  texture = NULL;
