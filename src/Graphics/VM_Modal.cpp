@@ -155,7 +155,7 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 	// RIGHT-CLICK
 	else if (VM_Modal::File == "modal_right_click")
 	{
-		if (buttonID == "modal_right_click_remove_file")
+		if ((buttonID == "modal_right_click_remove_file") || (buttonID == "modal_right_click_remove_path"))
 		{
 			String name    = "";
 			int    mediaID = 0;
@@ -170,8 +170,12 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 			int  dbResult;
 			auto db = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
 
-			if (DB_RESULT_OK(dbResult) && (mediaID > 0))
-				dbResult = db->deleteMediaFile(mediaID);
+			if (DB_RESULT_OK(dbResult) && (mediaID > 0)) {
+				if (buttonID == "modal_right_click_remove_file")
+					dbResult = db->deleteMediaFile(mediaID);
+				else
+					dbResult = db->deleteMediaPath(mediaID);
+			}
 
 			DELETE_POINTER(db);
 

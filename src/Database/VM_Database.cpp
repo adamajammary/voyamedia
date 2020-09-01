@@ -206,6 +206,30 @@ int Database::VM_Database::deleteMediaFile(int mediaID)
 	return result;
 }
 
+int Database::VM_Database::deleteMediaPath(int mediaID)
+{
+	if (mediaID < 1)
+		return SQLITE_ERROR;
+
+	int         result;
+	String      path = VM_Text::EscapeSQL(this->getValue(mediaID, "path"));
+	String      sql  = VM_Text::Format("SELECT id FROM MEDIA_FILES WHERE path=%s;", path.c_str());
+	VM_DBResult rows = this->getRows(sql);
+
+	for (auto row : rows)
+	{
+		if (row.empty())
+			continue;
+
+		result = this->deleteMediaFile(std::atoi(row["id"].c_str()));
+
+		if (DB_RESULT_ERROR(result))
+			return result;
+	}
+
+	return SQLITE_OK;
+}
+
 int Database::VM_Database::deletePlaylist(const String &name)
 {
 	if (name.empty())

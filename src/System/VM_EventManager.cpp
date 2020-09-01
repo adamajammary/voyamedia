@@ -776,13 +776,10 @@ bool System::VM_EventManager::isClickedModal(SDL_Event* mouseEvent)
 			} else if (button->id == "modal_settings_clean_thumbs") {
 				VM_ThreadManager::Threads[THREAD_CLEAN_THUMBS]->start = true;
 				hide = true;
-			} else if (button->id == "modal_settings_color") {
+			} else if ((button->id == "modal_settings_color") || (button->id == "modal_settings_lang")) {
 				VM_Modal::Apply(button->id);
 				hide = true;
-			} else if (button->id == "modal_settings_lang") {
-				VM_Modal::Apply(button->id);
-				hide = true;
-			} else if (button->id == "modal_right_click_remove_file") {
+			} else if ((button->id == "modal_right_click_remove_file") || (button->id == "modal_right_click_remove_path")) {
 				VM_Modal::Apply(button->id);
 				hide = true;
 			} else if ((button->id == "modal_right_click_tmbd_movie") || (button->id == "modal_right_click_tmbd_tv")) {

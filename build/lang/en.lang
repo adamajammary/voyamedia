@@ -62,6 +62,7 @@ error.window=Failed to create the window.
 
 remove=REMOVE
 remove.file.db=REMOVE FILE FROM THE DATABASE
+remove.path.db=REMOVE FOLDER FROM THE DATABASE
 
 # SETTINGS
 

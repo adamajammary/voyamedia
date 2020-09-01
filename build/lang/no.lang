@@ -62,6 +62,7 @@ error.window=Klarte ikke å lage vinduet.
 
 remove=FJERN
 remove.file.db=FJERN FIL FRA DATABASEN
+remove.path.db=FJERN MAPPE FRA DATABASEN
 
 # SETTINGS
 

@@ -96,6 +96,9 @@ modal_playlists_remove.background-color=#101010FF
 modal_right_click_remove_file.background-color=#101010FF
 modal_right_click_remove_file.border-color=#FFFFFFFF
 
+modal_right_click_remove_path.background-color=#101010FF
+modal_right_click_remove_path.border-color=#FFFFFFFF
+
 modal_right_click_tmbd_movie.background-color=#101010FF
 modal_right_click_tmbd_movie.border-color=#FFFFFFFF
 
