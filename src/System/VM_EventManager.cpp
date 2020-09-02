@@ -723,13 +723,14 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 		{
 			VM_Player::FullScreenToggle(false);
 
-			if (VM_Player::State.isPaused && (VM_Player::State.fullscreenEnter || VM_Player::State.fullscreenExit))
-				VM_Player::Play();
+			//if (VM_Player::State.isPaused && (VM_Player::State.fullscreenEnter || VM_Player::State.fullscreenExit))
+			//	VM_Player::Play();
 
-			return true;
+			//return true;
 		}
-		else
+		//else
 		#endif
+
 		// VIDEO-SINGLE-CLICK -> PLAY/PAUSE TOGGLE
 		if (VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea))
 		{
