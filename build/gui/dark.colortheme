@@ -97,6 +97,9 @@ modal_playlists_remove.background-color=#101010FF
 
 # MODAL - RIGHT-CLICK
 
+modal_right_click_info.background-color=#101010FF
+modal_right_click_info.border-color=#FFFFFFFF
+
 modal_right_click_remove_file.background-color=#101010FF
 modal_right_click_remove_file.border-color=#FFFFFFFF
 

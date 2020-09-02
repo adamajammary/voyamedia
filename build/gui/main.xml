@@ -30,7 +30,7 @@
           <button id="list_table_thumb" halign="center" valign="middle" height="20%" width="height"></button>
           <button id="list_table_file" valign="middle" height="20%" font-size="10">%file</button>
           <button id="list_table_path" valign="middle" height="20%" font-size="10">%path</button>
-          <button id="list_table_details" halign="center" valign="middle" height="20%" width="height" image-width="50%" image-height="image-width" modal="modal_details"></button>
+          <button id="list_table_details" halign="center" valign="middle" height="20%" width="height" image-width="50%" image-height="image-width" modal="modal_right_click"></button>
         </table>
 
         <panel id="list_table_scrollbar" orientation="vertical" width="25" border-width="1">

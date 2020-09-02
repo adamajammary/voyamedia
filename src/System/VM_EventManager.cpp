@@ -765,25 +765,30 @@ bool System::VM_EventManager::isClickedModal(SDL_Event* mouseEvent)
 
 			bool hide = false;
 
-			if (button->id == "modal_player_settings_audio") {
-				VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));
-			} else if (button->id == "modal_player_settings_subs") {
-				VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));
-			} else if (button->id == "modal_player_settings_info") {
-				VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));
-			} else if (button->id == "modal_settings_clean_db") {
+			if (button->id == "modal_settings_clean_db")
+			{
 				VM_ThreadManager::Threads[THREAD_CLEAN_DB]->start = true;
 				hide = true;
-			} else if (button->id == "modal_settings_clean_thumbs") {
+			}
+			else if (button->id == "modal_settings_clean_thumbs")
+			{
 				VM_ThreadManager::Threads[THREAD_CLEAN_THUMBS]->start = true;
 				hide = true;
-			} else if ((button->id == "modal_settings_color") || (button->id == "modal_settings_lang")) {
-				VM_Modal::Apply(button->id);
-				hide = true;
-			} else if ((button->id == "modal_right_click_remove_file") || (button->id == "modal_right_click_remove_path")) {
-				VM_Modal::Apply(button->id);
-				hide = true;
-			} else if ((button->id == "modal_right_click_tmbd_movie") || (button->id == "modal_right_click_tmbd_tv")) {
+			}
+			else if ((button->id == "modal_player_settings_audio") ||
+				(button->id == "modal_player_settings_subs") ||
+				(button->id == "modal_player_settings_info") ||
+				(button->id == "modal_right_click_info"))
+			{
+				VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));
+			}
+			else if ((button->id == "modal_settings_color") ||
+				(button->id == "modal_settings_lang") ||
+				(button->id == "modal_right_click_remove_file") ||
+				(button->id == "modal_right_click_remove_path") ||
+				(button->id == "modal_right_click_tmbd_movie") ||
+				(button->id == "modal_right_click_tmbd_tv"))
+			{
 				VM_Modal::Apply(button->id);
 				hide = true;
 			}

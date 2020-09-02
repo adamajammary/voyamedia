@@ -1237,7 +1237,10 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 	// SINGLE-CLICKED INFO/DETAILS ICON
 	if (info->selected && VM_Graphics::ButtonPressed(mouseEvent, areaInfo))
 	{
-		VM_Modal::Open(VM_XML::GetAttribute(info->xmlNode, "modal"));
+		if (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST)
+			VM_Modal::Open("modal_details");
+		else
+			VM_Modal::Open(VM_XML::GetAttribute(info->xmlNode, "modal"));
 	}
 	else if (TMDB_MOVIE_IS_SELECTED || TMDB_TV_IS_SELECTED)
 	{
@@ -1482,7 +1485,10 @@ int Graphics::VM_Table::setRows(bool temp)
 					rowColumn->setThumb(this->id);
 			// LAST COLUMN - ABOUT/INFO
 			} else if ((col == this->buttons.size() - 1) && !temp) {
-				rowColumn->setImage((VM_GUI::ColorThemeFile == "dark" ? "about-1-512.png" : "about-2-512.png"), false);
+				if (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST)
+					rowColumn->setImage((VM_GUI::ColorThemeFile == "dark" ? "about-1-512.png" : "about-2-512.png"), false);
+				else
+					rowColumn->setImage((VM_GUI::ColorThemeFile == "dark" ? "ellipsis-vertical-1-512.png" : "ellipsis-vertical-2-512.png"), false);
 			// REMAINING COLUMNS
 			} else if (!temp && (col == 1)) {
 				rowColumn->setText(this->result[row]["name"]);
