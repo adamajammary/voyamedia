@@ -1478,7 +1478,7 @@ int Graphics::VM_Table::setRows(bool temp)
 			{
 				rowColumn->borderWidth     = VM_Border(2);
 				rowColumn->borderColor     = rowColumn->backgroundColor;
-				rowColumn->backgroundColor = { 0, 0, 0, 0xFF };
+				rowColumn->backgroundColor = VM_COLOR_BLACK;
 				rowColumn->highlightColor  = rowColumn->backgroundColor;
 
 				if (!temp && this->thumbThreads.empty())

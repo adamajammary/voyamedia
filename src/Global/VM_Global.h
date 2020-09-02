@@ -450,6 +450,9 @@ namespace VoyaMedia
 	const SDL_Color SDL_COLOR_BLACK = { 0, 0, 0, 0xFF };
 	const SDL_Color SDL_COLOR_WHITE = { 0xFF, 0xFF, 0xFF, 0xFF };
 
+	const VM_Color  VM_COLOR_BLACK = { 0, 0, 0, 0xFF };
+	const VM_Color  VM_COLOR_WHITE = { 0xFF, 0xFF, 0xFF, 0xFF };
+
 	#if defined ANDROID || defined _ios
 		const int CURSOR_HIDE_DELAY = 5000;
 	#elif defined _linux || defined _macosx || defined _windows
