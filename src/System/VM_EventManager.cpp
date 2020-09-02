@@ -963,9 +963,12 @@ bool System::VM_EventManager::isClickedTextInput(SDL_Event* mouseEvent, VM_Compo
 				if (activate)
 					VM_TextInput::Unfocus();
 			}
-			// SEARCH
-			else if (button->id == "middle_search_button")
+			// CLEAR/SEARCH
+			else if ((button->id == "middle_search_clear") || (button->id == "middle_search_button"))
 			{
+				if (button->id == "middle_search_clear")
+					VM_TextInput::Clear();
+
 				VM_TextInput::SaveToDB();
 				VM_TextInput::SetActive(false);
 

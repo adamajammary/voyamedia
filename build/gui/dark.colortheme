@@ -14,6 +14,9 @@ middle_search_input.text-color=#000000FF
 
 middle_search_button.background-color=#101010FF
 
+middle_search_clear.background-color=#FFFFFFFF
+middle_search_clear.border-color=#101010FF
+
 middle_search_playlist_save.background-color=#101010FF
 
 list.border-color=#202020FF
