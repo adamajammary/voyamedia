@@ -1417,7 +1417,7 @@ Graphics::VM_Border Graphics::VM_Graphics::ToVMBorder(const String &borderWidth)
 */
 Graphics::VM_Color Graphics::VM_Graphics::ToVMColor(const String &colorHex)
 {
-	VM_Color color   = VM_COLOR_BLACK;
+	VM_Color color   = VM_Color(SDL_COLOR_BLACK);
 	bool     invertA = false;
 	off_t    offsetR = -1;
 	off_t    offsetG = -1;

@@ -7,7 +7,7 @@ MediaPlayer::VM_SubStyle::VM_SubStyle()
 {
 	this->alignment      = SUB_ALIGN_BOTTOM_CENTER;
 	this->blur           = 0;
-	this->colorPrimary   = VM_COLOR_WHITE;
+	this->colorPrimary   = VM_Color(SDL_COLOR_WHITE);
 	this->colorOutline   = {};
 	this->colorShadow    = {};
 	this->font           = NULL;

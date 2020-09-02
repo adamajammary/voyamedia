@@ -1533,7 +1533,7 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 
 		if (!SDL_RectEmpty(&VM_Player::VideoDimensions) && !VM_Player::State.quit)
 		{
-			VM_Color backgroundColor = SDL_COLOR_BLACK;
+			VM_Color backgroundColor = VM_Color(SDL_COLOR_BLACK);
 			VM_Graphics::FillArea(&backgroundColor, &location);
 
 			SDL_RenderCopy(VM_Window::Renderer, VM_Player::videoContext.texture->data, NULL, &VM_Player::VideoDimensions);
