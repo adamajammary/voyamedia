@@ -26,6 +26,7 @@ list_table.row2-color=#FFFFFFFF
 list_table.text-color=#000000FF
 
 list_table_file.text-color=#FFFFFFFF
+list_table_path.text-color=#FFFFFFFF
 
 list_table_scrollbar.background-color=#101010FF
 list_table_scrollbar.border-color=#101010FF

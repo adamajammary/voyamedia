@@ -261,6 +261,8 @@ String Graphics::VM_Table::getSort()
 		sort = "search COLLATE NOCASE";
 	else if (this->states[VM_Top::Selected].sortColumn == "modal_playlists_media_type")
 		sort = "media_type COLLATE NOCASE";
+	else if (this->states[VM_Top::Selected].sortColumn == "list_table_path")
+		sort = "path COLLATE NOCASE";
 	else
 		sort = "name COLLATE NOCASE";
 
@@ -277,7 +279,7 @@ String Graphics::VM_Table::getSQL()
 		String  search      = VM_Text::EscapeSQL(VM_GUI::ListTable->getSearch(), true);
 		Strings searchWords = VM_Text::Split(search, " ");
 
-		sql = "SELECT name, id, full_path FROM MEDIA_FILES";
+		sql = "SELECT name, id, full_path, path FROM MEDIA_FILES";
 		sql.append(" WHERE media_type=" + std::to_string(VM_Top::Selected));
 		
 		for (const auto &word : searchWords)
@@ -352,11 +354,22 @@ VM_DBResult Graphics::VM_Table::getShoutCast()
 		if ((station == NULL) || (strcmp(reinterpret_cast<const char*>(station->name), "station") != 0))
 			continue;
 
+		String genre      = VM_XML::GetAttribute(station, "genre");
+		String bitRate    = VM_XML::GetAttribute(station, "br");
+		String listeners  = VM_Text::ToViewCount(std::atoll(VM_XML::GetAttribute(station, "lc").c_str()));
+		String nowPlaying = VM_Text::Replace(VM_XML::GetAttribute(station, "ct"), "\\\"", "\"");
+		String details    = VM_Text::Format("%s | %s kbps | %s", genre.c_str(), bitRate.c_str(), listeners.c_str());
+
+		if (!nowPlaying.empty())
+			details.append(VM_Text::Format(" | %s", nowPlaying.c_str()));
+
 		VM_DBRow row = {
-			{ "name", VM_Text::Replace(VM_XML::GetAttribute(station, "name"), "\\\"", "\"") },
-			{ "id",   VM_XML::GetAttribute(station, "id") },
-			{ "full_path", VM_XML::GetAttribute(station, "logo") }
+			{ "name",      VM_Text::Replace(VM_XML::GetAttribute(station, "name"), "\\\"", "\"") },
+			{ "id",        VM_XML::GetAttribute(station, "id") },
+			{ "full_path", VM_XML::GetAttribute(station, "logo") },
+			{ "path",      details }
 		};
+
 		result.push_back(row);
 	}
 
@@ -444,10 +457,20 @@ VM_DBResult Graphics::VM_Table::getTMDB(VM_MediaType mediaType)
 		if (!thumbURL.empty())
 			thumbURL = ("https://image.tmdb.org/t/p/w342/" + thumbURL.substr(2));
 
+		const signed char star[4]  = { 0xE2 - 256, 0x98 - 256, 0x85 - 256, 0 };
+		
+		double      voteAvg  = VM_JSON::GetValueNumber(VM_JSON::GetItem(itemsArray[i], "vote_average"));
+		String      rating   = VM_Text::Format("%s %.1f", star, voteAvg);
+		const char* date     = (mediaType == MEDIA_TYPE_TMDB_MOVIE ? "release_date" : "first_air_date");
+		int         year     = std::atoi(VM_JSON::GetValueString(VM_JSON::GetItem(itemsArray[i], date)).c_str());
+		String      language = VM_Text::GetLanguage(VM_JSON::GetValueString(VM_JSON::GetItem(itemsArray[i], "original_language")));
+		String      details  = VM_Text::Format("%d | %s | %s", year, rating.c_str(), language.c_str());
+
 		VM_DBRow row = {
 			{ "name",      title },
 			{ "id",        std::to_string((int64_t)VM_JSON::GetValueNumber(VM_JSON::GetItem(itemsArray[i], "id"))) },
-			{ "full_path", thumbURL }
+			{ "full_path", thumbURL },
+			{ "path",      details }
 		};
 
 		result.push_back(row);
@@ -1389,85 +1412,90 @@ int Graphics::VM_Table::setRows(bool temp)
 	VM_Color row2Color = this->getColor("row2");
 
 	// HEADER ROW
-	for (int col = 0; col < (int)this->buttons.size(); col++)
+	for (size_t col = 0; col < this->buttons.size(); col++)
 	{
 		if (!VM_Player::State.isStopped || (VM_Modal::IsVisible() && (VM_Modal::ListTable == NULL)))
 			break;
 
-		VM_Button* button = dynamic_cast<VM_Button*>(this->buttons[col]);
+		VM_Button* headerColumn = dynamic_cast<VM_Button*>(this->buttons[col]);
 
-		if (button->imageData != NULL)
-			button->removeImage();
+		if (headerColumn->imageData != NULL)
+			headerColumn->removeImage();
 
-		button->setText("");
+		headerColumn->setText("");
 
 		//if ((this->id == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE) && (col == 1))
-		if ((this->id == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST) && (col == 1))
+		if ((col == 1) && (this->id == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST))
 		{
-			button->setText(VM_Window::Labels["title"]);
+			headerColumn->setText(VM_Window::Labels["title"]);
 		}
-		else if (!temp && !this->result.empty() && (button->id == this->states[VM_Top::Selected].sortColumn) &&
+		else if (!temp &&
+			!this->result.empty() &&
+			(headerColumn->id == this->states[VM_Top::Selected].sortColumn) &&
 			((this->id == "list_table") || (this->id == "modal_playlists_list_table")))
 		{
-			button->margin.left = 0;
-			button->setImage((this->states[VM_Top::Selected].sortDirection == "ASC" ? "triangle-4-64.png" : "triangle-3-64.png"), false, 10, 10);
+			//headerColumn->margin.left = 0;
+
+			String image = (this->states[VM_Top::Selected].sortDirection == "ASC" ? "triangle-4-64.png" : "triangle-3-64.png");
+			headerColumn->setImage(image, false, 8, 8);
 		}
 
 		if (col > 0)
-			button->margin.left = 10;
+			headerColumn->margin.left = 10;
 
-		button->borderWidth = VM_Border(3, 0, 0, 3);
+		//headerColumn->borderWidth = VM_Border(3, 0, 0, 3);
 	}
 
 	this->resultMutex.lock();
 
 	// FILE ROWS
-	for (int row = 0; row < (int)this->result.size(); row++)
+	for (size_t row = 0; row < this->result.size(); row++)
 	{
 		offsetY += this->buttons[0]->backgroundArea.h;
 
-		VM_Buttons buttonsRow;
+		VM_Buttons rowColumns;
 
-		for (int col = 0; col < (int)this->buttons.size(); col++)
+		for (size_t col = 0; col < this->buttons.size(); col++)
 		{
-			VM_Button* buttonColumn = new VM_Button(*this->buttons[col]);
+			VM_Button* rowColumn = new VM_Button(*this->buttons[col]);
 
-			buttonColumn->backgroundArea.y += offsetY;
-
-			buttonColumn->backgroundColor = (row % 2 == 0 ? row1Color : row2Color);
-			buttonColumn->borderColor     = { 0x10, 0x10, 0x10, 0xFF };
-			buttonColumn->borderWidth     = VM_Border(2, 0, 0, 0);
-
-			buttonColumn->id += ("_" + std::to_string(row) + "_" + std::to_string(col));
-
-			buttonColumn->highlightColor = this->getColor("highlight");
-			buttonColumn->mediaID        = std::atoi(this->result[row]["id"].c_str());
-			//buttonColumn->mediaID2       = this->result[row]["id"];
-			buttonColumn->mediaURL       = this->result[row]["full_path"];
-			buttonColumn->parent         = this;
+			rowColumn->backgroundArea.y += offsetY;
+			rowColumn->backgroundColor   = (row % 2 == 0 ? row1Color : row2Color);
+			rowColumn->borderColor       = { 0x10, 0x10, 0x10, 0xFF };
+			rowColumn->borderWidth       = VM_Border(2, 0, 0, 0);
+			rowColumn->id               += ("_" + std::to_string(row) + "_" + std::to_string(col));
+			rowColumn->highlightColor    = this->getColor("highlight");
+			rowColumn->mediaID           = std::atoi(this->result[row]["id"].c_str());
+			//rowColumn->mediaID2          = this->result[row]["id"];
+			rowColumn->mediaURL          = this->result[row]["full_path"];
+			rowColumn->parent            = this;
 
 			// FIRST COLUMN - THUMB
 			if ((col == 0) && (this->id == "list_table"))
 			{
-				buttonColumn->borderWidth     = VM_Border(5);
-				buttonColumn->borderColor     = buttonColumn->backgroundColor;
-				buttonColumn->backgroundColor = { 0, 0, 0, 0xFF };
-				buttonColumn->highlightColor  = buttonColumn->backgroundColor;
+				rowColumn->borderWidth     = VM_Border(2);
+				rowColumn->borderColor     = rowColumn->backgroundColor;
+				rowColumn->backgroundColor = { 0, 0, 0, 0xFF };
+				rowColumn->highlightColor  = rowColumn->backgroundColor;
 
 				if (!temp && this->thumbThreads.empty())
-					buttonColumn->setThumb(this->id);
+					rowColumn->setThumb(this->id);
 			// LAST COLUMN - ABOUT/INFO
-			} else if ((col == (int)this->buttons.size() - 1) && !temp) {
-				buttonColumn->setImage((VM_GUI::ColorThemeFile == "dark" ? "about-1-512.png" : "about-2-512.png"), false);
+			} else if ((col == this->buttons.size() - 1) && !temp) {
+				rowColumn->setImage((VM_GUI::ColorThemeFile == "dark" ? "about-1-512.png" : "about-2-512.png"), false);
 			// REMAINING COLUMNS
-			} else if (!temp) {
-				buttonColumn->setText(this->result[row]["name"]);
+			} else if (!temp && (col == 1)) {
+				rowColumn->setText(this->result[row]["name"]);
+			} else if (!temp && (col == 2) && (this->id == "modal_playlists_list_table")) {
+				rowColumn->setText(this->result[row]["search"]);
+			} else if (!temp && (col == 2)) {
+				rowColumn->setText(this->result[row]["path"]);
 			}
 
-			buttonsRow.push_back(buttonColumn);
+			rowColumns.push_back(rowColumn);
 		}
 
-		this->rows.push_back(buttonsRow);
+		this->rows.push_back(rowColumns);
 	}
 
 	this->resultMutex.unlock();

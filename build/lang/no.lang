@@ -11,6 +11,7 @@ movies=FILMER
 name=NAVN
 off=AV
 paste=LIM INN
+path=MAPPE
 pictures=BILDER
 playlist_name=SPILLELISTENAVN
 playlists=SPILLELISTER

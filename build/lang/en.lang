@@ -11,6 +11,7 @@ movies=MOVIES
 name=NAME
 off=OFF
 paste=PASTE
+path=PATH
 pictures=PICTURES
 playlist_name=PLAYLIST NAME
 playlists=PLAYLISTS
