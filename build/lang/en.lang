@@ -3,6 +3,7 @@
 add=ADD
 audio=MUSIC
 cancel=CANCEL
+details=DETAILS
 episode=episode
 episodes=episodes
 file=FILE

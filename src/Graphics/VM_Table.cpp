@@ -1428,9 +1428,12 @@ int Graphics::VM_Table::setRows(bool temp)
 		headerColumn->setText("");
 
 		//if ((this->id == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE) && (col == 1))
-		if ((col == 1) && (this->id == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST))
+		if ((this->id == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST))
 		{
-			headerColumn->setText(VM_Window::Labels["title"]);
+			if (col == 1)
+				headerColumn->setText(VM_Window::Labels["title"]);
+			else if (col == 2)
+				headerColumn->setText(VM_Window::Labels["details"]);
 		}
 		else if (!temp &&
 			!this->result.empty() &&
@@ -1483,19 +1486,26 @@ int Graphics::VM_Table::setRows(bool temp)
 
 				if (!temp && this->thumbThreads.empty())
 					rowColumn->setThumb(this->id);
+			}
 			// LAST COLUMN - ABOUT/INFO
-			} else if ((col == this->buttons.size() - 1) && !temp) {
+			else if ((col == this->buttons.size() - 1) && !temp)
+			{
 				if (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST)
 					rowColumn->setImage((VM_GUI::ColorThemeFile == "dark" ? "about-1-512.png" : "about-2-512.png"), false);
 				else
 					rowColumn->setImage((VM_GUI::ColorThemeFile == "dark" ? "ellipsis-vertical-1-512.png" : "ellipsis-vertical-2-512.png"), false);
+			}
 			// REMAINING COLUMNS
-			} else if (!temp && (col == 1)) {
+			else if ((col == 1) && !temp)
+			{
 				rowColumn->setText(this->result[row]["name"]);
-			} else if (!temp && (col == 2) && (this->id == "modal_playlists_list_table")) {
-				rowColumn->setText(this->result[row]["search"]);
-			} else if (!temp && (col == 2)) {
-				rowColumn->setText(this->result[row]["path"]);
+			}
+			else if ((col == 2) && !temp)
+			{
+				if (this->id == "modal_playlists_list_table")
+					rowColumn->setText(this->result[row]["search"]);
+				else
+					rowColumn->setText(this->result[row]["path"]);
 			}
 
 			rowColumns.push_back(rowColumn);
