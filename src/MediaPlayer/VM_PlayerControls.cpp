@@ -279,9 +279,6 @@ int MediaPlayer::VM_PlayerControls::RefreshTime(time_t time)
 	if (button != NULL)
 		button->setText(VM_Text::GetTimeFormatted(time, true));
 
-	if (!VM_Player::State.isPlaying)
-		return RESULT_OK;
-
 	// FILE NAME/TITLE
 	button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_file"]);
 
