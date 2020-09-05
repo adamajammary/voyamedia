@@ -112,10 +112,16 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 			String imageFile = "";
 
 			//if (YOUTUBE_IS_SELECTED || SHOUTCAST_IS_SELECTED) {
-			if (SHOUTCAST_IS_SELECTED) {
-				button->visible           = false;
+			if (SHOUTCAST_IS_SELECTED)
+			{
+				button->visible = false;
+
 				VM_Player::State.loopType = LOOP_TYPE_NORMAL;
-			} else {
+			}
+			else
+			{
+				button->visible = true;
+
 				switch (VM_Player::State.loopType) {
 					case LOOP_TYPE_NORMAL:  imageFile = "loop-1-512.png"; break;
 					case LOOP_TYPE_LOOP:    imageFile = "loop-5-512.png"; break;
