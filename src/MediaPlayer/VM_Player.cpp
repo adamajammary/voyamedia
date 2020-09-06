@@ -246,7 +246,7 @@ int MediaPlayer::VM_Player::closeVideo()
 
 int MediaPlayer::VM_Player::cursorHide()
 {
-	if ((SDL_GetTicks() - VM_Player::CursorLastVisible) < CURSOR_HIDE_DELAY)
+	if (!VIDEO_IS_SELECTED || (SDL_GetTicks() - VM_Player::CursorLastVisible) < CURSOR_HIDE_DELAY)
 		return ERROR_INVALID_ARGUMENTS;
 
 	if ((!VM_Player::isCursorHidden || VM_PlayerControls::IsVisible()) && !VM_Player::State.isPaused)
@@ -305,8 +305,8 @@ int MediaPlayer::VM_Player::FreeTextures()
 
 int MediaPlayer::VM_Player::FullScreenEnter(bool windowMode)
 {
-	VM_Player::State.fullscreenEnter    = true;
-	VM_Player::fullscreenEnterWindowed  = windowMode;
+	VM_Player::State.fullscreenEnter   = true;
+	VM_Player::fullscreenEnterWindowed = windowMode;
 
 	return RESULT_OK;
 }
