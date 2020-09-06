@@ -261,7 +261,7 @@ int MediaPlayer::VM_Player::cursorHide()
 
 	VM_Player::isCursorHidden = true;
 
-	if (VM_Player::State.isPlaying && VM_Window::FullScreenMaximized)
+	if ((VM_Player::State.isPlaying || VM_Player::State.openFile) && VM_Window::FullScreenMaximized)
 		VM_PlayerControls::Hide();
 
 	return RESULT_OK;

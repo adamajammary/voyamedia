@@ -720,7 +720,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 	{
 		// VIDEO DOUBLE-CLICK -> FULLSCREEN
 		#if defined _linux || defined _macosx || defined _windows
-		if (VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea, false, true)) //{
+		if (VIDEO_IS_SELECTED && VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea, false, true)) //{
 			VM_Player::FullScreenToggle(false);
 
 			//if (VM_Player::State.isPaused && (VM_Player::State.fullscreenEnter || VM_Player::State.fullscreenExit))
