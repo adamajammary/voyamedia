@@ -261,9 +261,7 @@ int MediaPlayer::VM_Player::cursorHide()
 
 	VM_Player::isCursorHidden = true;
 
-	#if defined _linux || defined _macosx || defined _windows
 	if (VM_Window::FullScreenMaximized)
-	#endif
 		VM_PlayerControls::Hide();
 
 	return RESULT_OK;
