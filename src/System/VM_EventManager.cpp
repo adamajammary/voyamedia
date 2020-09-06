@@ -613,12 +613,12 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 					else
 						VM_Modal::Open("modal_details");
 				// FULLSCREEN
+				#if defined _linux || defined _macosx || defined _windows
 				} else if (button->id == "bottom_player_controls_fullscreen") {
-					//#if defined _android || defined _ios
 					//	VM_PlayerControls::Hide();
 					//#else
 					VM_Player::FullScreenToggle(false);
-					//#endif
+				#endif
 				// STRETCH
 				} else if (button->id == "bottom_player_controls_stretch") {
 					VM_Player::KeepAspectRatioToggle();
@@ -718,8 +718,8 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 
 	if (snapshot != NULL)
 	{
-		//#if !defined _android && !defined _ios
-		// VIDEO-DOUBLE-CLICK -> FULLSCREEN
+		// VIDEO DOUBLE-CLICK -> FULLSCREEN
+		#if defined _linux || defined _macosx || defined _windows
 		if (VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea, false, true)) //{
 			VM_Player::FullScreenToggle(false);
 
@@ -729,9 +729,9 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 			//return true;
 		//}
 		//else
-		//#endif
+		#endif
 
-		// VIDEO-SINGLE-CLICK -> PLAY/PAUSE TOGGLE
+		// VIDEO SINGLE-CLICK -> PLAY/PAUSE TOGGLE
 		if (VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea))
 		{
 			VM_Player::PlayPauseToggle();

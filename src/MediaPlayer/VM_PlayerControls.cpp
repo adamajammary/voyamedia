@@ -197,8 +197,16 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 		// FULLSCREEN
 		button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_fullscreen"]);
 
-		if (button != NULL)
-			button->setImage((!VM_Player::State.isStopped ? "fullscreen-1-512.png" : "fullscreen-2-512.png"), false);
+		if (button != NULL) {
+			#if defined _android || defined _ios
+				button->visible = false;
+			#else
+				button->visible = VIDEO_IS_SELECTED;
+			#endif
+
+			if (button->visible)
+				button->setImage((!VM_Player::State.isStopped ? "fullscreen-1-512.png" : "fullscreen-2-512.png"), false);
+		}
 
 		// SETTINGS
 		button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_settings"]);
