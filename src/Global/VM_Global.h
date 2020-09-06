@@ -421,6 +421,7 @@ namespace VoyaMedia
 	//const String YOUTUBE_API_URL      = "https://www.googleapis.com/youtube/v3/";
 
 	const int    AUDIO_BUFFER_SIZE      = 768000;
+	const int    CURSOR_HIDE_DELAY      = 2000;
 	const char   GOOGLE_IP[]            = "216.58.211.132";
 	const int    HTTP_RESPONSE_OK       = 200;
 	const double INVALID_COORDINATE     = 1000.0;
@@ -448,12 +449,6 @@ namespace VoyaMedia
 
 	const SDL_Color SDL_COLOR_BLACK = { 0, 0, 0, 0xFF };
 	const SDL_Color SDL_COLOR_WHITE = { 0xFF, 0xFF, 0xFF, 0xFF };
-
-	#if defined ANDROID || defined _ios
-		const int CURSOR_HIDE_DELAY = 5000;
-	#elif defined _linux || defined _macosx || defined _windows
-		const int CURSOR_HIDE_DELAY = 2000;
-	#endif
 
 	const int          DEFAULT_MARGIN            = 10;
 	const int          DEFAULT_CHAR_BUFFER_SIZE  = 1024;
