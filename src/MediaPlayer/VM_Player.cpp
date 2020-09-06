@@ -543,7 +543,11 @@ int MediaPlayer::VM_Player::OpenFilePath(const String &filePath)
 	VM_Player::State.openFile = true;
 	VM_Player::State.filePath = filePath;
 
-	VM_Player::FullScreenEnter(true);
+	#if defined _android || defined _ios
+		VM_Player::FullScreenEnter(false);
+	#else
+		VM_Player::FullScreenEnter(true);
+	#endif
 
 	return RESULT_OK;
 }
