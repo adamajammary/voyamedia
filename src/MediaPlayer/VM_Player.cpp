@@ -247,14 +247,14 @@ int MediaPlayer::VM_Player::closeVideo()
 int MediaPlayer::VM_Player::cursorHide()
 {
 	#if defined _linux || defined _macosx || defined _windows
-		if (VM_Player::isCursorHidden || !VM_Player::State.isPlaying || ((SDL_GetTicks() - VM_Player::CursorLastVisible) < CURSOR_HIDE_DELAY))
+		if (VM_Player::isCursorHidden || ((SDL_GetTicks() - VM_Player::CursorLastVisible) < CURSOR_HIDE_DELAY))
 			return ERROR_INVALID_ARGUMENTS;
 
-		SDL_Rect mousePosition = { 0, 0, 0, 0 };
+		SDL_Rect mousePosition = {};
 		SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 
 		if (!VM_Graphics::ButtonHovered(&mousePosition, VM_GUI::Components["bottom_player_snapshot"]->backgroundArea))
-			return ERROR_UNKNOWN;
+			return RESULT_OK;
 
 		SDL_ShowCursor(0);
 	#endif
@@ -274,16 +274,16 @@ int MediaPlayer::VM_Player::CursorShow()
 	if (VM_Window::Inactive)
 		VM_Window::Refresh();
 
-	if (!VM_Player::isCursorHidden)
-		return ERROR_UNKNOWN;
-
 	#if defined _linux || defined _macosx || defined _windows
-		SDL_ShowCursor(1);
-	#endif
-	
-	VM_Player::isCursorHidden = false;
+		if (!VM_Player::isCursorHidden)
+			return RESULT_OK;
 
-	if (!VM_PlayerControls::IsVisible())
+		SDL_ShowCursor(1);
+	
+		VM_Player::isCursorHidden = false;
+	#endif
+
+	if (!VM_Player::State.isStopped && !VM_PlayerControls::IsVisible())
 		VM_PlayerControls::Show();
 
 	return RESULT_OK;
@@ -318,6 +318,7 @@ int MediaPlayer::VM_Player::FullScreenEnter()
 
 		#if defined _linux || defined _macosx || defined _windows
 			int mouseX, mouseY;
+
 			SDL_GetGlobalMouseState(&mouseX, &mouseY);
 			SDL_SetWindowFullscreen(VM_Window::MainWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
 			SDL_WarpMouseGlobal(mouseX, mouseY);
@@ -354,14 +355,13 @@ int MediaPlayer::VM_Player::FullScreenExit()
 	{
 		#if defined _linux || defined _macosx || defined _windows
 			int mouseX, mouseY;
-			SDL_GetGlobalMouseState(&mouseX, &mouseY);
 
+			SDL_GetGlobalMouseState(&mouseX, &mouseY);
 			SDL_SetWindowFullscreen(VM_Window::MainWindow, 0);
 
 			bool windowIsMaximized = ((SDL_GetWindowFlags(VM_Window::MainWindow) & SDL_WINDOW_MAXIMIZED) != 0);
 
-			if (windowIsMaximized)
-			{
+			if (windowIsMaximized) {
 				SDL_RestoreWindow(VM_Window::MainWindow);
 				SDL_SetWindowPosition(VM_Window::MainWindow, VM_Window::DimensionsBeforeFS.x, VM_Window::DimensionsBeforeFS.y);
 				SDL_SetWindowSize(VM_Window::MainWindow,     VM_Window::DimensionsBeforeFS.w, VM_Window::DimensionsBeforeFS.h);

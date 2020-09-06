@@ -86,13 +86,14 @@ int System::VM_EventManager::HandleEvents()
 
 			break;
 		case SDL_FINGERUP:
-			VM_Player::CursorLastVisible = SDL_GetTicks();
+			VM_Player::CursorShow();
+			//VM_Player::CursorLastVisible = SDL_GetTicks();
 
-			if (VM_Window::Inactive)
-				VM_Window::Refresh();
+			//if (VM_Window::Inactive)
+			//	VM_Window::Refresh();
 
-			if (!VM_Player::State.isStopped && !VM_PlayerControls::IsVisible())
-				VM_PlayerControls::Show();
+			//if (!VM_Player::State.isStopped && !VM_PlayerControls::IsVisible())
+			//	VM_PlayerControls::Show();
 
 			VM_EventManager::TouchEvent = TOUCH_EVENT_UNKNOWN;
 
@@ -122,9 +123,9 @@ int System::VM_EventManager::HandleEvents()
 			// RIGHT-CLICK / LONG PRESS
 			if ((event.tfinger.timestamp - VM_EventManager::touchDownTimestamp) > 500) {
 				VM_EventManager::TouchEvent = TOUCH_EVENT_LONG_PRESS;
-			//// DOUBLE-CLICK
-			//} else if ((event.tfinger.timestamp - VM_EventManager::touchUpTimestamp) < 300) {
-			//	VM_EventManager::TouchEvent = TOUCH_EVENT_DOUBLE_TAP;
+			// DOUBLE-CLICK
+			} else if ((event.tfinger.timestamp - VM_EventManager::touchUpTimestamp) < 300) {
+				VM_EventManager::TouchEvent = TOUCH_EVENT_DOUBLE_TAP;
 			// NORMAL
 			} else {
 				VM_EventManager::TouchEvent = TOUCH_EVENT_TAP;
@@ -613,11 +614,11 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 						VM_Modal::Open("modal_details");
 				// FULLSCREEN
 				} else if (button->id == "bottom_player_controls_fullscreen") {
-					#if defined _android || defined _ios
-						VM_PlayerControls::Hide();
-					#else
-						VM_Player::FullScreenToggle(false);
-					#endif
+					//#if defined _android || defined _ios
+					//	VM_PlayerControls::Hide();
+					//#else
+					VM_Player::FullScreenToggle(false);
+					//#endif
 				// STRETCH
 				} else if (button->id == "bottom_player_controls_stretch") {
 					VM_Player::KeepAspectRatioToggle();
@@ -717,7 +718,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 
 	if (snapshot != NULL)
 	{
-		#if !defined _android && !defined _ios
+		//#if !defined _android && !defined _ios
 		// VIDEO-DOUBLE-CLICK -> FULLSCREEN
 		if (VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea, false, true))
 		{
@@ -729,7 +730,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 			//return true;
 		}
 		//else
-		#endif
+		//#endif
 
 		// VIDEO-SINGLE-CLICK -> PLAY/PAUSE TOGGLE
 		if (VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea))

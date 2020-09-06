@@ -145,8 +145,8 @@ bool Graphics::VM_Graphics::ButtonPressed(const SDL_Event* mouseEvent, const SDL
 
 	if (doubleClicked) {
 		#if defined _android || defined _ios
-			//if (VM_EventManager::TouchEvent != TOUCH_EVENT_DOUBLE_TAP)
-			return false;
+			if (VM_EventManager::TouchEvent != TOUCH_EVENT_DOUBLE_TAP)
+				return false;
 		#else
 			if (mouseEvent->button.clicks < 2)
 				return false;
