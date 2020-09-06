@@ -246,24 +246,26 @@ int MediaPlayer::VM_Player::closeVideo()
 
 int MediaPlayer::VM_Player::cursorHide()
 {
-	if (VM_Player::isCursorHidden || ((SDL_GetTicks() - VM_Player::CursorLastVisible) < CURSOR_HIDE_DELAY))
+	if ((SDL_GetTicks() - VM_Player::CursorLastVisible) < CURSOR_HIDE_DELAY)
 		return ERROR_INVALID_ARGUMENTS;
 
-	#if defined _linux || defined _macosx || defined _windows
-		SDL_Rect mousePosition = {};
-		SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
+	if (!VM_Player::isCursorHidden || VM_PlayerControls::IsVisible())
+	{
+		#if defined _linux || defined _macosx || defined _windows
+			SDL_Rect mousePosition = {};
+			SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 
-		if (!VM_Graphics::ButtonHovered(&mousePosition, VM_GUI::Components["bottom_player_snapshot"]->backgroundArea))
-			return RESULT_OK;
+			if (!VM_Graphics::ButtonHovered(&mousePosition, VM_GUI::Components["bottom_player_snapshot"]->backgroundArea))
+				return RESULT_OK;
 
-		SDL_ShowCursor(0);
-	#endif
+			SDL_ShowCursor(0);
+		#endif
 
-	VM_Player::isCursorHidden = true;
+		VM_Player::isCursorHidden = true;
 
-	//if ((VM_Player::State.isPlaying || VM_Player::State.openFile) && VM_Window::FullScreenMaximized)
-	if (VM_Window::FullScreenMaximized)
-		VM_PlayerControls::Hide();
+		//if ((VM_Player::State.isPlaying || VM_Player::State.openFile) && VM_Window::FullScreenMaximized)
+			VM_PlayerControls::Hide();
+	}
 
 	return RESULT_OK;
 }
