@@ -274,8 +274,8 @@ int MediaPlayer::VM_Player::CursorShow()
 	if (VM_Window::Inactive)
 		VM_Window::Refresh();
 
-	if (!VM_Player::isCursorHidden)
-		return RESULT_OK;
+	//if (!VM_Player::isCursorHidden)
+	//	return RESULT_OK;
 
 	#if defined _linux || defined _macosx || defined _windows
 		SDL_ShowCursor(1);
@@ -544,7 +544,7 @@ int MediaPlayer::VM_Player::OpenFilePath(const String &filePath)
 	VM_Player::State.filePath = filePath;
 
 	#if defined _android || defined _ios
-		VM_Player::FullScreenEnter(false);
+		VM_Player::FullScreenEnter(!VIDEO_IS_SELECTED);
 	#else
 		VM_Player::FullScreenEnter(true);
 	#endif
