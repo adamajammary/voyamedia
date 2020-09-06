@@ -261,7 +261,8 @@ int MediaPlayer::VM_Player::cursorHide()
 
 	VM_Player::isCursorHidden = true;
 
-	if ((VM_Player::State.isPlaying || VM_Player::State.openFile) && VM_Window::FullScreenMaximized)
+	//if ((VM_Player::State.isPlaying || VM_Player::State.openFile) && VM_Window::FullScreenMaximized)
+	if (VM_Window::FullScreenMaximized)
 		VM_PlayerControls::Hide();
 
 	return RESULT_OK;
@@ -274,8 +275,8 @@ int MediaPlayer::VM_Player::CursorShow()
 	if (VM_Window::Inactive)
 		VM_Window::Refresh();
 
-	//if (!VM_Player::isCursorHidden)
-	//	return RESULT_OK;
+	if (!VM_Player::isCursorHidden)
+		return RESULT_OK;
 
 	#if defined _linux || defined _macosx || defined _windows
 		SDL_ShowCursor(1);
