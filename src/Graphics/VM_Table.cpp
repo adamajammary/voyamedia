@@ -1242,52 +1242,45 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 		else
 			VM_Modal::Open(VM_XML::GetAttribute(info->xmlNode, "modal"));
 	}
-	else if (TMDB_MOVIE_IS_SELECTED || TMDB_TV_IS_SELECTED)
+	// SINGLE-CLICKED PLAY/THUMB ICON
+	else if (thumb->selected && VM_Graphics::ButtonPressed(mouseEvent, areaThumb))
+	{
+		//if (YOUTUBE_IS_SELECTED)
+		//	VM_Player::OpenFilePath(VM_FileSystem::GetYouTubeVideo(thumb->mediaID2));
+		if (SHOUTCAST_IS_SELECTED)
+			VM_Player::OpenFilePath(VM_FileSystem::GetShoutCastStation(thumb->mediaID));
+		else if (VM_Top::Selected < MEDIA_TYPE_SHOUTCAST)
+			VM_Player::OpenFilePath(thumb->mediaURL);
+	}
+	else
 	{
 		for (auto button : this->rows[row])
 		{
 			SDL_Rect area = SDL_Rect(button->backgroundArea);
-			area.y -= offsetY;
+			area.y       -= offsetY;
 
+			// DOUBLE-CLICKED ROW
 			if (VM_Graphics::ButtonPressed(mouseEvent, area, false, true))
-				VM_Modal::Open(VM_XML::GetAttribute(info->xmlNode, "modal"));
-		}
-	}
-	else
-	{
-		// SINGLE-CLICKED PLAY ICON
-		if (thumb->selected && VM_Graphics::ButtonPressed(mouseEvent, areaThumb))
-		{
-			//if (YOUTUBE_IS_SELECTED)
-			//	VM_Player::OpenFilePath(VM_FileSystem::GetYouTubeVideo(thumb->mediaID2));
-			if (SHOUTCAST_IS_SELECTED)
-				VM_Player::OpenFilePath(VM_FileSystem::GetShoutCastStation(thumb->mediaID));
-			else
-				VM_Player::OpenFilePath(thumb->mediaURL);
-		}
-		// DOUBLE- OR RIGHT-CLICKED ROW
-		else
-		{
-			for (auto button : this->rows[row])
 			{
-				SDL_Rect area = SDL_Rect(button->backgroundArea);
-				area.y       -= offsetY;
+				//if (YOUTUBE_IS_SELECTED)
+				//	VM_Player::OpenFilePath(VM_FileSystem::GetYouTubeVideo(button->mediaID2));
+				if (VM_Top::Selected > MEDIA_TYPE_SHOUTCAST)
+					VM_Modal::Open("modal_details");
+				else if (SHOUTCAST_IS_SELECTED)
+					VM_Player::OpenFilePath(VM_FileSystem::GetShoutCastStation(thumb->mediaID));
+				else if (VM_Top::Selected < MEDIA_TYPE_SHOUTCAST)
+					VM_Player::OpenFilePath(thumb->mediaURL);
 
-				if (VM_Graphics::ButtonPressed(mouseEvent, area, false, true))
-				{
-					//if (YOUTUBE_IS_SELECTED)
-					//	VM_Player::OpenFilePath(VM_FileSystem::GetYouTubeVideo(button->mediaID2));
-					if (SHOUTCAST_IS_SELECTED)
-						VM_Player::OpenFilePath(VM_FileSystem::GetShoutCastStation(button->mediaID));
-					else
-						VM_Player::OpenFilePath(button->mediaURL);
-				}
-				else if (VM_Graphics::ButtonPressed(mouseEvent, area, true, false))
-				{
-					//if (!YOUTUBE_IS_SELECTED && !SHOUTCAST_IS_SELECTED)
-					if (!SHOUTCAST_IS_SELECTED)
-						VM_Modal::Open("modal_right_click");
-				}
+				break;
+			}
+			// RIGHT-CLICKED ROW
+			else if (VM_Graphics::ButtonPressed(mouseEvent, area, true, false))
+			{
+				//if (!YOUTUBE_IS_SELECTED && !SHOUTCAST_IS_SELECTED)
+				if (VM_Top::Selected < MEDIA_TYPE_SHOUTCAST)
+					VM_Modal::Open("modal_right_click");
+
+				break;
 			}
 		}
 	}
