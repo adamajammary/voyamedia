@@ -246,10 +246,10 @@ int MediaPlayer::VM_Player::closeVideo()
 
 int MediaPlayer::VM_Player::cursorHide()
 {
-	#if defined _linux || defined _macosx || defined _windows
-		if (VM_Player::isCursorHidden || ((SDL_GetTicks() - VM_Player::CursorLastVisible) < CURSOR_HIDE_DELAY))
-			return ERROR_INVALID_ARGUMENTS;
+	if (VM_Player::isCursorHidden || ((SDL_GetTicks() - VM_Player::CursorLastVisible) < CURSOR_HIDE_DELAY))
+		return ERROR_INVALID_ARGUMENTS;
 
+	#if defined _linux || defined _macosx || defined _windows
 		SDL_Rect mousePosition = {};
 		SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 
@@ -261,7 +261,9 @@ int MediaPlayer::VM_Player::cursorHide()
 
 	VM_Player::isCursorHidden = true;
 
+	#if defined _linux || defined _macosx || defined _windows
 	if (VM_Window::FullScreenMaximized)
+	#endif
 		VM_PlayerControls::Hide();
 
 	return RESULT_OK;
@@ -274,14 +276,14 @@ int MediaPlayer::VM_Player::CursorShow()
 	if (VM_Window::Inactive)
 		VM_Window::Refresh();
 
-	#if defined _linux || defined _macosx || defined _windows
-		if (!VM_Player::isCursorHidden)
-			return RESULT_OK;
+	if (!VM_Player::isCursorHidden)
+		return RESULT_OK;
 
+	#if defined _linux || defined _macosx || defined _windows
 		SDL_ShowCursor(1);
-	
-		VM_Player::isCursorHidden = false;
 	#endif
+	
+	VM_Player::isCursorHidden = false;
 
 	if (!VM_Player::State.isStopped && !VM_PlayerControls::IsVisible())
 		VM_PlayerControls::Show();

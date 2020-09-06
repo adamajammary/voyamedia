@@ -720,15 +720,14 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 	{
 		//#if !defined _android && !defined _ios
 		// VIDEO-DOUBLE-CLICK -> FULLSCREEN
-		if (VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea, false, true))
-		{
+		if (VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea, false, true)) //{
 			VM_Player::FullScreenToggle(false);
 
 			//if (VM_Player::State.isPaused && (VM_Player::State.fullscreenEnter || VM_Player::State.fullscreenExit))
 			//	VM_Player::Play();
 
 			//return true;
-		}
+		//}
 		//else
 		//#endif
 
