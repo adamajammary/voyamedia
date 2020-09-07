@@ -922,6 +922,32 @@ Strings System::VM_FileSystem::getAndroidAssets(const String &assetDirectory)
 	return androidAssets;
 }
 
+Strings System::VM_FileSystem::GetAndroidMediaFiles()
+{
+	Strings   files;
+	jclass    jniClass         = VM_Window::JNI->getClass();
+	JNIEnv*   jniEnvironment   = VM_Window::JNI->getEnvironment();
+	jmethodID jniMethod        = jniEnvironment->GetStaticMethodID(jniClass, "GetMediaFiles", "[Ljava/lang/String;");
+
+	if (jniMethod == NULL)
+		return files;
+
+	jobjectArray jArray      = (jobjectArray)jniEnvironment->CallStaticObjectMethod(jniClass, jniMethod);
+	const int    arrayLength = jniEnvironment->GetArrayLength(jArray);
+
+	for (int i = 0; i < arrayLength; i++)
+	{
+		jstring     jString = (jstring)(jniEnvironment->GetObjectArrayElement(jArray, i));
+		const char* cString = jniEnvironment->GetStringUTFChars(jString, NULL);
+
+		files.push_back(String(cString));
+
+		jniEnvironment->ReleaseStringUTFChars(jString, cString);
+	}
+
+	return files;
+}
+
 String System::VM_FileSystem::GetAndroidStoragePath()
 {
 	jclass    jniClass          = VM_Window::JNI->getClass();
@@ -3573,10 +3599,24 @@ int System::VM_FileSystem::ScanAndroid(void* userData)
 
 	VM_Window::StatusString = VM_Window::Labels["status.scan.local"];
 
-	if (VM_FileSystem::AddMediaFilesRecursively(VM_Window::AndroidStoragePath) == RESULT_OK)
+	Strings files  = VM_FileSystem::GetAndroidMediaFiles();
+	int     result = RESULT_OK;
+
+	for (const auto &file : files)
+	{
+		result = VM_FileSystem::addMediaFile(file);
+
+		if (result != RESULT_OK) {
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), file.c_str());
+			break;
+		}
+	}
+
+	//if (VM_FileSystem::AddMediaFilesRecursively(VM_Window::AndroidStoragePath) == RESULT_OK)
+	if (result == RESULT_OK)
 		VM_Window::StatusString = VM_Window::Labels["status.scan.finished"];
-	else
-		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), VM_Window::AndroidStoragePath.c_str());
+	//else
+	//	VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), VM_Window::AndroidStoragePath.c_str());
 
 	VM_GUI::ListTable->refreshRows();
 
