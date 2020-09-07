@@ -3602,8 +3602,14 @@ int System::VM_FileSystem::ScanAndroid(void* userData)
 	Strings files  = VM_FileSystem::GetAndroidMediaFiles();
 	int     result = RESULT_OK;
 
+	VM_Modal::ShowMessage(VM_Text::Format("FILES: %ulld", files.size()));
+	LOG("FILES: %ulld", files.size());
+
 	for (const auto &file : files)
 	{
+		VM_Modal::ShowMessage(VM_Text::Format("FILES: %s", file.c_str()));
+		LOG("FILE: %s", file.c_str());
+
 		result = VM_FileSystem::addMediaFile(file);
 
 		if (result != RESULT_OK) {
