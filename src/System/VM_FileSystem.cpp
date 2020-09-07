@@ -924,12 +924,10 @@ Strings System::VM_FileSystem::getAndroidAssets(const String &assetDirectory)
 
 Strings System::VM_FileSystem::GetAndroidMediaFiles()
 {
-	Strings files;
-
-	VM_JavaJNI jni = new VM_JavaJNI();
-
+	Android::VM_JavaJNI jni = new VM_JavaJNI();
 	jni->init();
 
+	Strings   files;
 	jclass    jniClass       = jni->getClass();
 	JNIEnv*   jniEnvironment = jni->getEnvironment();
 	jmethodID jniMethod      = jniEnvironment->GetStaticMethodID(jniClass, "GetMediaFiles", "[Ljava/lang/String;");
