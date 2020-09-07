@@ -927,7 +927,7 @@ Strings System::VM_FileSystem::GetAndroidMediaFiles()
 	Strings   files;
 	jclass    jniClass       = VM_Window::JNI->getClass();
 	JNIEnv*   jniEnvironment = VM_Window::JNI->getEnvironment();
-	jmethodID jniMethod      = jniEnvironment->GetStaticMethodID(jniClass, "GetMediaFiles", "[Ljava/lang/String;");
+	jmethodID jniMethod      = jniEnvironment->GetStaticMethodID(jniClass, "GetMediaFiles", "()[Ljava/lang/String;");
 
 	if (jniMethod == NULL)
 		return files;
@@ -996,9 +996,8 @@ Strings System::VM_FileSystem::getDirectoryContent(const String &directoryPath, 
 			String fileName = String(file->d_name);
 		#endif
 
-		if ((file->d_type == fileType) && (!checkSystemFiles || !VM_FileSystem::isSystemFile(fileName))) {
+		if ((file->d_type == fileType) && (!checkSystemFiles || !VM_FileSystem::isSystemFile(fileName)))
 			directoyContent.push_back(fileName);
-		}
 	}
 
 	closedir(directory);
