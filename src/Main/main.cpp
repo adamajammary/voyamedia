@@ -46,7 +46,8 @@ int main(const int argc, char* argv[])
 		VM_EventManager::HandleEvents();
 
 		#if defined _android
-			VM_EventManager::HandleHeadSetUnpluggedAndroid(VM_Window::JNI->getEnvironment());
+			VM_EventManager::HandleStoragePermissionAndroid();
+			VM_EventManager::HandleHeadSetUnpluggedAndroid();
 
 			if (VM_Window::StartWakeLock)
 				VM_EventManager::WakeLockStart();

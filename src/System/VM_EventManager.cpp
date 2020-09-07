@@ -356,15 +356,13 @@ int System::VM_EventManager::HandleEventsMobile(void* userdata, SDL_Event* event
 #endif
 
 #if defined _android
-int System::VM_EventManager::HandleHeadSetUnpluggedAndroid(JNIEnv* jniEnvironment)
+int System::VM_EventManager::HandleHeadSetUnpluggedAndroid()
 {
 	if (!VM_Player::State.isPlaying)
 		return RESULT_OK;
 
-	if (jniEnvironment == NULL)
-		return ERROR_UNKNOWN;
-
 	jclass    jniClass              = VM_Window::JNI->getClass();
+	JNIEnv*   jniEnvironment        = VM_Window::JNI->getEnvironment();
 	jmethodID jniIsHeadSetUnplugged = jniEnvironment->GetStaticMethodID(jniClass, "IsHeadSetUnplugged", "()Z");
 	jmethodID jniIsAudioModeNormal  = jniEnvironment->GetStaticMethodID(jniClass, "IsAudioModeNormal",  "()Z");
 	jmethodID jniResetHeadsetState  = jniEnvironment->GetStaticMethodID(jniClass, "ResetHeadsetState",  "()V");
@@ -380,6 +378,28 @@ int System::VM_EventManager::HandleHeadSetUnpluggedAndroid(JNIEnv* jniEnvironmen
 	if (jniEnvironment->CallStaticBooleanMethod(jniClass, jniIsHeadSetUnplugged)) {
 		VM_Player::Pause();
 		jniEnvironment->CallStaticVoidMethod(jniClass, jniResetHeadsetState);
+	}
+
+	return RESULT_OK;
+}
+
+int System::VM_EventManager::HandleStoragePermissionAndroid()
+{
+	jclass    jniClass                  = VM_Window::JNI->getClass();
+	JNIEnv*   jniEnvironment            = VM_Window::JNI->getEnvironment();
+	jmethodID jniHasStoragePermission   = jniEnvironment->GetStaticMethodID(jniClass, "HasStoragePermission",   "()Z");
+	jmethodID jniResetStoragePermission = jniEnvironment->GetStaticMethodID(jniClass, "ResetStoragePermission", "()V");
+
+	if ((jniHasStoragePermission == NULL) || (jniResetStoragePermission == NULL))
+		return ERROR_UNKNOWN;
+
+	if (jniEnvironment->CallStaticBooleanMethod(jniClass, jniHasStoragePermission))
+	{
+		VM_Window::AndroidMediaFiles = VM_FileSystem::GetAndroidMediaFiles();
+
+		VM_ThreadManager::Threads[THREAD_SCAN_ANDROID]->start = true;
+
+		jniEnvironment->CallStaticVoidMethod(jniClass, jniResetStoragePermission);
 	}
 
 	return RESULT_OK;
@@ -541,7 +561,7 @@ bool System::VM_EventManager::isClickedBottomControls(SDL_Event* mouseEvent)
 		if (button->id == "bottom_controls_browse")
 		{
 			#if defined _android
-				VM_ThreadManager::Threads[THREAD_SCAN_ANDROID]->start = true;
+				VM_FileSystem::RequestAndroidStoragePermission();
 			#elif defined _ios
 				VM_ThreadManager::Threads[THREAD_SCAN_ITUNES]->start = true;
 			#else

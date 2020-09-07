@@ -3561,6 +3561,18 @@ void System::VM_FileSystem::RefreshMetaData()
 	VM_FileSystem::updateMeta = true;
 }
 
+#if defined _android
+void System::VM_FileSystem::RequestAndroidStoragePermission()
+{
+	jclass    jniClass       = VM_Window::JNI->getClass();
+	JNIEnv*   jniEnvironment = VM_Window::JNI->getEnvironment();
+	jmethodID jniMethod      = jniEnvironment->GetStaticMethodID(jniClass, "RequestStoragePermission", "()V");
+
+	if (jniMethod != NULL)
+		jniEnvironment->CallStaticVoidMethod(jniClass, jniMethod);
+}
+#endif
+
 void System::VM_FileSystem::SaveDropboxTokenOAuth2(const String &userCode)
 {
 	// USE THE USER TOKEN TO GET AN OAUTH2 TOKEN

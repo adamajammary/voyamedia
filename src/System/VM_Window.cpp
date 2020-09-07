@@ -108,7 +108,6 @@ int System::VM_Window::Open(const char* guiXML, const char* title)
 		}
 
 		//VM_Window::AndroidStoragePath = VM_FileSystem::GetAndroidStoragePath();
-		VM_Window::AndroidMediaFiles = VM_FileSystem::GetAndroidMediaFiles();
 	#elif defined _windows
 	//if (!IsProcessDPIAware())
 		SetProcessDPIAware();

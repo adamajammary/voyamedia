@@ -109,6 +109,7 @@ namespace VoyaMedia
 			#if defined _android
 				static Strings   GetAndroidMediaFiles();
 				//static String    GetAndroidStoragePath();
+				static void      RequestAndroidStoragePermission();
 				static int       ScanAndroid(void* userData);
 			#elif defined _ios
 				static void      DeleteFileITunes(const String &filePath);
