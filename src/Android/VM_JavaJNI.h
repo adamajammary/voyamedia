@@ -25,16 +25,16 @@ namespace VoyaMedia
 			bool    threadAttached;
 
 		public:
-			void    attachThread();
-			void    attachThread(JavaVM* javaVM);
+			//void    attachThread();
+			//void    attachThread(JavaVM* javaVM);
 			void    destroy();
-			void    detachThread();
-			void    detachThread(JavaVM* javaVM);
+			//void    detachThread();
+			//void    detachThread(JavaVM* javaVM);
 			jclass  getClass();
 			JNIEnv* getEnvironment();
-			JavaVM* getJavaVM();
+			//JavaVM* getJavaVM();
 			int     init();
-			bool    isAttached();
+			//bool    isAttached();
 
 		};
 	}

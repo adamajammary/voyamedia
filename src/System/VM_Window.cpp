@@ -30,7 +30,8 @@ WString          System::VM_Window::WorkingDirectoryW   = L"";
 #if defined _android
 	using namespace VoyaMedia::Android;
 
-	String      System::VM_Window::AndroidStoragePath = "";
+	Strings     System::VM_Window::AndroidMediaFiles;
+	//String      System::VM_Window::AndroidStoragePath = "";
 	VM_JavaJNI* System::VM_Window::JNI                = NULL;
 	SDL_Thread* System::VM_Window::MedaPlayerThread   = NULL;
 	bool        System::VM_Window::MinimizeWindow     = false;
@@ -106,7 +107,8 @@ int System::VM_Window::Open(const char* guiXML, const char* title)
 			return ERROR_UNKNOWN;
 		}
 
-		VM_Window::AndroidStoragePath = VM_FileSystem::GetAndroidStoragePath();
+		//VM_Window::AndroidStoragePath = VM_FileSystem::GetAndroidStoragePath();
+		VM_Window::AndroidMediaFiles = VM_FileSystem::GetAndroidMediaFiles();
 	#elif defined _windows
 	//if (!IsProcessDPIAware())
 		SetProcessDPIAware();

@@ -40,7 +40,8 @@ namespace VoyaMedia
 			static WString              WorkingDirectoryW;
 
 			#if defined _android
-				static String               AndroidStoragePath;
+				//static String               AndroidStoragePath;
+				static Strings              AndroidMediaFiles;
 				static Android::VM_JavaJNI* JNI;
 				static SDL_Thread*          MedaPlayerThread;
 				static bool                 MinimizeWindow;

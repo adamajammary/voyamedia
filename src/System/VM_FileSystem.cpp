@@ -924,24 +924,13 @@ Strings System::VM_FileSystem::getAndroidAssets(const String &assetDirectory)
 
 Strings System::VM_FileSystem::GetAndroidMediaFiles()
 {
-	auto jni = new Android::VM_JavaJNI();
-
-	jni->attachThread(VM_Window::JNI->getJavaVM());
-	jni->init();
-
 	Strings   files;
-	jclass    jniClass       = jni->getClass();
-	JNIEnv*   jniEnvironment = jni->getEnvironment();
+	jclass    jniClass       = VM_Window::JNI->getClass();
+	JNIEnv*   jniEnvironment = VM_Window::JNI->getEnvironment();
 	jmethodID jniMethod      = jniEnvironment->GetStaticMethodID(jniClass, "GetMediaFiles", "[Ljava/lang/String;");
 
 	if (jniMethod == NULL)
-	{
-		jni->detachThread(VM_Window::JNI->getJavaVM());
-		jni->destroy();
-		DELETE_POINTER(jni);
-
 		return files;
-	}
 
 	jobjectArray jArray      = (jobjectArray)jniEnvironment->CallStaticObjectMethod(jniClass, jniMethod);
 	const int    arrayLength = jniEnvironment->GetArrayLength(jArray);
@@ -956,30 +945,26 @@ Strings System::VM_FileSystem::GetAndroidMediaFiles()
 		jniEnvironment->ReleaseStringUTFChars(jString, cString);
 	}
 
-	jni->detachThread(VM_Window::JNI->getJavaVM());
-	jni->destroy();
-	DELETE_POINTER(jni);
-
 	return files;
 }
 
-String System::VM_FileSystem::GetAndroidStoragePath()
-{
-	jclass    jniClass          = VM_Window::JNI->getClass();
-	JNIEnv*   jniEnvironment    = VM_Window::JNI->getEnvironment();
-	jmethodID jniGetStoragePath = jniEnvironment->GetStaticMethodID(jniClass, "GetStoragePath", "()Ljava/lang/String;");
-
-	if (jniGetStoragePath == NULL)
-		return "";
-
-	jstring     jString = (jstring)jniEnvironment->CallStaticObjectMethod(jniClass, jniGetStoragePath);
-	const char* cString = jniEnvironment->GetStringUTFChars(jString, NULL);
-	String      path    = String(cString);
-	
-	jniEnvironment->ReleaseStringUTFChars(jString, cString);
-
-	return path;
-}
+//String System::VM_FileSystem::GetAndroidStoragePath()
+//{
+//	jclass    jniClass          = VM_Window::JNI->getClass();
+//	JNIEnv*   jniEnvironment    = VM_Window::JNI->getEnvironment();
+//	jmethodID jniGetStoragePath = jniEnvironment->GetStaticMethodID(jniClass, "GetStoragePath", "()Ljava/lang/String;");
+//
+//	if (jniGetStoragePath == NULL)
+//		return "";
+//
+//	jstring     jString = (jstring)jniEnvironment->CallStaticObjectMethod(jniClass, jniGetStoragePath);
+//	const char* cString = jniEnvironment->GetStringUTFChars(jString, NULL);
+//	String      path    = String(cString);
+//	
+//	jniEnvironment->ReleaseStringUTFChars(jString, cString);
+//
+//	return path;
+//}
 #endif
 
 Strings System::VM_FileSystem::getDirectoryContent(const String &directoryPath, bool returnFiles, bool checkSystemFiles)
@@ -3614,13 +3599,12 @@ int System::VM_FileSystem::ScanAndroid(void* userData)
 
 	VM_Window::StatusString = VM_Window::Labels["status.scan.local"];
 
-	Strings files  = VM_FileSystem::GetAndroidMediaFiles();
-	int     result = RESULT_OK;
+	VM_Modal::ShowMessage(VM_Text::Format("FILES: %ulld", VM_Window::AndroidMediaFiles.size()));
+	LOG("FILES: %ulld", VM_Window::AndroidMediaFiles.size());
 
-	VM_Modal::ShowMessage(VM_Text::Format("FILES: %ulld", files.size()));
-	LOG("FILES: %ulld", files.size());
+	int result = RESULT_OK;
 
-	for (const auto &file : files)
+	for (const auto &file : VM_Window::AndroidMediaFiles)
 	{
 		VM_Modal::ShowMessage(VM_Text::Format("FILES: %s", file.c_str()));
 		LOG("FILE: %s", file.c_str());
