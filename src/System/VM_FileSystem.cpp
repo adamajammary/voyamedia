@@ -924,13 +924,23 @@ Strings System::VM_FileSystem::getAndroidAssets(const String &assetDirectory)
 
 Strings System::VM_FileSystem::GetAndroidMediaFiles()
 {
-	Strings   files;
-	jclass    jniClass         = VM_Window::JNI->getClass();
-	JNIEnv*   jniEnvironment   = VM_Window::JNI->getEnvironment();
-	jmethodID jniMethod        = jniEnvironment->GetStaticMethodID(jniClass, "GetMediaFiles", "[Ljava/lang/String;");
+	Strings files;
+
+	VM_JavaJNI jni = new VM_JavaJNI();
+
+	jni->init();
+
+	jclass    jniClass       = jni->getClass();
+	JNIEnv*   jniEnvironment = jni->getEnvironment();
+	jmethodID jniMethod      = jniEnvironment->GetStaticMethodID(jniClass, "GetMediaFiles", "[Ljava/lang/String;");
 
 	if (jniMethod == NULL)
+	{
+		jni->destroy();
+		DELETE_POINTER(jni);
+
 		return files;
+	}
 
 	jobjectArray jArray      = (jobjectArray)jniEnvironment->CallStaticObjectMethod(jniClass, jniMethod);
 	const int    arrayLength = jniEnvironment->GetArrayLength(jArray);
@@ -944,6 +954,9 @@ Strings System::VM_FileSystem::GetAndroidMediaFiles()
 
 		jniEnvironment->ReleaseStringUTFChars(jString, cString);
 	}
+
+	jni->destroy();
+	DELETE_POINTER(jni);
 
 	return files;
 }
