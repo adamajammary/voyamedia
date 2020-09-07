@@ -927,7 +927,7 @@ Strings System::VM_FileSystem::GetAndroidMediaFiles()
 	Strings   files;
 	jclass    jniClass       = VM_Window::JNI->getClass();
 	JNIEnv*   jniEnvironment = VM_Window::JNI->getEnvironment();
-	jmethodID jniMethod      = jniEnvironment->GetStaticMethodID(jniClass, "GetMediaFiles", "()[Ljava/lang/String;");
+	jmethodID jniMethod      = jniEnvironment->GetStaticMethodID(jniClass, "GetMediaFiles", "()[Ljava/lang/Object;");
 
 	if (jniMethod == NULL)
 		return files;
