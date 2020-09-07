@@ -70,7 +70,8 @@ JavaVM* Android::VM_JavaJNI::getJavaVM()
 
 int Android::VM_JavaJNI::init()
 {
-	this->jniEnvironment = (JNIEnv*)SDL_AndroidGetJNIEnv();
+	if (this->jniEnvironment == NULL)
+		this->jniEnvironment = (JNIEnv*)SDL_AndroidGetJNIEnv();
 
 	if (this->jniEnvironment == NULL)
 		return ERROR_UNKNOWN;

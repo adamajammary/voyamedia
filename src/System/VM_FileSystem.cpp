@@ -925,8 +925,9 @@ Strings System::VM_FileSystem::getAndroidAssets(const String &assetDirectory)
 Strings System::VM_FileSystem::GetAndroidMediaFiles()
 {
 	auto jni = new Android::VM_JavaJNI();
+
+	jni->attachThread(VM_Window::JNI->getJavaVM());
 	jni->init();
-	jni->attachThread();
 
 	Strings   files;
 	jclass    jniClass       = jni->getClass();
@@ -935,7 +936,7 @@ Strings System::VM_FileSystem::GetAndroidMediaFiles()
 
 	if (jniMethod == NULL)
 	{
-		jni->detachThread();
+		jni->detachThread(VM_Window::JNI->getJavaVM());
 		jni->destroy();
 		DELETE_POINTER(jni);
 
@@ -955,7 +956,7 @@ Strings System::VM_FileSystem::GetAndroidMediaFiles()
 		jniEnvironment->ReleaseStringUTFChars(jString, cString);
 	}
 
-	jni->detachThread();
+	jni->detachThread(VM_Window::JNI->getJavaVM());
 	jni->destroy();
 	DELETE_POINTER(jni);
 
