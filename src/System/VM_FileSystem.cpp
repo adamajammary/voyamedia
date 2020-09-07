@@ -926,6 +926,7 @@ Strings System::VM_FileSystem::GetAndroidMediaFiles()
 {
 	auto jni = new Android::VM_JavaJNI();
 	jni->init();
+	jni->attachThread();
 
 	Strings   files;
 	jclass    jniClass       = jni->getClass();
@@ -934,6 +935,7 @@ Strings System::VM_FileSystem::GetAndroidMediaFiles()
 
 	if (jniMethod == NULL)
 	{
+		jni->detachThread();
 		jni->destroy();
 		DELETE_POINTER(jni);
 
@@ -953,6 +955,7 @@ Strings System::VM_FileSystem::GetAndroidMediaFiles()
 		jniEnvironment->ReleaseStringUTFChars(jString, cString);
 	}
 
+	jni->detachThread();
 	jni->destroy();
 	DELETE_POINTER(jni);
 

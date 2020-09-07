@@ -18,7 +18,7 @@ Android::VM_JavaJNI::~VM_JavaJNI()
 
 void Android::VM_JavaJNI::attachThread()
 {
-	this->threadAttached = true;
+	this->attachThread(this->javaVM);
 }
 
 void Android::VM_JavaJNI::attachThread(JavaVM* javaVM)
@@ -42,7 +42,7 @@ void Android::VM_JavaJNI::destroy()
 
 void Android::VM_JavaJNI::detachThread()
 {
-	this->threadAttached = false;
+	this->detachThread(this->javaVM);
 }
 
 void Android::VM_JavaJNI::detachThread(JavaVM* javaVM)
