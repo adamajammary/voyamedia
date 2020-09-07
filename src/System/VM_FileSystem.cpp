@@ -924,7 +924,7 @@ Strings System::VM_FileSystem::getAndroidAssets(const String &assetDirectory)
 
 Strings System::VM_FileSystem::GetAndroidMediaFiles()
 {
-	Android::VM_JavaJNI jni = new VM_JavaJNI();
+	auto jni = new Android::VM_JavaJNI();
 	jni->init();
 
 	Strings   files;
