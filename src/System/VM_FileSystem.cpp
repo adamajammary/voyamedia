@@ -3610,22 +3610,14 @@ int System::VM_FileSystem::ScanAndroid(void* userData)
 
 	VM_Window::StatusString = VM_Window::Labels["status.scan.local"];
 
-	VM_Modal::ShowMessage(VM_Text::Format("FILES: %ulld", VM_Window::AndroidMediaFiles.size()));
-	LOG("FILES: %ulld", VM_Window::AndroidMediaFiles.size());
-
 	int result = RESULT_OK;
 
-	for (const auto &file : VM_Window::AndroidMediaFiles)
-	{
-		VM_Modal::ShowMessage(VM_Text::Format("FILES: %s", file.c_str()));
-		LOG("FILE: %s", file.c_str());
+	for (const auto &dir : VM_Window::AndroidMediaFiles) {
+		//result = VM_FileSystem::addMediaFile(file);
+		result = VM_FileSystem::AddMediaFilesRecursively(dir);
 
-		result = VM_FileSystem::addMediaFile(file);
-
-		if (result != RESULT_OK) {
-			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), file.c_str());
-			break;
-		}
+		if (result != RESULT_OK)
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), dir.c_str());
 	}
 
 	//if (VM_FileSystem::AddMediaFilesRecursively(VM_Window::AndroidStoragePath) == RESULT_OK)
