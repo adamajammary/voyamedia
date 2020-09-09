@@ -262,7 +262,7 @@ String Graphics::VM_Table::getSort()
 	else if (this->states[VM_Top::Selected].sortColumn == "modal_playlists_media_type")
 		sort = "media_type COLLATE NOCASE";
 	else if (this->states[VM_Top::Selected].sortColumn == "list_table_path")
-		sort = "path COLLATE NOCASE";
+		sort = "full_path COLLATE NOCASE";
 	else
 		sort = "name COLLATE NOCASE";
 
