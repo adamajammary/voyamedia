@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-![Voya Media screenshot](https://sourceforge.net/p/voyamedia/screenshot/VoyaMedia-8-1920.png)
+![Voya Media screenshot](https://www.jammary.com/img/player/VoyaMedia-1.jpg)
 
 Voya Media is a cross-platform media player that easily plays your music, pictures and videos.
 
