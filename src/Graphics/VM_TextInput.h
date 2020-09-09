@@ -26,6 +26,7 @@ namespace VoyaMedia
 			static bool   IsActive();
 			static int    SetActive(bool active, VM_Button* button = NULL);
 			static void   Backspace();
+			static void   Clear();
 			static void   Delete();
 			static void   Left();
 			static void   Right();

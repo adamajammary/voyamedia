@@ -187,11 +187,8 @@ String UPNP::VM_UPNP::getItemXML(const VM_UpnpFile* item, const String &itemType
 		return "";
 
 	VM_MediaTime durationTime = VM_MediaTime((double)item->duration);
-
-	char duration[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(duration, DEFAULT_CHAR_BUFFER_SIZE, "%02d:%02d:%02d", durationTime.hours, durationTime.minutes, durationTime.seconds);
-
-	String xml = "";
+	String       duration     = VM_Text::Format("%02d:%02d:%02d", durationTime.hours, durationTime.minutes, durationTime.seconds);
+	String       xml          = "";
 
 	xml.append("<item id=\"" + item->id + "\" parentID=\"" + parentID + "\" restricted=\"1\">");
 	xml.append("<dc:title>" + item->title + "</dc:title>");
@@ -888,10 +885,10 @@ int UPNP::VM_UPNP::ScanDevices(void* userData)
 {
 	VM_ThreadManager::Threads[THREAD_UPNP_CLIENT]->completed = false;
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.upnp"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.scan.upnp"];
 
 	// INITIALIZE THE VM_UPNP LIBRARY
-	int result = LIB_UPNP::UpnpInit(VM_UPNP::ClientIP.c_str(), 0);
+	int result = LIB_UPNP::UpnpInit2(VM_UPNP::ClientIP.c_str(), 0);
 
 	if ((result != UPNP_E_SUCCESS) && (result != UPNP_E_INIT)) {
 		VM_UPNP::stopClient(result);
@@ -914,7 +911,7 @@ int UPNP::VM_UPNP::ScanDevices(void* userData)
 		if (VM_Window::Quit)
 			break;
 
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "[%d%%] %s [%s]", ((i * 100) / UPNP_SEARCH_MAX_COUNT), VM_Window::Labels["status.scan.upnp"].c_str(), VM_UPNP::ClientIP.c_str());
+		VM_Window::StatusString = VM_Text::Format("[%d%%] %s [%s]", ((i * 100) / UPNP_SEARCH_MAX_COUNT), VM_Window::Labels["status.scan.upnp"].c_str(), VM_UPNP::ClientIP.c_str());
 
 		if (LIB_UPNP::UpnpSearchAsync(VM_UPNP::Client, UPNP_SEARCH_TIMEOUT, "upnp:rootdevice", NULL) != UPNP_E_SUCCESS)
 			break;
@@ -928,7 +925,7 @@ int UPNP::VM_UPNP::ScanDevices(void* userData)
 		return UPNP_E_SUCCESS;
 	}
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "[100%%] %s [%s]", VM_Window::Labels["status.scan.upnp"].c_str(), VM_UPNP::ClientIP.c_str());
+	VM_Window::StatusString = VM_Text::Format("[100%%] %s [%s]", VM_Window::Labels["status.scan.upnp"].c_str(), VM_UPNP::ClientIP.c_str());
 
 	if (VM_UPNP::Devices.empty()) {
 		VM_UPNP::stopClient(UPNP_E_NO_WEB_SERVER);
@@ -943,7 +940,7 @@ int UPNP::VM_UPNP::ScanDevices(void* userData)
 
 	if (!VM_UPNP::Device.empty())
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s %s [UPnP]", VM_Window::Labels["status.scan"].c_str(), VM_Text::GetUrlRoot(VM_UPNP::Device).c_str());
+		VM_Window::StatusString = VM_Text::Format("%s %s [UPnP]", VM_Window::Labels["status.scan"].c_str(), VM_Text::GetUrlRoot(VM_UPNP::Device).c_str());
 
 		if (VM_UPNP::scanFiles(VM_UPNP::Device.c_str()) <= 0) {
 			VM_UPNP::stopClient(UPNP_E_FILE_NOT_FOUND);
@@ -967,7 +964,7 @@ int UPNP::VM_UPNP::scanFiles(const char* mediaURL)
 	String           server      = VM_Text::GetUrlRoot(mediaURL);
 	VM_XmlNodes      services    = VM_XML::GetNodes("/root/device/serviceList/service", xmlDocument);
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s %s [UPnP]", VM_Window::Labels["status.scan"].c_str(), String(deviceName + " (" + server + ")").c_str());
+	VM_Window::StatusString = VM_Text::Format("%s %s [UPnP]", VM_Window::Labels["status.scan"].c_str(), String(deviceName + " (" + server + ")").c_str());
 
 	for (auto service : services)
 	{
@@ -1038,7 +1035,7 @@ int UPNP::VM_UPNP::scanFiles(const char* mediaURL)
 				if (!VM_FileSystem::IsMediaFile(path))
 					continue;
 
-				snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.adding"].c_str(), path.c_str());
+				VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.adding"].c_str(), path.c_str());
 
 				db = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
 
@@ -1050,7 +1047,7 @@ int UPNP::VM_UPNP::scanFiles(const char* mediaURL)
 				DELETE_POINTER(db);
 
 				if (mediaID > 0) {
-					snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.already_added"].c_str(), path.c_str());
+					VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.already_added"].c_str(), path.c_str());
 					continue;
 				}
 
@@ -1082,7 +1079,7 @@ int UPNP::VM_UPNP::scanFiles(const char* mediaURL)
 				}
 
 				if (!validMedia) {
-					snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), path.c_str());
+					VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), path.c_str());
 					continue;
 				}
 
@@ -1100,9 +1097,9 @@ int UPNP::VM_UPNP::scanFiles(const char* mediaURL)
 				{
 					filesAdded++;
 
-					snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
+					VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
 				} else {
-					snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
+					VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
 				}
 			}
 
@@ -1124,10 +1121,10 @@ int UPNP::VM_UPNP::Start(void* userData)
 {
 	VM_ThreadManager::Threads[THREAD_UPNP_SERVER]->completed = false;
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s UPnP Server [%s] ...", VM_Window::Labels["upnp.starting"].c_str(), VM_UPNP::ServerIP.c_str());
+	VM_Window::StatusString = VM_Text::Format("%s UPnP Server [%s] ...", VM_Window::Labels["upnp.starting"].c_str(), VM_UPNP::ServerIP.c_str());
 
 	// INITIALIZE THE UPNP LIBRARY
-	int result = LIB_UPNP::UpnpInit(VM_UPNP::ServerIP.c_str(), 0);
+	int result = LIB_UPNP::UpnpInit2(VM_UPNP::ServerIP.c_str(), 0);
 
 	if ((result != UPNP_E_SUCCESS) && (result != UPNP_E_INIT)) {
 		VM_UPNP::stopServer(result);
@@ -1150,8 +1147,7 @@ int UPNP::VM_UPNP::Start(void* userData)
 	}
 
 	// GENERATE THE SERVER DESCRIPTION URL
-	char mediaURL[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(mediaURL, DEFAULT_CHAR_BUFFER_SIZE, "http://%s:%d/description.xml", LIB_UPNP::UpnpGetServerIpAddress(), LIB_UPNP::UpnpGetServerPort());
+	String mediaURL = VM_Text::Format("http://%s:%d/description.xml", LIB_UPNP::UpnpGetServerIpAddress(), LIB_UPNP::UpnpGetServerPort());
 
 	// LET EVERYONE KNOW THE FILES HAVE BEEN UPDATED
 	VM_UPNP::updateID++;
@@ -1165,7 +1161,7 @@ int UPNP::VM_UPNP::Start(void* userData)
 	}
 
 	// TRY STARTING THE VM_UPNP MEDIA SERVER
-	result = LIB_UPNP::UpnpRegisterRootDevice(mediaURL, VM_UPNP::handleEvents, NULL, &VM_UPNP::server);
+	result = LIB_UPNP::UpnpRegisterRootDevice(mediaURL.c_str(), VM_UPNP::handleEvents, NULL, &VM_UPNP::server);
 
 	if (result != UPNP_E_SUCCESS) {
 		VM_UPNP::stopServer(result);
@@ -1198,7 +1194,7 @@ int UPNP::VM_UPNP::Start(void* userData)
 	while (VM_ThreadManager::Threads[THREAD_UPNP_SERVER]->start && !VM_Window::Quit)
 	{
 		if (VM_ThreadManager::Threads[THREAD_UPNP_CLIENT]->completed)
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "UPnP Server %s [%s:%u]", VM_Window::Labels["upnp.running"].c_str(), LIB_UPNP::UpnpGetServerIpAddress(), LIB_UPNP::UpnpGetServerPort());
+			VM_Window::StatusString = VM_Text::Format("UPnP Server %s [%s:%u]", VM_Window::Labels["upnp.running"].c_str(), LIB_UPNP::UpnpGetServerIpAddress(), LIB_UPNP::UpnpGetServerPort());
 
 		SDL_Delay(DELAY_TIME_BACKGROUND);
 	}
@@ -1221,13 +1217,13 @@ int UPNP::VM_UPNP::stopClient(int result)
 	VM_UPNP::ClientIP = "";
 
 	if (result == UPNP_E_FILE_NOT_FOUND)
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_upnp_items"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["error.no_upnp_items"];
 	else if (result == UPNP_E_NO_WEB_SERVER)
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_upnp"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["error.no_upnp"];
 	else if (result == UPNP_E_SUCCESS)
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.finished"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["status.scan.finished"];
 	else
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s %s", VM_Window::Labels["error.init_upnp"].c_str(), LIB_UPNP::UpnpGetErrorMessage(result));
+		VM_Window::StatusString = VM_Text::Format("%s %s", VM_Window::Labels["error.init_upnp"].c_str(), LIB_UPNP::UpnpGetErrorMessage(result));
 
 	VM_ThreadManager::Threads[THREAD_UPNP_CLIENT]->start     = false;
 	VM_ThreadManager::Threads[THREAD_UPNP_CLIENT]->completed = true;
@@ -1251,11 +1247,11 @@ int UPNP::VM_UPNP::stopServer(int result)
 	VM_UPNP::deviceUDN = "";
 
 	if (result == UPNP_E_FILE_NOT_FOUND)
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.share_no_files"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["error.share_no_files"];
 	else if (result != UPNP_E_SUCCESS)
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s UPnP Server: %s", VM_Window::Labels["error.start"].c_str(), LIB_UPNP::UpnpGetErrorMessage(result));
+		VM_Window::StatusString = VM_Text::Format("%s UPnP Server: %s", VM_Window::Labels["error.start"].c_str(), LIB_UPNP::UpnpGetErrorMessage(result));
 	else
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "UPnP Server %s", VM_Window::Labels["upnp.stopped"].c_str());
+		VM_Window::StatusString = VM_Text::Format("UPnP Server %s", VM_Window::Labels["upnp.stopped"].c_str());
 
 	VM_ThreadManager::Threads[THREAD_UPNP_SERVER]->start     = false;
 	VM_ThreadManager::Threads[THREAD_UPNP_SERVER]->completed = true;
@@ -1263,7 +1259,7 @@ int UPNP::VM_UPNP::stopServer(int result)
 	return UPNP_E_SUCCESS;
 }
 
-int UPNP::VM_UPNP::webServerClose(void* fileHandle, const void* cookie)
+int UPNP::VM_UPNP::webServerClose(void* fileHandle, const void* cookie, const void* request_cookie)
 {
 	VM_UpnpFile* file = static_cast<VM_UpnpFile*>(fileHandle);
 
@@ -1282,7 +1278,7 @@ int UPNP::VM_UPNP::webServerClose(void* fileHandle, const void* cookie)
 	return UPNP_E_SUCCESS;
 }
 
-int UPNP::VM_UPNP::webServerGetInfo(const char* filename, LIB_UPNP::UpnpFileInfo* info, const void* cookie)
+int UPNP::VM_UPNP::webServerGetInfo(const char* filename, LIB_UPNP::UpnpFileInfo* info, const void* cookie, const void** request_cookie)
 { 
 	if ((filename == NULL) || (info == NULL) || VM_UPNP::files.empty())
 		return ERROR_INVALID_ARGUMENTS;
@@ -1315,7 +1311,7 @@ int UPNP::VM_UPNP::webServerGetInfo(const char* filename, LIB_UPNP::UpnpFileInfo
 	return UPNP_E_SUCCESS;
 }
 
-void* UPNP::VM_UPNP::webServerOpen(const char* filename, LIB_UPNP::UpnpOpenFileMode mode, const void* cookie)
+void* UPNP::VM_UPNP::webServerOpen(const char* filename, LIB_UPNP::UpnpOpenFileMode mode, const void* cookie, const void* request_cookie)
 { 
 	if ((filename == NULL) || (mode != LIB_UPNP::UPNP_READ))
 		return NULL;
@@ -1341,7 +1337,7 @@ void* UPNP::VM_UPNP::webServerOpen(const char* filename, LIB_UPNP::UpnpOpenFileM
 	return NULL;
 }
 
-int UPNP::VM_UPNP::webServerRead(void* fileHandle, char* buffer, size_t bufferSize, const void* cookie)
+int UPNP::VM_UPNP::webServerRead(void* fileHandle, char* buffer, size_t bufferSize, const void* cookie, const void* request_cookie)
 {
 	if ((fileHandle == NULL) || (buffer == NULL))
 		return 0;
@@ -1364,9 +1360,9 @@ int UPNP::VM_UPNP::webServerRead(void* fileHandle, char* buffer, size_t bufferSi
 }
 
 #if defined _windows
-int UPNP::VM_UPNP::webServerSeek(void* fileHandle, int64_t offset, int origin, const void* cookie)
+int UPNP::VM_UPNP::webServerSeek(void* fileHandle, int64_t offset, int origin, const void* cookie, const void* request_cookie)
 #else
-int UPNP::VM_UPNP::webServerSeek(void* fileHandle, off_t offset, int origin, const void* cookie)
+int UPNP::VM_UPNP::webServerSeek(void* fileHandle, off_t offset, int origin, const void* cookie, const void* request_cookie)
 #endif
 {
 	if (fileHandle == NULL)
@@ -1396,7 +1392,7 @@ int UPNP::VM_UPNP::webServerSeek(void* fileHandle, off_t offset, int origin, con
 	return UPNP_E_SUCCESS;
 }
 
-int UPNP::VM_UPNP::webServerWrite(void* fileHandle, char* buffer, size_t bufferSize, const void* cookie)
+int UPNP::VM_UPNP::webServerWrite(void* fileHandle, char* buffer, size_t bufferSize, const void* cookie, const void* request_cookie)
 {
 	return ERROR_UNKNOWN;
 }

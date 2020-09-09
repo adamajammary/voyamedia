@@ -41,51 +41,46 @@ extern "C"
 
 // Platform-specific APIs
 #if defined _android
-	#include <dirent.h>								// mkdir(x), opendir(x)
-	#include <fcntl.h>								// fcntl(x)
-	#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
-	#include <unistd.h>								// chdir(x)
-	#include <android/asset_manager_jni.h>			// VM_FileSystem::GetAndroidAssets(x)
-	#include <android/native_activity.h>			// VM_FileSystem::GetAndroidAssets(x)
-	#include <sys/stat.h>							// stat64, lstat64(x), _stat64, _stat64(x)
+	#include <dirent.h>                            // mkdir(x), opendir(x)
+	#include <fcntl.h>                             // fcntl(x)
+	#include <unistd.h>                            // chdir(x)
+	#include <android/asset_manager_jni.h>         // VM_FileSystem::GetAndroidAssets(x)
+	#include <android/native_activity.h>           // VM_FileSystem::GetAndroidAssets(x)
+	#include <sys/stat.h>                          // stat64, lstat64(x), _stat64, _stat64(x)
 #elif defined _ios
-	#include <dirent.h>								// mkdir(x),  opendir(x)
-	#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
-	#include <AVFoundation/AVAssetExportSession.h>	// AVAssetExportSession*
-	#include <AVFoundation/AVFoundation.h>			// AVAudioSession
-	#include <Foundation/Foundation.h>				// NSString, NSArray, NSURL, NSUUID
-	#include <MediaPlayer/Mediaplayer.h>			// MPMediaItem, MPMediaItemArtwork, MPMediaQuery
-	#include <Photos/Photos.h>						// PHAsset, PHFetchResult, PHFetchOptions
-	#include <sys/stat.h>							// stat64, lstat64(x), _stat64, _stat64(x)
-	#include <os/log.h>								// os_log(x)
+	#include <dirent.h>                            // mkdir(x),  opendir(x)
+	#include <ifaddrs.h>                           // ifaddrs, getifaddrs(x)
+	#include <netdb.h>                             // addrinfo, gethostname(x)
+	#include <AVFoundation/AVAssetExportSession.h> // AVAssetExportSession*
+	#include <AVFoundation/AVFoundation.h>         // AVAudioSession
+	#include <Foundation/Foundation.h>             // NSString, NSArray, NSURL, NSUUID
+	#include <MediaPlayer/Mediaplayer.h>           // MPMediaItem, MPMediaItemArtwork, MPMediaQuery
+	#include <Photos/Photos.h>                     // PHAsset, PHFetchResult, PHFetchOptions
+	#include <sys/stat.h>                          // stat64, lstat64(x), _stat64, _stat64(x)
+	#include <os/log.h>                            // os_log(x)
 #elif defined _linux
-	#include <dirent.h>								// opendir(x)
-	#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
-	#include <arpa/inet.h>							// inet_addr(x), inet_ntoa(x)
-	#include <gtk/gtk.h>							// gtk_file_chooser_dialog_new(x), gtk_dialog_run(x), gtk_file_chooser_get_uri(x)
-	#include <sys/fcntl.h>							// fcntl(x)
-	#include <sys/socket.h>							// socket(x), bind(x), connect(x)
-	#include <sys/stat.h>							// mkdir(x), stat64, lstat64(x), _stat64, _stat64(x)
-	#include <sys/utsname.h>						// uname(x)
+	#include <dirent.h>                            // opendir(x)
+	#include <gtk/gtk.h>                           // gtk_file_chooser_dialog_new(x), gtk_dialog_run(x), gtk_file_chooser_get_uri(x)
+	#include <sys/fcntl.h>                         // fcntl(x)
+	#include <sys/stat.h>                          // mkdir(x), stat64, lstat64(x), _stat64, _stat64(x)
 #elif defined _macosx
-	#include <ifaddrs.h>
-	#include <netdb.h>								// hostent, in_addr, gethostname(x), gethostbyname(x)
-	#include <arpa/inet.h>							// inet_addr(x), inet_ntoa(x)
-	#include <AppKit/AppKit.h>						// NSOpenPanel*
-	#include <Foundation/Foundation.h>				// NSString, NSArray, NSURL
-	#include <sys/dir.h>							// opendir(x)
-	#include <sys/socket.h>							// socket(x), bind(x), connect(x)
-	#include <sys/stat.h>							// mkdir(x), stat64, lstat64(x), _stat64, _stat64(x)
+	#include <ifaddrs.h>                           // ifaddrs, getifaddrs(x)
+	#include <netdb.h>                             // addrinfo, gethostname(x)
+	#include <AppKit/AppKit.h>                     // NSOpenPanel*
+	#include <Foundation/Foundation.h>             // NSString, NSArray, NSURL
+	#include <sys/dir.h>                           // opendir(x)
+	#include <sys/stat.h>                          // mkdir(x), stat64, lstat64(x), _stat64, _stat64(x)
 #elif defined _windows
-	#include <Commdlg.h>							// GetOpenFileNameA(x)
-	#include <direct.h>								// mkdir(x)
-	#include <dirent.h>								// opendir(x)
-	#include <Shellapi.h>							// ShellExecuteA(x)
-	#include <Shlobj.h>								// SHBrowseForFolder(), SHGetPathFromIDListA
+	#include <Commdlg.h>                           // GetOpenFileNameA(x)
+	#include <direct.h>                            // mkdir(x)
+	#include <dirent.h>                            // opendir(x)
+	#include <iphlpapi.h>                          // GetAdaptersAddresses
+	#include <Shellapi.h>                          // ShellExecuteA(x)
+	#include <Shlobj.h>                            // SHBrowseForFolder(), SHGetPathFromIDListA
 #endif
 
 #if defined _ios || defined _macosx
-	#include <SystemConfiguration/SCNetworkReachability.h>	// SCNetworkReachability
+	#include <SystemConfiguration/SCNetworkReachability.h> // SCNetworkReachability
 #endif
 
 namespace LIB_FFMPEG
@@ -93,6 +88,7 @@ namespace LIB_FFMPEG
 	extern "C"
 	{
 		#include <libavformat/avformat.h>
+		#include <libavutil/imgutils.h>
 		#include <libavutil/opt.h>
 		#include <libavutil/time.h>
 		#include <libswresample/swresample.h>
@@ -204,7 +200,6 @@ namespace VoyaMedia
 	#define FREE_DB(d)             if (d != NULL) { LIB_SQLITE::sqlite3_close(d);  d = NULL; }
 	#define FREE_JSON_DOC(d)       if (d != NULL) { LIB_JSON::json_free_value(&d); d = NULL; }
 	#define FREE_IMAGE(i)          if (i != NULL) { LIB_FREEIMAGE::FreeImage_Unload(i); i = NULL; }
-	#define FREE_FRAME(f, p)       if (f != NULL) { if (p) { LIB_FFMPEG::avpicture_free(reinterpret_cast<LIB_FFMPEG::AVPicture*>(f)); } LIB_FFMPEG::av_frame_free(&f); f = NULL; }
 	#define FREE_MEMORY(m)         if (m != NULL) { LIB_FREEIMAGE::FreeImage_CloseMemory(m); m = NULL; }
 	#define FREE_PACKET(p)         if (p != NULL) { LIB_FFMPEG::av_free_packet(p); LIB_FFMPEG::av_free(p); p = NULL; }
 	#define FREE_POINTER(p)        if (p != NULL) { free(p); p = NULL; }
@@ -228,7 +223,7 @@ namespace VoyaMedia
 	#define AUDIO_IS_SELECTED      (VM_Top::Selected == MEDIA_TYPE_AUDIO)
 	#define PICTURE_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_PICTURE)
 	#define VIDEO_IS_SELECTED      (VM_Top::Selected == MEDIA_TYPE_VIDEO)
-	#define YOUTUBE_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_YOUTUBE)
+	//#define YOUTUBE_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_YOUTUBE)
 	#define SHOUTCAST_IS_SELECTED  (VM_Top::Selected == MEDIA_TYPE_SHOUTCAST)
 	#define TMDB_MOVIE_IS_SELECTED (VM_Top::Selected == MEDIA_TYPE_TMDB_MOVIE)
 	#define TMDB_TV_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_TMDB_TV)
@@ -256,6 +251,11 @@ namespace VoyaMedia
 		FONT_MERGED, FONT_CJK, NR_OF_FONTS
 	};
 
+	enum VM_LoopType
+	{
+		LOOP_TYPE_NORMAL, LOOP_TYPE_LOOP, LOOP_TYPE_SHUFFLE
+	};
+
 	enum VM_MediaType
 	{
 		MEDIA_TYPE_UNKNOWN = -1,
@@ -266,16 +266,24 @@ namespace VoyaMedia
 		MEDIA_TYPE_ATTACHMENT,
 		MEDIA_TYPE_NB,
 		MEDIA_TYPE_PICTURE,
-		MEDIA_TYPE_YOUTUBE,
+		//MEDIA_TYPE_YOUTUBE,
 		MEDIA_TYPE_SHOUTCAST,
 		MEDIA_TYPE_TMDB_MOVIE,
 		MEDIA_TYPE_TMDB_TV,
 		NR_OF_MEDIA_TYPES
 	};
 
-	enum VM_PlayType
+	enum VM_RefreshType
 	{
-		PLAY_TYPE_NORMAL, PLAY_TYPE_LOOP, PLAY_TYPE_SHUFFLE
+		REFRESH_NONE,
+		REFRESH_ALL,
+		REFRESH_LOOP,
+		REFRESH_PLAY,
+		REFRESH_PROGRESS,
+		REFRESH_ROTATE,
+		REFRESH_STRETCH,
+		REFRESH_VOLUME,
+		REFRESH_VOLUME_AND_MUTE
 	};
 
 	enum VM_SubAlignment
@@ -353,8 +361,7 @@ namespace VoyaMedia
 
 	enum VM_TouchEventType
 	{
-		TOUCH_EVENT_UNKNOWN = -1, TOUCH_EVENT_TAP, TOUCH_EVENT_LONG_PRESS,
-		//TOUCH_EVENT_DOUBLE_TAP,
+		TOUCH_EVENT_UNKNOWN = -1, TOUCH_EVENT_TAP, TOUCH_EVENT_LONG_PRESS, TOUCH_EVENT_DOUBLE_TAP,
 		//TOUCH_EVENT_SWIPE_DOWN, TOUCH_EVENT_SWIPE_LEFT, TOUCH_EVENT_SWIPE_RIGHT, TOUCH_EVENT_SWIPE_UP
 	};
 
@@ -396,7 +403,8 @@ namespace VoyaMedia
 	const String APP_DESCRIPTION      = "__APP_DESCRIPTION__";
 	const String APP_NAME             = "__APP_NAME__";
 	const String APP_PRIVACY          = (APP_COMPANY + " does not collect any information stored on the local system.");
-	const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libcurl (MIT), libXML2 (MIT), libupnp (BSD), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Dropbox, Google Maps API, Google Noto Fonts (OFL), SHOUTcast Radio Directory API, TMDb API, YouTube Data API";
+	//const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libcurl (MIT), libXML2 (MIT), libupnp (BSD), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Dropbox, Google Maps API, Google Noto Fonts (OFL), SHOUTcast Radio Directory API, TMDb API, YouTube Data API";
+	const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libcurl (MIT), libXML2 (MIT), libupnp (BSD), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Dropbox, Google Maps API, Google Noto Fonts (OFL), SHOUTcast Radio Directory API, TMDb API";
 	const String APP_UPDATE_V3_MSG    = ("Welcome to " + APP_NAME + " 3\n\nWhat's new:\n- Completely refactored the UI-rendering engine\n- UI is now DPI-aware and independent of screen sizes and resolutions\n- Completely restructured the database (*)\n\n(*) Settings have been reset\n(*) Media library is empty (files must to be re-added)!");
 	const String APP_URL              = "__APP_URL__";
 	const String APP_VERSION          = "__APP_VERSION__";
@@ -409,10 +417,11 @@ namespace VoyaMedia
 	const String SHOUTCAST_API_URL    = "https://api.shoutcast.com/legacy/";
 	const String TMDB_API_KEY         = "__TMDB_API_KEY__";
 	const String TMDB_API_URL         = "https://api.themoviedb.org/3/";
-	const String YOUTUBE_API_KEY      = "__YOUTUBE_API_KEY__";
-	const String YOUTUBE_API_URL      = "https://www.googleapis.com/youtube/v3/";
+	//const String YOUTUBE_API_KEY      = "__YOUTUBE_API_KEY__";
+	//const String YOUTUBE_API_URL      = "https://www.googleapis.com/youtube/v3/";
 
 	const int    AUDIO_BUFFER_SIZE      = 768000;
+	const int    CURSOR_HIDE_DELAY      = 2000;
 	const char   GOOGLE_IP[]            = "216.58.211.132";
 	const int    HTTP_RESPONSE_OK       = 200;
 	const double INVALID_COORDINATE     = 1000.0;
@@ -441,21 +450,17 @@ namespace VoyaMedia
 	const SDL_Color SDL_COLOR_BLACK = { 0, 0, 0, 0xFF };
 	const SDL_Color SDL_COLOR_WHITE = { 0xFF, 0xFF, 0xFF, 0xFF };
 
-	#if defined ANDROID || defined _ios
-		const int CURSOR_HIDE_DELAY = 5000;
-	#elif defined _linux || defined _macosx || defined _windows
-		const int CURSOR_HIDE_DELAY = 2000;
-	#endif
-
-	const int          DEFAULT_MARGIN            = 30;
+	const int          DEFAULT_MARGIN            = 10;
 	const int          DEFAULT_CHAR_BUFFER_SIZE  = 1024;
 	const int          DEFAULT_WCHAR_BUFFER_SIZE = 4096;
-	//const double       DEFAULT_FONT_DPI_RATIO    = 0.75; // (72.0 / 96.0)
+	const float        DEFAULT_FONT_DPI_RATIO    = 0.75f; // (72.0 / 96.0)
 	const int          DEFAULT_FONT_SIZE         = 11;
 	const int          DEFAULT_FONT_SIZE_SUB     = 48;
-	const VM_PlayType  DEFAULT_LOOP_TYPE         = PLAY_TYPE_NORMAL;
+	const int          DEFAULT_IMG_TXT_SPACING   = 5;
+	const VM_LoopType  DEFAULT_LOOP_TYPE         = LOOP_TYPE_NORMAL;
 	const VM_MediaType DEFAULT_MEDIA_TYPE        = MEDIA_TYPE_AUDIO;
 	const int          DEFAULT_SCALE_FILTER      = SWS_LANCZOS;
+	const SDL_Point    DEFAULT_SUB_SCREEN_SIZE   = { 384, 288 };
 
 	#if defined _android
 		const float DEFAULT_DPI = 160.0f;
@@ -469,7 +474,7 @@ namespace VoyaMedia
 
 	const int    DELAY_TIME_BACKGROUND = 200;
 	const int    DELAY_TIME_DEFAULT    = 15;
-	const int    DELAY_TIME_GUI_RENDER = 300;
+	const int    DELAY_TIME_GUI_RENDER = 200;
 	const int    DELAY_TIME_ONE_MS     = 1;
 	const double DELAY_TIME_SUB_RENDER = 0.1;
 
@@ -514,6 +519,7 @@ namespace VoyaMedia
 
 	const int MIN_OUTLINE           = 3;
 	const int MIN_PACKET_QUEUE_SIZE = 25;
+	const int MIN_SUB_PACKET_SIZE   = 100;
 	const int MIN_WINDOW_SIZE       = 360;
 
 	const int ONE_THOUSAND   = 1000;
@@ -567,13 +573,6 @@ namespace VoyaMedia
 		struct VM_TableState;
 		class  VM_Texture;
 
-		struct VM_PointF
-		{
-			float x, y;
-			VM_PointF()                 { this->x = 0; this->y = 0; }
-			VM_PointF(float x, float y) { this->x = x; this->y = y; }
-		};
-
 		typedef std::vector<VM_Button*>                          VM_Buttons;
 		typedef umapEH<VM_MediaType, StringMap, VM_EnumHash>     VM_CacheResponses;
 		typedef std::vector<VM_Texture*>                         VM_Textures;
@@ -607,6 +606,7 @@ namespace VoyaMedia
 		typedef std::list<VM_Subtitle*>           VM_Subtitles;
 		typedef std::vector<VM_SubStyle*>         VM_SubStyles;
 		typedef std::vector<VM_SubTexture*>       VM_SubTextures;
+		typedef std::pair<size_t, VM_SubTextures> VM_SubTextureId;
 		typedef umap<size_t, VM_SubTextures>      VM_SubTexturesId;
 	}
 

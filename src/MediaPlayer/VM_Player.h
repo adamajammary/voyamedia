@@ -82,7 +82,7 @@ namespace VoyaMedia
 			SDL_mutex*                 mutex;
 			VM_Packets                 packets;
 			bool                       packetsAvailable;
-			Graphics::VM_PointF        scale;
+			SDL_FPoint                 scale;
 			SDL_Point                  size;
 			LIB_FFMPEG::AVStream*      stream;
 			std::vector<VM_SubStyle*>  styles;
@@ -128,13 +128,12 @@ namespace VoyaMedia
 			LIB_FFMPEG::AVFrame*  frame;
 			int                   frameDecoded;
 			int                   frameDuration;
-			LIB_FFMPEG::AVPicture frameEncoded;
+			LIB_FFMPEG::AVFrame*  frameEncoded;
 			int                   index;
 			SDL_mutex*            mutex;
 			VM_Packets            packets;
 			bool                  packetsAvailable;
 			double                pts;
-			SDL_Rect              renderLocation;
 			LIB_FFMPEG::AVStream* stream;
 			Graphics::VM_Texture* texture;
 			SDL_Thread*           thread;
@@ -153,7 +152,6 @@ namespace VoyaMedia
 				this->mutex            = NULL;
 				this->packetsAvailable = true;
 				this->pts              = 0.0;
-				this->renderLocation   = {};
 				this->stream           = NULL;
 				this->index            = -1;
 				this->texture          = NULL;
@@ -174,7 +172,7 @@ namespace VoyaMedia
 			bool        isPlaying;
 			bool        isStopped;
 			bool        keepAspectRatio;
-			VM_PlayType loopType;
+			VM_LoopType loopType;
 			bool        openFile;
 			bool        quit;
 			Strings     urls;
@@ -218,6 +216,7 @@ namespace VoyaMedia
 			static VM_PlayerState               State;
 			static Strings                      SubsExternal;
 			static System::VM_TimeOut*          TimeOut;
+			static SDL_Rect                     VideoDimensions;
 
 		private:
 			static VM_PlayerAudioContext        audioContext;
@@ -256,7 +255,7 @@ namespace VoyaMedia
 			static uint32_t                   GetVideoPixelFormat(LIB_FFMPEG::AVPixelFormat pixelFormat);
 			static LIB_FFMPEG::AVPixelFormat  GetVideoPixelFormat(uint32_t pixelFormat);
 			static int                        GetStreamIndex(VM_MediaType mediaType);
-			static Graphics::VM_PointF        GetSubScale();
+			static SDL_FPoint                 GetSubScale();
 			static void                       Init();
 			static bool                       IsYUV(LIB_FFMPEG::AVPixelFormat pixelFormat);
 			static void                       KeepAspectRatioToggle();

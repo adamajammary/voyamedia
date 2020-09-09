@@ -5,6 +5,11 @@
 #ifndef VM_FILESYSTEM_H
 #define VM_FILESYSTEM_H
 
+#if defined _android || defined _linux
+	#include <ifaddrs.h> // ifaddrs, getifaddrs(x)
+	#include <netdb.h>   // addrinfo, gethostname(x)
+#endif
+
 namespace VoyaMedia
 {
 	namespace System
@@ -75,9 +80,9 @@ namespace VoyaMedia
 			static String                       GetShoutCastStation(int stationID);
 			static StringMap                    GetTmdbDetails(int mediaID, VM_MediaType mediaType);
 			static String                       GetURL(VM_UrlType urlType, const String &data = "");
-			static StringMap                    GetYouTubeDetails(const String &mediaID);
-			static Strings                      GetYouTubeVideos(const String &mediaURL);
-			static String                       GetYouTubeVideo(const String &videoID);
+			//static StringMap                    GetYouTubeDetails(const String &mediaID);
+			//static Strings                      GetYouTubeVideos(const String &mediaURL);
+			//static String                       GetYouTubeVideo(const String &videoID);
 			static bool                         HasInternetConnection();
 			static void                         InitFFMPEG();
 			static int                          InitLibraries();
@@ -102,7 +107,9 @@ namespace VoyaMedia
 			static int                          SetWorkingDirectory();
 		
 			#if defined _android
-				static String    GetAndroidStoragePath();
+				static Strings   GetAndroidMediaFiles();
+				//static String    GetAndroidStoragePath();
+				static void      RequestAndroidStoragePermission();
 				static int       ScanAndroid(void* userData);
 			#elif defined _ios
 				static void      DeleteFileITunes(const String &filePath);

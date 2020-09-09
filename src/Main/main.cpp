@@ -46,7 +46,8 @@ int main(const int argc, char* argv[])
 		VM_EventManager::HandleEvents();
 
 		#if defined _android
-			VM_EventManager::HandleHeadSetUnpluggedAndroid(VM_Window::JNI->getEnvironment());
+			VM_EventManager::HandleStoragePermissionAndroid();
+			VM_EventManager::HandleHeadSetUnpluggedAndroid();
 
 			if (VM_Window::StartWakeLock)
 				VM_EventManager::WakeLockStart();
@@ -115,27 +116,23 @@ int main(const int argc, char* argv[])
 		}
 
 		// Try to open the requested URL in a web browser in the main UI thread (can be requested from other threads)
-		if (!VM_Window::OpenURL.empty() && (VM_FileSystem::OpenWebBrowserT(VM_Window::OpenURL) != RESULT_OK))
-		{
-			snprintf(
-				VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'",
-				VM_Window::Labels["error.open"].c_str(), VM_Window::OpenURL.c_str()
-			);
-
-			VM_Window::OpenURL = "";
+		if (!VM_Window::OpenURL.empty() && (VM_FileSystem::OpenWebBrowserT(VM_Window::OpenURL) != RESULT_OK)) {
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.open"].c_str(), VM_Window::OpenURL.c_str());
+			VM_Window::OpenURL      = "";
 		}
 
 		// Update the status text if it has changed
 		VM_Button* statusText = dynamic_cast<VM_Button*>(VM_GUI::Components["status_text"]);
 
-		if ((statusText != NULL) && (strcmp(VM_Window::StatusString, statusText->getText().c_str()) != 0))
+		if ((statusText != NULL) && (VM_Window::StatusString != statusText->getText()))
 			statusText->setText(VM_Window::StatusString);
 
 		// Render the current UI if the window is active/visible
 		VM_Window::Render();
 
 		// Sleep to save system resource usage
-		if ((VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED) && VM_Player::State.isPlaying)
+		//if ((VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED) && VM_Player::State.isPlaying)
+		if (VIDEO_IS_SELECTED && VM_Player::State.isPlaying)
 			SDL_Delay(DELAY_TIME_DEFAULT);
 		else
 			SDL_Delay(DELAY_TIME_GUI_RENDER);

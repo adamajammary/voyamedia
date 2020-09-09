@@ -14,6 +14,7 @@ Graphics::VM_Component::VM_Component()
 	this->fontSize        = DEFAULT_FONT_SIZE;
 	this->id              = "";
 	this->margin          = {};
+	this->overlayColor    = {};
 	this->parent          = NULL;
 	this->selected        = false;
 	this->visible         = true;
@@ -57,9 +58,14 @@ int Graphics::VM_Component::render()
 	if (!this->visible)
 		return ERROR_INVALID_ARGUMENTS;
 
-	if ((this->backgroundColor.a == 0xFF) || (this->parent == NULL) || (this->parent->backgroundColor.a == 0xFF))
-		VM_Graphics::FillArea(&this->backgroundColor, &this->backgroundArea);
+	SDL_Rect area = SDL_Rect(this->backgroundArea);
 
+	area.x += this->borderWidth.left;
+	area.y += this->borderWidth.top;
+	area.w -= (this->borderWidth.left + this->borderWidth.right);
+	area.h -= (this->borderWidth.top  + this->borderWidth.bottom);
+
+	VM_Graphics::FillArea(&this->backgroundColor, &area);
 	VM_Graphics::FillBorder(&this->borderColor, &this->backgroundArea, this->borderWidth);
 
 	for (auto button : this->buttons)
@@ -77,6 +83,7 @@ void Graphics::VM_Component::setColors()
 	this->backgroundColor = this->getColor("background");
 	this->borderColor     = this->getColor("border");
 	this->highlightColor  = this->getColor("highlight");
+	this->overlayColor    = this->getColor("overlay");
 }
 
 void Graphics::VM_Component::setPositionAlign(int positionX, int positionY)

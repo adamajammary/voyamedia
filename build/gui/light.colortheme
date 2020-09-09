@@ -14,6 +14,9 @@ middle_search_input.text-color=#000000FF
 
 middle_search_button.background-color=#101010FF
 
+middle_search_clear.background-color=#FFFFFFFF
+middle_search_clear.border-color=#101010FF
+
 middle_search_playlist_save.background-color=#101010FF
 
 list.border-color=#303030FF
@@ -26,13 +29,14 @@ list_table.row2-color=#FFFFFFFF
 list_table.text-color=#000000FF
 
 list_table_file.text-color=#FFFFFFFF
+list_table_path.text-color=#FFFFFFFF
 
 list_table_scrollbar.background-color=#101010FF
+list_table_scrollbar.border-color=#101010FF
 list_table_scrollbar_bar.background-color=#F97F10FF
 
-list_table_bottom.background-color=#101010FF
+list_table_bottom.background-color=#F97F10FF
 list_table_bottom.border-color=#101010FF
-list_details_text.background-color=#F97F10FF
 
 bottom.background-color=#202020FF
 
@@ -93,8 +97,14 @@ modal_playlists_remove.background-color=#101010FF
 
 # MODAL - RIGHT-CLICK
 
+modal_right_click_info.background-color=#101010FF
+modal_right_click_info.border-color=#FFFFFFFF
+
 modal_right_click_remove_file.background-color=#101010FF
 modal_right_click_remove_file.border-color=#FFFFFFFF
+
+modal_right_click_remove_path.background-color=#101010FF
+modal_right_click_remove_path.border-color=#FFFFFFFF
 
 modal_right_click_tmbd_movie.background-color=#101010FF
 modal_right_click_tmbd_movie.border-color=#FFFFFFFF

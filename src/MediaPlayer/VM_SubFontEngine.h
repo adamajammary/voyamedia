@@ -48,18 +48,21 @@ namespace VoyaMedia
 			static int            getDialoguePropOffset(const Strings &dialogueSplit);
 			static SDL_Rect       getDrawRect(const String &subLine, VM_SubStyle* style);
 			static VM_SubStyle*   getSubStyle(const VM_SubStyles &subStyles, const Strings &subSplit);
+			static void           handleSubCollisions(const VM_SubTextureId &subTextures, const VM_SubTexturesId &subs);
+			static int            handleSubsOutOfBound(const VM_SubTextureId &subTextures);
 			static void           removeSubs(VM_SubTexturesId &subs);
 			static void           removeSubs(VM_SubTexturesId &subs, size_t id);
 			static int            renderSub(VM_SubTexture* subTexture);
 			static int            renderSubBorderShadow(VM_SubTexture* subTexture);
 			static void           renderSubs(VM_SubTexturesId &subs);
-			static void           renderSubsPositionAbsolute(VM_SubTexturesId &subs);
-			static void           renderSubsPositionRelative(VM_SubTexturesId &subs);
 			static void           setSubPositionAbsolute(const VM_SubTexturesId &subs);
-			static void           setSubPositionRelativeTop(const VM_SubTexturesId &subs);
+			static void           setSubPositionRelative(const VM_SubTexturesId &subs);
 			static void           setTotalWidthAbsolute(const VM_SubTexturesId &subs);
 			static void           setTotalWidthRelative(const VM_SubTexturesId &subs);
-			static int            splitSub(uint16_t* subStringUTF16, VM_Subtitle* sub, VM_Subtitle* prevSub, std::vector<uint16_t*> &subStrings16);
+			static int            splitSub(uint16_t* subStringUTF16, VM_Subtitle* sub, std::vector<uint16_t*> &subStrings16);
+			static size_t         splitSubGetNrLines(const Strings &words, TTF_Font* font, const int maxWidth);
+			static int            splitSubDistributeByLines(const Strings &words, size_t nrLines, TTF_Font* font, const int maxWidth, std::vector<uint16_t*> &subStrings16);
+			static void           splitSubDistributeByWidth(const Strings &words, TTF_Font* font, const int maxWidth, std::vector<uint16_t*> &subStrings16);
 
 		};
 	}

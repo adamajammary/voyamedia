@@ -3,8 +3,10 @@
 IDI_ICON ICON "img\logo.ico"
 
 1 VERSIONINFO
-FILEVERSION    1,0,0
-PRODUCTVERSION 1,0,0
+FILEVERSION    __APP_VERSION_2__
+PRODUCTVERSION __APP_VERSION_2__
+//FILEVERSION    1,0,0
+//PRODUCTVERSION 1,0,0
 FILEOS         0x4
 FILETYPE       1
 BEGIN
@@ -12,12 +14,12 @@ BEGIN
 	BEGIN
 		BLOCK "040904E4"
 		BEGIN
-			VALUE "CompanyName",      "Adam A. Jammary (Jammary Consulting)"
-			VALUE "LegalCopyright",   "(c) 2012 Adam A. Jammary (Jammary Consulting). All rights reserved."
-			VALUE "ProductName",      "Voya Media"
-			VALUE "FileDescription",  "Voya Media"
-			VALUE "FileVersion",      "1.0.0"
-			VALUE "ProductVersion",   "1.0.0"
+			VALUE "CompanyName",      "__APP_COMPANY__"
+			VALUE "LegalCopyright",   "__APP_COPYRIGHT__"
+			VALUE "ProductName",      "__APP_NAME__"
+			VALUE "FileDescription",  "__APP_NAME__"
+			VALUE "FileVersion",      "__APP_VERSION__"
+			VALUE "ProductVersion",   "__APP_VERSION__"
 			VALUE "InternalName",     "VoyaMedia.exe"
 			VALUE "OriginalFilename", "VoyaMedia.exe"
 		END

@@ -373,11 +373,15 @@ int Graphics::VM_GUI::loadComponentsRelative(VM_Component* component)
 	if (component == NULL)
 		return ERROR_INVALID_ARGUMENTS;
 
-	for (auto child : component->children)
-		child->setSizePercent(component);
+	for (auto child : component->children) {
+		if (child->visible)
+			child->setSizePercent(component);
+	}
 
-	for (auto button : component->buttons)
-		button->setSizePercent(component);
+	for (auto button : component->buttons) {
+		if (button->visible)
+			button->setSizePercent(component);
+	}
 
 	VM_GUI::setComponentSizeBlank(component, component->children);
 	VM_GUI::setComponentSizeBlank(component, component->buttons);
@@ -504,6 +508,9 @@ int Graphics::VM_GUI::setComponentSizeBlank(VM_Component* parent, VM_Components 
 
 	for (auto component : components)
 	{
+		if (!component->visible)
+			continue;
+
 		String width  = VM_XML::GetAttribute(component->xmlNode, "width");
 		String height = VM_XML::GetAttribute(component->xmlNode, "height");
 
@@ -514,9 +521,9 @@ int Graphics::VM_GUI::setComponentSizeBlank(VM_Component* parent, VM_Components 
 
 			if (height.empty()) {
 				compsY++;
-				sizeY -= (parent->margin.top + parent->margin.bottom);
+				sizeY -= parent->margin.bottom;
 			} else {
-				sizeY -= (component->backgroundArea.h + parent->margin.top + parent->margin.bottom);
+				sizeY -= (component->backgroundArea.h + parent->margin.bottom);
 			}
 		}
 		// HORIZONTAL
@@ -526,15 +533,20 @@ int Graphics::VM_GUI::setComponentSizeBlank(VM_Component* parent, VM_Components 
 
 			if (width.empty()) {
 				compsX++;
-				sizeX -= (parent->margin.left + parent->margin.right);
+				sizeX -= parent->margin.right;
 			} else {
-				sizeX -= (component->backgroundArea.w + parent->margin.left + parent->margin.right);
+				sizeX -= (component->backgroundArea.w + parent->margin.right);
 			}
 		}
 	}
 
-	for (auto component : components)
-		component->setSizeBlank(sizeX, sizeY, compsX, compsY);
+	sizeX -= parent->margin.right;
+	sizeY -= parent->margin.bottom;
+
+	for (auto component : components) {
+		if (component->visible)
+			component->setSizeBlank(sizeX, sizeY, compsX, compsY);
+	}
 
 	return RESULT_OK;
 }
@@ -549,32 +561,39 @@ int Graphics::VM_GUI::setComponentPositionAlign(VM_Component* parent, VM_Compone
 	String vAlign      = VM_XML::GetAttribute(parent->xmlNode, "valign");
 	int    offsetX     = (parent->backgroundArea.x + parent->borderWidth.left + parent->margin.left);
 	int    offsetY     = (parent->backgroundArea.y + parent->borderWidth.top  + parent->margin.top);
-	int    maxX        = (parent->backgroundArea.w - parent->borderWidth.left - parent->borderWidth.right);
-	int    maxY        = (parent->backgroundArea.h - parent->borderWidth.top  - parent->borderWidth.bottom);
-	int    remainingX  = maxX;
-	int    remainingY  = maxY;
+	int    maxX        = (parent->backgroundArea.w - parent->borderWidth.left - parent->borderWidth.right  - parent->margin.left - parent->margin.right);
+	int    maxY        = (parent->backgroundArea.h - parent->borderWidth.top  - parent->borderWidth.bottom - parent->margin.top  - parent->margin.bottom);
+	int    remainingX  = (maxX + parent->margin.right);
+	int    remainingY  = (maxY + parent->margin.bottom);
 
-	// LEFT-ALIGN
+	int x, y;
+
+	// TOP-LEFT ALIGN
 	for (auto component : components)
 	{
+		if (!component->visible)
+			continue;
+
 		component->setPositionAlign(offsetX, offsetY);
 
-		if (orientation == "vertical")
-			offsetY += (component->backgroundArea.h + parent->margin.bottom + parent->margin.top);
-		else
-			offsetX += (component->backgroundArea.w + parent->margin.right  + parent->margin.left);
-	}
+		x = (component->backgroundArea.w + parent->margin.right);
+		y = (component->backgroundArea.h + parent->margin.bottom);
 
-	// CALCULATE UNUSED SPACE
-	for (auto component : components)
-	{
-		remainingX -= (parent->margin.left + component->backgroundArea.w + parent->margin.right);
-		remainingY -= (parent->margin.top  + component->backgroundArea.h + parent->margin.bottom);
+		if (orientation == "vertical") {
+			offsetY    += y;
+			remainingY -= y;
+		} else {
+			offsetX    += x;
+			remainingX -= x;
+		}
 	}
 
 	// ALIGN
 	for (auto component : components)
 	{
+		if (!component->visible)
+			continue;
+
 		offsetX = component->backgroundArea.x;
 		offsetY = component->backgroundArea.y;
 
@@ -589,9 +608,9 @@ int Graphics::VM_GUI::setComponentPositionAlign(VM_Component* parent, VM_Compone
 
 			// H-ALIGN
 			if (hAlign == "center")
-				offsetX += ((maxX - (component->backgroundArea.w + parent->margin.right + parent->margin.left)) / 2);
+				offsetX += ((maxX - component->backgroundArea.w) / 2);
 			else if (hAlign == "right")
-				offsetX += (maxX - (component->backgroundArea.w + parent->margin.right + parent->margin.left));
+				offsetX += (maxX - component->backgroundArea.w);
 		}
 		// HORIZONTAL
 		else
@@ -604,9 +623,9 @@ int Graphics::VM_GUI::setComponentPositionAlign(VM_Component* parent, VM_Compone
 
 			// V-ALIGN
 			if (vAlign == "middle")
-				offsetY += ((maxY - (component->backgroundArea.h + parent->margin.bottom + parent->margin.top)) / 2);
+				offsetY += ((maxY - component->backgroundArea.h) / 2);
 			else if (vAlign == "bottom")
-				offsetY += (maxY - (component->backgroundArea.h + parent->margin.bottom + parent->margin.top));
+				offsetY += (maxY - component->backgroundArea.h);
 		}
 
 		component->setPositionAlign(offsetX, offsetY);
@@ -665,7 +684,7 @@ int Graphics::VM_GUI::setTable(VM_Component* parent, VM_Component* component)
 			for (auto button : VM_GUI::Components["bottom_player_controls_controls_right"]->buttons)
 				dynamic_cast<VM_Button*>(button)->removeImage();
 
-			VM_PlayerControls::Hide(true);
+			VM_PlayerControls::Hide();
 			VM_PlayerControls::Init();
 			VM_PlayerControls::Refresh();
 
@@ -693,19 +712,11 @@ int Graphics::VM_GUI::setTable(VM_Component* parent, VM_Component* component)
 
 void Graphics::VM_GUI::showPlayerControls()
 {
-	VM_PlayerControls::Show(true);
+	VM_PlayerControls::Show();
 	VM_PlayerControls::Init();
 	VM_PlayerControls::Refresh();
 
-	VM_Component* bottom   = VM_GUI::Components["bottom"];
-	VM_Component* player   = VM_GUI::Components["bottom_player"];
-	VM_Component* snapshot = VM_GUI::Components["bottom_player_snapshot"];
-	VM_Component* topBar   = VM_GUI::Components["top_bar"];
-
-	snapshot->backgroundArea.x = 0;
-	snapshot->backgroundArea.y = (topBar->backgroundArea.y + topBar->backgroundArea.h);
-	snapshot->backgroundArea.w = VM_Window::Dimensions.w;
-	snapshot->backgroundArea.h = (VM_Window::Dimensions.h - snapshot->backgroundArea.y - bottom->backgroundArea.h);
+	VM_Component* player = VM_GUI::Components["bottom_player"];
 
 	player->backgroundArea = {};
 	player->borderWidth    = {};

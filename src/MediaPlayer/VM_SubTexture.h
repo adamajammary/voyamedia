@@ -19,7 +19,6 @@ namespace VoyaMedia
 
 		public:
 			SDL_Rect              locationRender;
-			SDL_Rect              max;
 			VM_SubTexture*        outline;
 			VM_SubTexture*        shadow;
 			VM_Subtitle*          subtitle;

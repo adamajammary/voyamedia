@@ -44,11 +44,11 @@ int System::VM_FileSystem::addMediaFile(const String &fullPath)
 	
 	String fileName = VM_FileSystem::GetFileName(fullPath, false);
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.adding"].c_str(), fileName.c_str());
+	VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.adding"].c_str(), fileName.c_str());
 
 	// FILE IS VALID - ALREADY ADDED
 	if (mediaID > 0) {
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.already_added"].c_str(), fileName.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.already_added"].c_str(), fileName.c_str());
 		return RESULT_OK;
 	}
 
@@ -118,9 +118,9 @@ int System::VM_FileSystem::addMediaFile(const String &fullPath)
 			VM_FileSystem::FileBookmarkSave(fullPath, mediaID);
 		#endif
 
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
 	} else {
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
 		return ERROR_UNKNOWN;
 	}
 
@@ -218,7 +218,7 @@ int System::VM_FileSystem::CleanDB(void* userData)
 {
 	VM_ThreadManager::Threads[THREAD_CLEAN_DB]->completed = false;
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.clean.db"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.clean.db"];
 
 	VM_DBResult rows;
 	int         dbResult;
@@ -275,7 +275,7 @@ int System::VM_FileSystem::CleanDB(void* userData)
 
 	if (!VM_Window::Quit)
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.clean.db.finished"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["status.clean.db.finished"];
 
 		VM_GUI::ListTable->refreshRows();
 		VM_FileSystem::RefreshMetaData();
@@ -296,7 +296,7 @@ int System::VM_FileSystem::CleanThumbs(void* userData)
 {
 	VM_ThreadManager::Threads[THREAD_CLEAN_THUMBS]->completed = false;
 	
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.clean.thumbs"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.clean.thumbs"];
 	
 	#if defined _windows
 		String thumbsDir = VM_Text::ToUTF8(VM_FileSystem::GetPathThumbnailsDirW().c_str());
@@ -316,7 +316,7 @@ int System::VM_FileSystem::CleanThumbs(void* userData)
 		remove(String(thumbsDir + PATH_SEPERATOR + thumbFiles[i]).c_str());
 	}
 	
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.clean.thumbs.finished"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.clean.thumbs.finished"];
 
 	if (!thumbFiles.empty() && !VM_Window::Quit)
 	{
@@ -922,23 +922,49 @@ Strings System::VM_FileSystem::getAndroidAssets(const String &assetDirectory)
 	return androidAssets;
 }
 
-String System::VM_FileSystem::GetAndroidStoragePath()
+Strings System::VM_FileSystem::GetAndroidMediaFiles()
 {
-	jclass    jniClass          = VM_Window::JNI->getClass();
-	JNIEnv*   jniEnvironment    = VM_Window::JNI->getEnvironment();
-	jmethodID jniGetStoragePath = jniEnvironment->GetStaticMethodID(jniClass, "GetStoragePath", "()Ljava/lang/String;");
+	Strings   files;
+	jclass    jniClass       = VM_Window::JNI->getClass();
+	JNIEnv*   jniEnvironment = VM_Window::JNI->getEnvironment();
+	jmethodID jniMethod      = jniEnvironment->GetStaticMethodID(jniClass, "GetMediaFiles", "()[Ljava/lang/Object;");
 
-	if (jniGetStoragePath == NULL)
-		return "";
+	if (jniMethod == NULL)
+		return files;
 
-	jstring     jString = (jstring)jniEnvironment->CallStaticObjectMethod(jniClass, jniGetStoragePath);
-	const char* cString = jniEnvironment->GetStringUTFChars(jString, NULL);
-	String      path    = String(cString);
-	
-	jniEnvironment->ReleaseStringUTFChars(jString, cString);
+	jobjectArray jArray      = (jobjectArray)jniEnvironment->CallStaticObjectMethod(jniClass, jniMethod);
+	const int    arrayLength = jniEnvironment->GetArrayLength(jArray);
 
-	return path;
+	for (int i = 0; i < arrayLength; i++)
+	{
+		jstring     jString = (jstring)(jniEnvironment->GetObjectArrayElement(jArray, i));
+		const char* cString = jniEnvironment->GetStringUTFChars(jString, NULL);
+
+		files.push_back(String(cString));
+
+		jniEnvironment->ReleaseStringUTFChars(jString, cString);
+	}
+
+	return files;
 }
+
+//String System::VM_FileSystem::GetAndroidStoragePath()
+//{
+//	jclass    jniClass          = VM_Window::JNI->getClass();
+//	JNIEnv*   jniEnvironment    = VM_Window::JNI->getEnvironment();
+//	jmethodID jniGetStoragePath = jniEnvironment->GetStaticMethodID(jniClass, "GetStoragePath", "()Ljava/lang/String;");
+//
+//	if (jniGetStoragePath == NULL)
+//		return "";
+//
+//	jstring     jString = (jstring)jniEnvironment->CallStaticObjectMethod(jniClass, jniGetStoragePath);
+//	const char* cString = jniEnvironment->GetStringUTFChars(jString, NULL);
+//	String      path    = String(cString);
+//	
+//	jniEnvironment->ReleaseStringUTFChars(jString, cString);
+//
+//	return path;
+//}
 #endif
 
 Strings System::VM_FileSystem::getDirectoryContent(const String &directoryPath, bool returnFiles, bool checkSystemFiles)
@@ -970,9 +996,8 @@ Strings System::VM_FileSystem::getDirectoryContent(const String &directoryPath, 
 			String fileName = String(file->d_name);
 		#endif
 
-		if ((file->d_type == fileType) && (!checkSystemFiles || !VM_FileSystem::isSystemFile(fileName))) {
+		if ((file->d_type == fileType) && (!checkSystemFiles || !VM_FileSystem::isSystemFile(fileName)))
 			directoyContent.push_back(fileName);
-		}
 	}
 
 	closedir(directory);
@@ -1392,10 +1417,7 @@ String System::VM_FileSystem::getMediaResolutionStringVideo(LIB_FFMPEG::AVStream
 	if ((stream == NULL) || (stream->codec == NULL))
 		return "";
 
-	char resolution[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(resolution, DEFAULT_CHAR_BUFFER_SIZE, "%dp (%dx%d)", stream->codec->height, stream->codec->width, stream->codec->height);
-
-	return String(resolution);
+	return VM_Text::Format("%dp (%dx%d)", stream->codec->height, stream->codec->width, stream->codec->height);
 }
 
 LIB_FFMPEG::AVStream* System::VM_FileSystem::GetMediaStreamBest(LIB_FFMPEG::AVFormatContext* formatContext, VM_MediaType mediaType)
@@ -1416,7 +1438,7 @@ LIB_FFMPEG::AVStream* System::VM_FileSystem::GetMediaStreamBest(LIB_FFMPEG::AVFo
 		{
 			switch (mediaType) {
 			case MEDIA_TYPE_AUDIO:
-				quality = (stream->codec->channels * stream->codec->sample_rate);
+				quality = ((int64_t)stream->codec->channels * (int64_t)stream->codec->sample_rate);
 
 				if ((bestStream == NULL) || (quality > bestQuality)) {
 					bestStream  = stream;
@@ -1425,7 +1447,7 @@ LIB_FFMPEG::AVStream* System::VM_FileSystem::GetMediaStreamBest(LIB_FFMPEG::AVFo
 
 				break;
 			case MEDIA_TYPE_VIDEO:
-				quality = (stream->codec->width * stream->codec->height);
+				quality = ((int64_t)stream->codec->width * (int64_t)stream->codec->height);
 
 				if ((bestStream == NULL) || (quality > bestQuality)) {
 					bestStream  = stream;
@@ -1768,7 +1790,6 @@ Strings System::VM_FileSystem::GetMediaSubFiles(const String &videoFilePath)
 {
 	String  directory, idxFile = "", videoFileName;
 	Strings filesInDirectory, subtitleFiles;
-	char    subtitleFile[DEFAULT_CHAR_BUFFER_SIZE];
 
 	directory        = videoFilePath.substr(0, videoFilePath.rfind(PATH_SEPERATOR));
 	filesInDirectory = VM_FileSystem::GetDirectoryFiles(directory);
@@ -1784,8 +1805,7 @@ Strings System::VM_FileSystem::GetMediaSubFiles(const String &videoFilePath)
 			continue;
 		}
 
-		snprintf(subtitleFile, DEFAULT_CHAR_BUFFER_SIZE, "%s%s%s", directory.c_str(), PATH_SEPERATOR, file.c_str());
-		subtitleFiles.push_back(subtitleFile);
+		subtitleFiles.push_back(VM_Text::Format("%s%s%s", directory.c_str(), PATH_SEPERATOR, file.c_str()));
 
 		if (VM_FileSystem::GetFileExtension(file, true) == "IDX")
 			idxFile = VM_Text::ToUpper(VM_FileSystem::GetFileName(file, true));
@@ -1818,99 +1838,67 @@ VM_MediaType System::VM_FileSystem::GetMediaType(LIB_FFMPEG::AVFormatContext* fo
 Strings System::VM_FileSystem::GetNetworkInterfaces()
 {
 	Strings interfaces;
-	String  ipAddress;
 
-	#if defined _android
-		jclass    jniClass       = VM_Window::JNI->getClass();
-		JNIEnv*   jniEnvironment = VM_Window::JNI->getEnvironment();
-		jmethodID jniGetIP       = jniEnvironment->GetStaticMethodID(jniClass, "GetIP", "()Ljava/lang/String;");
+	#if defined _windows
+		WSADATA winSockData;
 
-		if (jniGetIP == NULL)
+		if (WSAStartup(MAKEWORD(2, 2), &winSockData) != 0)
 			return interfaces;
 
-		jstring     jString = (jstring)jniEnvironment->CallStaticObjectMethod(jniClass, jniGetIP);
-		const char* cString = jniEnvironment->GetStringUTFChars(jString, NULL);
+		const ULONG MAX_ITERATIONS = 3;
+		const ULONG FLAGS          = (GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_UNICAST);
 
-		ipAddress = String(cString);
+		ULONG bufferSize = 15 * KILO_BYTE;
+		ULONG iteration  = 0;
 
-		jniEnvironment->ReleaseStringUTFChars(jString, cString);
+		PIP_ADAPTER_ADDRESSES addresses;
+		DWORD                 result;
 
-		if ((ipAddress != "127.0.0.1") && (ipAddress != "0.0.0.0") && (ipAddress.substr(0, 8) != "169.254."))
-			interfaces.push_back(ipAddress);
-	#elif defined _ios || defined _macosx
-		NSString* ip;
+		do {
+			addresses = (IP_ADAPTER_ADDRESSES*)malloc(bufferSize);
+			result    = GetAdaptersAddresses(AF_INET, FLAGS, NULL, addresses, &bufferSize);
 
-		#ifdef _ios
-			LIB_UPNP::ifaddrs* addresses = NULL, *address;
-		#else
-			ifaddrs*       addresses = NULL, *address;
-		#endif
+			iteration++;
+
+			if (result == ERROR_BUFFER_OVERFLOW) {
+				FREE_POINTER(addresses);
+				continue;
+			}
+
+			for (PIP_ADAPTER_ADDRESSES address = addresses; address != NULL; address = address->Next) {
+				if ((address->OperStatus == IfOperStatusUp) && (address->IfType != IF_TYPE_SOFTWARE_LOOPBACK))
+					interfaces.push_back(VM_Text::ToUTF8(address->FriendlyName));
+			}
+
+			break;
+		} while ((result == ERROR_BUFFER_OVERFLOW) && (iteration < MAX_ITERATIONS));
+
+		FREE_POINTER(addresses);
+
+		WSACleanup();
+	#else
+		String   ifName;
+		ifaddrs* addresses = NULL, *address;
 
 		if (getifaddrs(&addresses) == 0)
 		{
 			for (address = addresses; address != NULL; address = address->ifa_next)
 			{
-				if ((address->ifa_addr == NULL) || (address->ifa_addr->sa_family != AF_INET))
+				if ((address->ifa_name == NULL) || (address->ifa_addr == NULL) || (address->ifa_addr->sa_family != AF_INET))
 					continue;
 
-				#ifdef _ios
-					ip = [NSString stringWithUTF8String:LIB_UPNP::inet_ntoa(((sockaddr_in*)address->ifa_addr)->sin_addr)];
+				#if defined _ios || defined _macosx
+					ifName = String([[NSString stringWithUTF8String:address->ifa_name] UTF8String]);
 				#else
-					ip = [NSString stringWithUTF8String:inet_ntoa(((sockaddr_in*)address->ifa_addr)->sin_addr)];
+					ifName = String(address->ifa_name);
 				#endif
 
-				ipAddress = String([ip UTF8String]);
-
-				if ((ipAddress == "127.0.0.1") || (ipAddress == "0.0.0.0") || (ipAddress.substr(0, 8) == "169.254."))
-					continue;
-
-				interfaces.push_back(ipAddress);
+				if (ifName.substr(0, 2) != "lo")
+					interfaces.push_back(ifName);
 			}
 		}
 
 		freeifaddrs(addresses);
-	#else
-		#if defined _windows
-		WSADATA winSockData;
-
-		if (WSAStartup(MAKEWORD(2, 2), &winSockData) != 0)
-			return interfaces;
-		#endif
-
-		char      hostName[DEFAULT_CHAR_BUFFER_SIZE];
-		addrinfo* addresses = NULL;
-		addrinfo* address   = NULL;
-		addrinfo  hints     = {};
-
-		hints.ai_family   = AF_INET;
-		hints.ai_socktype = SOCK_STREAM;
-		hints.ai_protocol = IPPROTO_TCP;
-
-		if (gethostname(hostName, DEFAULT_CHAR_BUFFER_SIZE) == 0)
-		{
-			if (getaddrinfo(hostName, "", &hints, &addresses) == 0)
-			{
-				for (address = addresses; address != NULL; address = address->ai_next)
-				{
-					if (address->ai_family != AF_INET)
-						continue;
-
-					ipAddress = String(inet_ntoa(((sockaddr_in*)address->ai_addr)->sin_addr));
-
-					if ((ipAddress == "127.0.0.1") || (ipAddress == "0.0.0.0") || (ipAddress.substr(0, 8) == "169.254."))
-						continue;
-
-					interfaces.push_back(ipAddress);
-				}
-			}
-
-			freeaddrinfo(addresses);
-		}
-
-		#if defined _windows
-			WSACleanup();
-		#endif
-		
 	#endif
 
 	return interfaces;
@@ -2360,18 +2348,12 @@ Strings System::VM_FileSystem::getOpticalFileDVD(const String &path)
 
 String System::VM_FileSystem::GetPathDatabase()
 {
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%cdb%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-
-	return String(path);
+	return VM_Text::Format("%s%cdb%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 String System::VM_FileSystem::GetPathFont()
 {
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%cfonts%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return String(path);
+	return VM_Text::Format("%s%cfonts%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 String System::VM_FileSystem::GetPathFontArial()
@@ -2391,34 +2373,22 @@ String System::VM_FileSystem::GetPathFontArial()
 
 String System::VM_FileSystem::GetPathGUI()
 {
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%cgui%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return String(path);
+	return VM_Text::Format("%s%cgui%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 String System::VM_FileSystem::GetPathImages()
 {
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%cimg%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return path;
+	return VM_Text::Format("%s%cimg%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 String System::VM_FileSystem::GetPathLanguages()
 {
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%clang%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return String(path);
+	return VM_Text::Format("%s%clang%c", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 String System::VM_FileSystem::GetPathThumbnailsDir()
 {
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%cthumbs", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C);
-
-	return String(path);
+	return VM_Text::Format("%s%cthumbs", VM_Window::WorkingDirectory.c_str(), PATH_SEPERATOR_C);
 }
 
 String System::VM_FileSystem::GetPathThumbnails(int mediaID)
@@ -2426,10 +2396,7 @@ String System::VM_FileSystem::GetPathThumbnails(int mediaID)
 	if (mediaID < 1)
 		return "";
 
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%c%d.jpg", VM_FileSystem::GetPathThumbnailsDir().c_str(), PATH_SEPERATOR_C, mediaID);
-	
-	return String(path);
+	return VM_Text::Format("%s%c%d.jpg", VM_FileSystem::GetPathThumbnailsDir().c_str(), PATH_SEPERATOR_C, mediaID);
 }
 
 String System::VM_FileSystem::GetPathThumbnails(const String &fileName)
@@ -2437,27 +2404,18 @@ String System::VM_FileSystem::GetPathThumbnails(const String &fileName)
 	if (fileName.empty())
 		return "";
 
-	char path[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(path, DEFAULT_CHAR_BUFFER_SIZE, "%s%c%s.jpg", VM_FileSystem::GetPathThumbnailsDir().c_str(), PATH_SEPERATOR_C, fileName.c_str());
-	
-	return String(path);
+	return VM_Text::Format("%s%c%s.jpg", VM_FileSystem::GetPathThumbnailsDir().c_str(), PATH_SEPERATOR_C, fileName.c_str());
 }
 
 #if defined _windows
 WString System::VM_FileSystem::GetPathDatabaseW()
 {
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, L"%s%cdb%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return WString(path);
+	return VM_Text::FormatW(L"%s%cdb%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 WString System::VM_FileSystem::GetPathFontW()
 {
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, L"%s%cfonts%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return WString(path);
+	return VM_Text::FormatW(L"%s%cfonts%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 WString System::VM_FileSystem::GetPathFontArialW()
@@ -2467,34 +2425,22 @@ WString System::VM_FileSystem::GetPathFontArialW()
 
 WString System::VM_FileSystem::GetPathGUIW()
 {
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, L"%s%cgui%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-
-	return WString(path);
+	return VM_Text::FormatW(L"%s%cgui%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 WString System::VM_FileSystem::GetPathImagesW()
 {
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, DEFAULT_CHAR_BUFFER_SIZE, L"%s%cimg%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return WString(path);
+	return VM_Text::FormatW(L"%s%cimg%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 WString System::VM_FileSystem::GetPathLanguagesW()
 {
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, DEFAULT_CHAR_BUFFER_SIZE, L"%s%clang%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
-	
-	return WString(path);
+	return VM_Text::FormatW(L"%s%clang%c", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C, PATH_SEPERATOR_C);
 }
 
 WString System::VM_FileSystem::GetPathThumbnailsDirW()
 {
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, DEFAULT_CHAR_BUFFER_SIZE, L"%s%cthumbs", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C);
-
-	return WString(path);
+	return VM_Text::FormatW(L"%s%cthumbs", VM_Window::WorkingDirectoryW.c_str(), PATH_SEPERATOR_C);
 }
 
 WString System::VM_FileSystem::GetPathThumbnailsW(int mediaID)
@@ -2502,10 +2448,7 @@ WString System::VM_FileSystem::GetPathThumbnailsW(int mediaID)
 	if (mediaID < 1)
 		return L"";
 
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, DEFAULT_CHAR_BUFFER_SIZE, L"%s%c%d.jpg", VM_FileSystem::GetPathThumbnailsDirW().c_str(), PATH_SEPERATOR_C, mediaID);
-	
-	return WString(path);
+	return VM_Text::FormatW(L"%s%c%d.jpg", VM_FileSystem::GetPathThumbnailsDirW().c_str(), PATH_SEPERATOR_C, mediaID);
 }
 
 WString System::VM_FileSystem::GetPathThumbnailsW(const WString &fileName)
@@ -2513,10 +2456,7 @@ WString System::VM_FileSystem::GetPathThumbnailsW(const WString &fileName)
 	if (fileName.empty())
 		return L"";
 
-	wchar_t path[DEFAULT_CHAR_BUFFER_SIZE];
-	std::swprintf(path, DEFAULT_CHAR_BUFFER_SIZE, L"%s%c%s.jpg", VM_FileSystem::GetPathThumbnailsDirW().c_str(), PATH_SEPERATOR_C, fileName.c_str());
-	
-	return WString(path);
+	return VM_Text::FormatW(L"%s%c%s.jpg", VM_FileSystem::GetPathThumbnailsDirW().c_str(), PATH_SEPERATOR_C, fileName.c_str());
 }
 #endif
 
@@ -2699,14 +2639,11 @@ StringMap System::VM_FileSystem::GetTmdbDetails(int mediaID, VM_MediaType mediaT
 		details["date"] = std::to_string(std::atoi(VM_JSON::GetValueString(VM_JSON::GetItem(document, "first_air_date")).c_str()));
 
 	// RATING
-	char              rating[DEFAULT_CHAR_BUFFER_SIZE];
 	const signed char star[4] = { 0xE2 - 256, 0x98 - 256, 0x85 - 256, 0 };
 	double            voteAvg = VM_JSON::GetValueNumber(VM_JSON::GetItem(document, "vote_average"));
 	int64_t           votes   = (int64_t)VM_JSON::GetValueNumber(VM_JSON::GetItem(document, "vote_count"));
 
-	snprintf(rating, DEFAULT_CHAR_BUFFER_SIZE, "%s %.1f/10 (%lld %s)", star, voteAvg, votes, VM_Window::Labels["votes"].c_str());
-
-	details["rating"] = String(rating);
+	details["rating"] = VM_Text::Format("%s %.1f/10 (%lld %s)", star, voteAvg, votes, VM_Window::Labels["votes"].c_str());
 
 	// DURATION
 	if (mediaType == MEDIA_TYPE_TMDB_TV)
@@ -2768,7 +2705,7 @@ String System::VM_FileSystem::GetURL(VM_UrlType urlType, const String &data)
 	return mediaURL;
 }
 
-StringMap System::VM_FileSystem::GetYouTubeDetails(const String &mediaID)
+/*StringMap System::VM_FileSystem::GetYouTubeDetails(const String &mediaID)
 {
 	StringMap         details;
 	String            apiKey   = VM_Text::Decrypt(YOUTUBE_API_KEY);
@@ -2809,13 +2746,10 @@ StringMap System::VM_FileSystem::GetYouTubeDetails(const String &mediaID)
 			{
 				details["views"] = VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "viewCount"));
 
-				char   likes[DEFAULT_CHAR_BUFFER_SIZE];
 				String likeCount    = VM_Text::ToViewCount(std::atoll(VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "likeCount")).c_str()));
 				String dislikeCount = VM_Text::ToViewCount(std::atoll(VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "dislikeCount")).c_str()));
 
-				snprintf(likes, DEFAULT_CHAR_BUFFER_SIZE, "%s likes   %s dislikes", likeCount.c_str(), dislikeCount.c_str());
-
-				details["likes"] = String(likes);
+				details["likes"] = VM_Text::Format("%s likes   %s dislikes", likeCount.c_str(), dislikeCount.c_str());
 
 			}
 		}
@@ -2846,7 +2780,7 @@ Strings System::VM_FileSystem::GetYouTubeVideos(const String &videoID)
 		error = error.substr(0, error.find("&"));
 		error = VM_Text::Replace(error, "+", " ");
 
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", error.c_str());
+		VM_Window::StatusString = error;
 	}
 
 	if ((response.find("status=ok") == String::npos) || (response.find("signature=True") != String::npos))
@@ -2944,7 +2878,7 @@ String System::VM_FileSystem::GetYouTubeVideo(const String &videoID)
 	VM_Player::State.urls = VM_FileSystem::GetYouTubeVideos(videoID);
 
 	return (!VM_Player::State.urls.empty() ? VM_Player::State.urls[0] : "");
-}
+}*/
 
 bool System::VM_FileSystem::hasFileExtension(const String &filePath)
 {
@@ -3002,10 +2936,9 @@ void System::VM_FileSystem::InitFFMPEG()
 
 int System::VM_FileSystem::InitLibraries()
 {
-	//#if defined _android
-	//	SDL_SetHint(SDL_HINT_ANDROID_BLOCK_ON_PAUSE, "0");
-	//#elif defined _ios
-	#if defined _ios
+	#if defined _android
+		SDL_SetHint(SDL_HINT_ANDROID_BLOCK_ON_PAUSE, "0");
+	#elif defined _ios
 		SDL_SetHint(SDL_HINT_AUDIO_CATEGORY, "AVAudioSessionCategoryPlayback");
 	#elif defined _macosx
 		SDL_SetHint(SDL_HINT_MAC_CTRL_CLICK_EMULATE_RIGHT_CLICK, "1");
@@ -3020,8 +2953,8 @@ int System::VM_FileSystem::InitLibraries()
 	SDL_setenv("SDL_VIDEO_YUV_HWACCEL", "1", 1);
 
 	SDL_SetHint(SDL_HINT_AUDIO_RESAMPLING_MODE,        "3");
-	SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED,       "0");
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,         "2");
+	SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED,       "0");
 	SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 
 	// SDL
@@ -3416,7 +3349,7 @@ int System::VM_FileSystem::OpenFile(const String &filePath)
 	if (VM_FileSystem::isFile(fileStruct.st_mode))
 	{
 		if (VM_FileSystem::addMediaFile(file) != RESULT_OK) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), file.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), file.c_str());
 			return ERROR_UNKNOWN;
 		}
 
@@ -3432,7 +3365,7 @@ int System::VM_FileSystem::OpenFile(const String &filePath)
 	// UNKNOWN
 	else
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), file.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), file.c_str());
 		return ERROR_UNKNOWN;
 	}
 
@@ -3628,6 +3561,18 @@ void System::VM_FileSystem::RefreshMetaData()
 	VM_FileSystem::updateMeta = true;
 }
 
+#if defined _android
+void System::VM_FileSystem::RequestAndroidStoragePermission()
+{
+	jclass    jniClass       = VM_Window::JNI->getClass();
+	JNIEnv*   jniEnvironment = VM_Window::JNI->getEnvironment();
+	jmethodID jniMethod      = jniEnvironment->GetStaticMethodID(jniClass, "RequestStoragePermission", "()V");
+
+	if (jniMethod != NULL)
+		jniEnvironment->CallStaticVoidMethod(jniClass, jniMethod);
+}
+#endif
+
 void System::VM_FileSystem::SaveDropboxTokenOAuth2(const String &userCode)
 {
 	// USE THE USER TOKEN TO GET AN OAUTH2 TOKEN
@@ -3663,12 +3608,23 @@ int System::VM_FileSystem::ScanAndroid(void* userData)
 
 	VM_FileSystem::InitFFMPEG();
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.local"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.scan.local"];
 
-	if (VM_FileSystem::AddMediaFilesRecursively(VM_Window::AndroidStoragePath) == RESULT_OK)
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.finished"].c_str());
-	else
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), VM_Window::AndroidStoragePath.c_str());
+	int result = RESULT_OK;
+
+	for (const auto &dir : VM_Window::AndroidMediaFiles) {
+		//result = VM_FileSystem::addMediaFile(file);
+		result = VM_FileSystem::AddMediaFilesRecursively(dir);
+
+		if (result != RESULT_OK)
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), dir.c_str());
+	}
+
+	//if (VM_FileSystem::AddMediaFilesRecursively(VM_Window::AndroidStoragePath) == RESULT_OK)
+	if (result == RESULT_OK)
+		VM_Window::StatusString = VM_Window::Labels["status.scan.finished"];
+	//else
+	//	VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), VM_Window::AndroidStoragePath.c_str());
 
 	VM_GUI::ListTable->refreshRows();
 
@@ -3685,7 +3641,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 {
 	VM_ThreadManager::Threads[THREAD_SCAN_DROPBOX]->completed = false;
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.validate_dropbox"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.validate_dropbox"];
 
 	int    dbResult;
 	auto   db    = new VM_Database(dbResult, DATABASE_SETTINGSv3);
@@ -3702,7 +3658,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 	// CHECK IF TOKEN IS EXPIRED - RE-AUTHENTICATE
 	if (token.empty() || VM_FileSystem::isExpiredDropboxTokenOAuth2(token))
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.validate_dropbox"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["error.validate_dropbox"];
 
 		VM_ThreadManager::Threads[THREAD_SCAN_DROPBOX]->start     = false;
 		VM_ThreadManager::Threads[THREAD_SCAN_DROPBOX]->completed = true;
@@ -3710,7 +3666,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 		return ERROR_UNKNOWN;
 	}
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.validate_dropbox.finished"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.validate_dropbox.finished"];
 
 	// https://www.dropbox.com/developers/documentation/http/documentation#files-list_folder
 
@@ -3719,7 +3675,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 	String            response = VM_FileSystem::PostData(VM_FileSystem::GetURL(URL_DROPBOX_FILES), data, headers);
 	LIB_JSON::json_t* document = VM_JSON::Parse(response.c_str());
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.dropbox"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.scan.dropbox"];
 
 	std::vector<LIB_JSON::json_t*> entryItems;
 	LIB_JSON::json_t*              entries      = VM_JSON::GetItem(document, "entries");
@@ -3741,7 +3697,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 		name = ("[Dropbox] " + name);
 
 		if (!VM_FileSystem::IsMediaFile(name)) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
 			continue;
 		}
 
@@ -3751,11 +3707,11 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 		String mediaURL  = VM_FileSystem::GetDropboxURL(path);
 
 		if (mediaURL.empty()) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
 			continue;
 		}
 
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.adding"].c_str(), name.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.adding"].c_str(), name.c_str());
 
 		db = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
 
@@ -3767,7 +3723,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 		DELETE_POINTER(db);
 
 		if (mediaID > 0) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.already_added"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.already_added"].c_str(), name.c_str());
 			continue;
 		}
 
@@ -3796,7 +3752,7 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 		}
 
 		if (!validMedia) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
 			continue;
 		}
 
@@ -3808,14 +3764,14 @@ int System::VM_FileSystem::ScanDropboxFiles(void* userData)
 		DELETE_POINTER(db);
 
 		if (DB_RESULT_OK(dbResult))
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.added"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.added"].c_str(), name.c_str());
 		else
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
 	}
 
 	if (!VM_Window::Quit)
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.finished"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["status.scan.finished"];
 
 		VM_GUI::ListTable->refreshRows();
 	}
@@ -3833,7 +3789,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 {
 	VM_ThreadManager::Threads[THREAD_SCAN_ITUNES]->completed = false;
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.itunes"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.scan.itunes"];
 
 	NSAutoreleasePool*                autoreleasePool = [[NSAutoreleasePool alloc] init];
 	MPMediaQuery*                     query           = [[MPMediaQuery      alloc] init];
@@ -3846,7 +3802,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 
 	if (authStatus != MPMediaLibraryAuthorizationStatusAuthorized)
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.failed"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["status.scan.failed"];
 
 		VM_ThreadManager::Threads[THREAD_SCAN_ITUNES]->start     = false;
 		VM_ThreadManager::Threads[THREAD_SCAN_ITUNES]->completed = true;
@@ -3879,7 +3835,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 		fileName   = (fileNameNS != nil ? String([fileNameNS UTF8String]) : "");
 		mimeType   = VM_FileSystem::GetFileMIME(url2);
 
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.adding"].c_str(), fileName.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.adding"].c_str(), fileName.c_str());
 
 		db     = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
 		int id = 0;
@@ -3890,7 +3846,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 		DELETE_POINTER(db);
 
 		if (id > 0) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.already_added"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.already_added"].c_str(), fileName.c_str());
 			continue;
 		}
 
@@ -3905,7 +3861,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 			mediaType = MEDIA_TYPE_PICTURE;
 
 		if (mediaType == MEDIA_TYPE_UNKNOWN) {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
 			continue;
 		}
 
@@ -3917,9 +3873,9 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 		DELETE_POINTER(db);
 
 		if (DB_RESULT_OK(dbResult))
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
 		else
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
 	}
 
 	[PHPhotoLibrary requestAuthorization:^(PHAuthorizationStatus status) {}];
@@ -3933,7 +3889,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 
 	if (authStatusPhotos != PHAuthorizationStatusAuthorized)
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.failed"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["status.scan.failed"];
 
 		VM_ThreadManager::Threads[THREAD_SCAN_ITUNES]->start     = false;
 		VM_ThreadManager::Threads[THREAD_SCAN_ITUNES]->completed = true;
@@ -3966,7 +3922,7 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 		fileName   = (fileNameNS != nil ? String([fileNameNS UTF8String]) : "");
 		mimeType   = VM_FileSystem::GetFileMIME(fileName);
 
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.adding"].c_str(), fileName.c_str());
+		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.adding"].c_str(), fileName.c_str());
 
 		db     = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
 		int id = 0;
@@ -3974,28 +3930,26 @@ int System::VM_FileSystem::ScanITunesLibrary(void* userData)
 		if (DB_RESULT_OK(dbResult))
 			id = db->getID(url);
 
-		if (id > 0)
-		{
+		if (id > 0) {
 			DELETE_POINTER(db);
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.already_added"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.already_added"].c_str(), fileName.c_str());
 			continue;
 		}
 
 		dbResult = db->addFile(url, ("[iTunes] " + fileName), "[iTunes]", 0, MEDIA_TYPE_PICTURE, mimeType);
 
 		if (DB_RESULT_OK(dbResult))
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.added"].c_str(), fileName.c_str());
 		else
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), fileName.c_str());
 
 		DELETE_POINTER(db);
 	}
 
 	[autoreleasePool release];
 
-	if (!VM_Window::Quit)
-	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.finished"].c_str());
+	if (!VM_Window::Quit) {
+		VM_Window::StatusString = VM_Window::Labels["status.scan.finished"];
 
 		VM_GUI::ListTable->refreshRows();
 	}
@@ -4015,7 +3969,7 @@ int System::VM_FileSystem::ScanMediaFiles(void* userData)
 
 	VM_FileSystem::InitFFMPEG();
 
-	snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan"].c_str());
+	VM_Window::StatusString = VM_Window::Labels["status.scan"];
 
 	VM_ThreadManager::Threads[THREAD_SCAN_FILES]->start = true;
 
@@ -4032,12 +3986,12 @@ int System::VM_FileSystem::ScanMediaFiles(void* userData)
 			continue;
 
 		if (VM_FileSystem::AddMediaFilesRecursively(filePath) != RESULT_OK)
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.add_dir"].c_str(), filePath.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add_dir"].c_str(), filePath.c_str());
 	}
 
 	if (!VM_Window::Quit)
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["status.scan.finished"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["status.scan.finished"];
 
 		VM_GUI::ListTable->refreshRows();
 	}

@@ -56,16 +56,16 @@ namespace VoyaMedia
 			static int     scanFiles(const char* mediaURL);
 			static int     stopClient(int result);
 			static int     stopServer(int result);
-			static int     webServerClose(void* fileHandle, const void* cookie);
-			static int     webServerGetInfo(const char* filename, LIB_UPNP::UpnpFileInfo* info, const void* cookie);
-			static void*   webServerOpen(const char* filename, LIB_UPNP::UpnpOpenFileMode mode, const void* cookie);
-			static int     webServerRead(void* fileHandle, char* buffer, size_t bufferSize, const void* cookie);
-			static int     webServerWrite(void* fileHandle, char *buffer, size_t bufferSize, const void* cookie);
+			static int     webServerClose(void* fileHandle, const void* cookie, const void* request_cookie);
+			static int     webServerGetInfo(const char* filename, LIB_UPNP::UpnpFileInfo* info, const void* cookie, const void** request_cookie);
+			static void*   webServerOpen(const char* filename, LIB_UPNP::UpnpOpenFileMode mode, const void* cookie, const void* request_cookie);
+			static int     webServerRead(void* fileHandle, char* buffer, size_t bufferSize, const void* cookie, const void* request_cookie);
+			static int     webServerWrite(void* fileHandle, char *buffer, size_t bufferSize, const void* cookie, const void* request_cookie);
 
 			#if defined _windows
-				static int webServerSeek(void* fileHandle, int64_t offset, int origin, const void* cookie);
+				static int webServerSeek(void* fileHandle, int64_t offset, int origin, const void* cookie, const void* request_cookie);
 			#else
-				static int webServerSeek(void* fileHandle, off_t offset, int origin, const void* cookie);
+				static int webServerSeek(void* fileHandle, off_t offset, int origin, const void* cookie, const void* request_cookie);
 			#endif
 
 		};

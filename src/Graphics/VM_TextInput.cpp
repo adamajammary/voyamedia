@@ -23,6 +23,22 @@ void Graphics::VM_TextInput::Backspace()
 	}
 }
 
+void Graphics::VM_TextInput::Clear()
+{
+	VM_TextInput::text = "";
+
+	VM_Button* input = dynamic_cast<VM_Button*>(VM_GUI::Components["middle_search_input"]);
+
+	if (input != NULL)
+	{
+		input->setText("");
+		input->setInputText("");
+
+		if (!VM_TextInput::active)
+			VM_TextInput::SetActive(true, input);
+	}
+}
+
 void Graphics::VM_TextInput::Delete()
 {
 	if (VM_TextInput::active && (VM_TextInput::cursor < (int)VM_TextInput::text.size()))

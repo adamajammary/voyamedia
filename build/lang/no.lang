@@ -3,6 +3,7 @@
 add=LEGG TIL
 audio=MUSIKK
 cancel=AVBRYT
+details=DETALJER
 episode=episode
 episodes=episoder
 file=FIL
@@ -11,6 +12,7 @@ movies=FILMER
 name=NAVN
 off=AV
 paste=LIM INN
+path=MAPPE
 pictures=BILDER
 playlist_name=SPILLELISTENAVN
 playlists=SPILLELISTER
@@ -62,6 +64,7 @@ error.window=Klarte ikke å lage vinduet.
 
 remove=FJERN
 remove.file.db=FJERN FIL FRA DATABASEN
+remove.path.db=FJERN MAPPE FRA DATABASEN
 
 # SETTINGS
 

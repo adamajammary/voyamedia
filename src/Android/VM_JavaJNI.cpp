@@ -16,21 +16,21 @@ Android::VM_JavaJNI::~VM_JavaJNI()
 	this->destroy();
 }
 
-void Android::VM_JavaJNI::attachThread()
-{
-	this->threadAttached = true;
-}
+//void Android::VM_JavaJNI::attachThread()
+//{
+//	this->threadAttached = true;
+//}
 
-void Android::VM_JavaJNI::attachThread(JavaVM* javaVM)
-{
-	if (!this->threadAttached && (javaVM != NULL))
-	{
-		this->result = javaVM->AttachCurrentThread(&this->jniEnvironment, NULL);
-
-		if ((this->result == 0) && (this->jniEnvironment != NULL))
-			this->threadAttached = true;
-	}
-}
+//void Android::VM_JavaJNI::attachThread(JavaVM* javaVM)
+//{
+//	if (!this->threadAttached && (javaVM != NULL))
+//	{
+//		this->result = javaVM->AttachCurrentThread(&this->jniEnvironment, NULL);
+//
+//		if ((this->result == 0) && (this->jniEnvironment != NULL))
+//			this->threadAttached = true;
+//	}
+//}
 
 void Android::VM_JavaJNI::destroy()
 {
@@ -40,18 +40,18 @@ void Android::VM_JavaJNI::destroy()
 	}
 }
 
-void Android::VM_JavaJNI::detachThread()
-{
-	this->threadAttached = false;
-}
+//void Android::VM_JavaJNI::detachThread()
+//{
+//	this->threadAttached = false;
+//}
 
-void Android::VM_JavaJNI::detachThread(JavaVM* javaVM)
-{
-	if (this->threadAttached && (javaVM != NULL)) {
-		javaVM->DetachCurrentThread();
-		this->threadAttached = false;
-	}
-}
+//void Android::VM_JavaJNI::detachThread(JavaVM* javaVM)
+//{
+//	if (this->threadAttached && (javaVM != NULL)) {
+//		javaVM->DetachCurrentThread();
+//		this->threadAttached = false;
+//	}
+//}
 
 jclass Android::VM_JavaJNI::getClass()
 {
@@ -63,10 +63,10 @@ JNIEnv* Android::VM_JavaJNI::getEnvironment()
 	return this->jniEnvironment;
 }
 
-JavaVM* Android::VM_JavaJNI::getJavaVM()
-{
-	return this->javaVM;
-}
+//JavaVM* Android::VM_JavaJNI::getJavaVM()
+//{
+//	return this->javaVM;
+//}
 
 int Android::VM_JavaJNI::init()
 {
@@ -87,9 +87,9 @@ int Android::VM_JavaJNI::init()
 	return RESULT_OK;
 }
 
-bool Android::VM_JavaJNI::isAttached()
-{
-	return this->threadAttached;
-}
+//bool Android::VM_JavaJNI::isAttached()
+//{
+//	return this->threadAttached;
+//}
 
 #endif

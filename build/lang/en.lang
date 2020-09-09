@@ -3,6 +3,7 @@
 add=ADD
 audio=MUSIC
 cancel=CANCEL
+details=DETAILS
 episode=episode
 episodes=episodes
 file=FILE
@@ -11,6 +12,7 @@ movies=MOVIES
 name=NAME
 off=OFF
 paste=PASTE
+path=PATH
 pictures=PICTURES
 playlist_name=PLAYLIST NAME
 playlists=PLAYLISTS
@@ -62,6 +64,7 @@ error.window=Failed to create the window.
 
 remove=REMOVE
 remove.file.db=REMOVE FILE FROM THE DATABASE
+remove.path.db=REMOVE FOLDER FROM THE DATABASE
 
 # SETTINGS
 

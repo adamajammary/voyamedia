@@ -13,6 +13,7 @@ Graphics::VM_Button::VM_Button(const VM_Component &component)
 	this->borderWidth     = component.borderWidth;
 	this->fontSize        = component.fontSize;
 	this->margin          = component.margin;
+	this->overlayColor    = component.overlayColor;
 	this->parent          = component.parent;
 	this->xmlDoc          = component.xmlDoc;
 	this->xmlNode         = component.xmlNode;
@@ -29,7 +30,7 @@ void Graphics::VM_Button::init(const String &id)
 {
 	this->id        = id;
 	this->mediaID   = 0;
-	this->mediaID2  = "";
+	//this->mediaID2  = "";
 	this->imageArea = {};
 	this->imageData = NULL;
 	this->inputText = "";
@@ -151,16 +152,24 @@ int Graphics::VM_Button::render()
 	if (!this->visible)
 		return ERROR_INVALID_ARGUMENTS;
 
-	// COLOR BACKGROUND
-	if ((this->backgroundColor.a == 0xFF) || (this->parent == NULL) || (this->parent->backgroundColor.a == 0xFF))
-	{
-		if (this->selected)
-			VM_Graphics::FillArea(&this->highlightColor, &this->backgroundArea);
-		else
-			VM_Graphics::FillArea(&this->backgroundColor, &this->backgroundArea);
-	}
+	//if ((this->id == "list_offset_end") && (SHOUTCAST_IS_SELECTED || YOUTUBE_IS_SELECTED))
+	if ((this->id == "list_offset_end") && SHOUTCAST_IS_SELECTED)
+		return RESULT_OK;
 
-	// COLOR BORDER
+	SDL_Rect area = SDL_Rect(this->backgroundArea);
+
+	area.x += this->borderWidth.left;
+	area.y += this->borderWidth.top;
+	area.w -= (this->borderWidth.left + this->borderWidth.right);
+	area.h -= (this->borderWidth.top  + this->borderWidth.bottom);
+
+	// BACKGROUND
+	if (this->selected)
+		VM_Graphics::FillArea(&this->highlightColor, &area);
+	else
+		VM_Graphics::FillArea(&this->backgroundColor, &area);
+
+	// BORDER
 	if (this->active)
 		VM_Graphics::FillBorder(&this->activeColor, &this->backgroundArea, this->borderWidth);
 	else
@@ -169,10 +178,7 @@ int Graphics::VM_Button::render()
 	// TEXT
 	if ((this->textData != NULL) && (this->textData->data != NULL))
 	{
-		int maxWidth  = (this->backgroundArea.w - this->borderWidth.left - this->borderWidth.right  - this->margin.left - this->margin.right);
-		int maxHeight = (this->backgroundArea.h - this->borderWidth.top  - this->borderWidth.bottom - this->margin.top  - this->margin.bottom);
-
-		SDL_Rect clip = { 0, 0, min(this->textArea.w, maxWidth), min(this->textArea.h, maxHeight) };
+		SDL_Rect clip = { 0, 0, min(this->textArea.w, area.w), min(this->textArea.h, area.h) };
 		SDL_Rect dest = { this->textArea.x, this->textArea.y, clip.w, clip.h };
 
 		SDL_RenderCopy(VM_Window::Renderer, this->textData->data, &clip, &dest);
@@ -181,6 +187,10 @@ int Graphics::VM_Button::render()
 	// IMAGE
 	if ((this->imageData != NULL) && (this->imageData->data != NULL))
 		SDL_RenderCopy(VM_Window::Renderer, this->imageData->data, NULL, &this->imageArea);
+
+	// OVERLAY
+	if (this->overlayColor.a > 0)
+		VM_Graphics::FillArea(&this->overlayColor, &area);
 
 	return RESULT_OK;
 }
@@ -358,8 +368,9 @@ int Graphics::VM_Button::setImageTextAlign()
 	String orientation = VM_XML::GetAttribute(this->xmlNode, "orientation");
 	String hAlign      = VM_XML::GetAttribute(this->xmlNode, "halign");
 	String vAlign      = VM_XML::GetAttribute(this->xmlNode, "valign");
-	int    maxX        = (this->backgroundArea.w - this->borderWidth.left - this->borderWidth.right  - this->margin.left - this->margin.right);
-	int    maxY        = (this->backgroundArea.h - this->borderWidth.top  - this->borderWidth.bottom - this->margin.top  - this->margin.bottom);
+
+	int maxX = (this->backgroundArea.w - this->borderWidth.left - this->borderWidth.right  - this->margin.left - this->margin.right);
+	int maxY = (this->backgroundArea.h - this->borderWidth.top  - this->borderWidth.bottom - this->margin.top  - this->margin.bottom);
 
 	// H-ALIGN
 	if (hAlign == "center") {
@@ -384,12 +395,12 @@ int Graphics::VM_Button::setImageTextAlign()
 	{
 		// VERTICAL
 		if (orientation == "vertical") {
-			this->textArea.y   = (this->imageArea.y + this->imageArea.h + 5);
+			this->textArea.y   = (this->imageArea.y + this->imageArea.h + DEFAULT_IMG_TXT_SPACING);
 			this->imageArea.y -= (this->textArea.h / 2);
 			this->textArea.y  -= (this->textArea.h / 2);
 		// HORIZONTAL
 		} else {
-			this->textArea.x = (this->imageArea.x + this->imageArea.w + 5);
+			this->textArea.x = (this->imageArea.x + this->imageArea.w + DEFAULT_IMG_TXT_SPACING);
 		}
 	}
 
@@ -442,13 +453,14 @@ int Graphics::VM_Button::setText(const String &text)
 
 void Graphics::VM_Button::setThumb(const String &tableID)
 {
-	if ((tableID == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE))// && (VM_Top::Selected <= MEDIA_TYPE_TMDB_TV))
+	//if ((tableID == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE))// && (VM_Top::Selected <= MEDIA_TYPE_TMDB_TV))
+	if ((tableID == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST))
 	{
 		String filename = "";
 
-		if (YOUTUBE_IS_SELECTED && !this->mediaID2.empty())
-			filename = ("youtube_" + this->mediaID2);
-		else if (SHOUTCAST_IS_SELECTED && (this->mediaID > 0))
+		//if (YOUTUBE_IS_SELECTED && !this->mediaID2.empty())
+		//	filename = ("youtube_" + this->mediaID2);
+		if (SHOUTCAST_IS_SELECTED && (this->mediaID > 0))
 			filename = ("shoutcast_" + std::to_string(this->mediaID));
 		else if (TMDB_MOVIE_IS_SELECTED && (this->mediaID > 0))
 			filename = ("tmbd_movie_" + std::to_string(this->mediaID));

@@ -145,8 +145,8 @@ bool Graphics::VM_Graphics::ButtonPressed(const SDL_Event* mouseEvent, const SDL
 
 	if (doubleClicked) {
 		#if defined _android || defined _ios
-			//if (VM_EventManager::TouchEvent != TOUCH_EVENT_DOUBLE_TAP)
-			return false;
+			if (VM_EventManager::TouchEvent != TOUCH_EVENT_DOUBLE_TAP)
+				return false;
 		#else
 			if (mouseEvent->button.clicks < 2)
 				return false;
@@ -196,8 +196,9 @@ Graphics::VM_Image* Graphics::VM_Graphics::CreateSnapshot(const String &filePath
 	if (formatContext == NULL)
 		return NULL;
 
-	bool                 isM4A         = VM_FileSystem::IsM4A(formatContext);
 	LIB_FREEIMAGE::FIBITMAP* snapshotImage = NULL;
+
+	bool isM4A = VM_FileSystem::IsM4A(formatContext);
 
 	// EXTRACT THUMBNAIL OR COVER ART FROM VIDEO STREAM
 	if (!isM4A)
@@ -211,7 +212,10 @@ Graphics::VM_Image* Graphics::VM_Graphics::CreateSnapshot(const String &filePath
 
 	VM_Image* image = new VM_Image(true, 0, 0, 0);
 
-	image->update(snapshotImage);
+	if (snapshotImage != NULL) {
+		image->update(snapshotImage);
+	}
+
 	FREE_IMAGE(snapshotImage);
 
 	return image;
@@ -222,20 +226,13 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotAudioJFIF(const St
 	if (audioFile.empty())
 		return NULL;
 
-	char tempFile[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(tempFile, DEFAULT_CHAR_BUFFER_SIZE, "%s_TEMP_IMAGE_.JPG", VM_FileSystem::GetPathImages().c_str());
+	FILE*  fileIn;
+	String tempFile2 = "";
+	String tempFile  = VM_Text::Format("%s_TEMP_IMAGE_.JPG", VM_FileSystem::GetPathImages().c_str());
 
-	FILE* fileIn;
-	char  tempFile2[DEFAULT_CHAR_BUFFER_SIZE] = "";
-
-	if (VM_FileSystem::IsHttp(audioFile))
-	{
-		snprintf(
-			tempFile2, DEFAULT_CHAR_BUFFER_SIZE, "%s_TEMP_AUDIO_.%s",
-			VM_FileSystem::GetPathImages().c_str(), VM_FileSystem::GetFileExtension(audioFile, true).c_str()
-		);
-
-		fileIn = VM_FileSystem::DownloadToFile(audioFile, tempFile2);
+	if (VM_FileSystem::IsHttp(audioFile)) {
+		tempFile2 = VM_Text::Format("%s_TEMP_AUDIO_.%s", VM_FileSystem::GetPathImages().c_str(), VM_FileSystem::GetFileExtension(audioFile, true).c_str());
+		fileIn    = VM_FileSystem::DownloadToFile(audioFile, tempFile2);
 	} else {
 		fileIn = fopen(audioFile.c_str(), "rb");
 	}
@@ -253,7 +250,7 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotAudioJFIF(const St
 				(std::fgetc(fileIn) == 0xFF) && (std::fgetc(fileIn) == 0xD8) && 
 				(std::fgetc(fileIn) == 0xFF) && (std::fgetc(fileIn) == 0xE0)) 
 			{
-				fileOut = fopen(tempFile, "wb");
+				fileOut = fopen(tempFile.c_str(), "wb");
 
 				if (fileOut == NULL)
 					break;
@@ -291,7 +288,7 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotAudioJFIF(const St
 	
 	LIB_FREEIMAGE::FIBITMAP* image = NULL;
 
-	fileOut = fopen(tempFile, "rb");
+	fileOut = fopen(tempFile.c_str(), "rb");
 
 	if (fileOut != NULL)
 	{
@@ -310,10 +307,10 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotAudioJFIF(const St
 		CLOSE_FILE(fileOut);
 	}
 
-	std::remove(tempFile);
+	std::remove(tempFile.c_str());
 	
 	if (VM_FileSystem::IsHttp(audioFile))
-		std::remove(tempFile2);
+		std::remove(tempFile2.c_str());
 
 	return image;
 }
@@ -385,14 +382,12 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotVideo(int mediaID,
 		frameReads++;
 	}
 
-	LIB_FFMPEG::AVPicture videoFrameRGB;
-	avpicture_alloc(&videoFrameRGB, LIB_FFMPEG::AV_PIX_FMT_BGR24, 0, 0);
-
 	LIB_FFMPEG::SwsContext* videoScaleContext = NULL;
+	LIB_FFMPEG::AVFrame*    videoFrameRGB     = LIB_FFMPEG::av_frame_alloc();
 
 	if (frameReturned && (videoFrameYUV->linesize[0] > 0))
 	{
-		if (avpicture_alloc(&videoFrameRGB, LIB_FFMPEG::AV_PIX_FMT_BGR24, videoFrameYUV->width, videoFrameYUV->height) == 0)
+		if (av_image_alloc(videoFrameRGB->data, videoFrameRGB->linesize, videoFrameYUV->width, videoFrameYUV->height, LIB_FFMPEG::AV_PIX_FMT_BGR24, 32) > 0)
 		{
 			videoScaleContext = sws_getContext(
 				videoFrameYUV->width, videoFrameYUV->height, videoStream->codec->pix_fmt,
@@ -407,7 +402,7 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotVideo(int mediaID,
 	{
 		scaleResult = sws_scale(
 			videoScaleContext, videoFrameYUV->data, videoFrameYUV->linesize, 0, videoFrameYUV->height,
-			videoFrameRGB.data, videoFrameRGB.linesize
+			videoFrameRGB->data, videoFrameRGB->linesize
 		);
 	}
 
@@ -416,19 +411,19 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotVideo(int mediaID,
 	if (scaleResult > 0)
 	{
 		snapshotImage = LIB_FREEIMAGE::FreeImage_ConvertFromRawBits(
-			static_cast<uint8_t*>(videoFrameRGB.data[0]), videoFrameYUV->width, videoFrameYUV->height, videoFrameRGB.linesize[0],
+			static_cast<uint8_t*>(videoFrameRGB->data[0]), videoFrameYUV->width, videoFrameYUV->height, videoFrameRGB->linesize[0],
 			24, FI_RGBA_RED_MASK, FI_RGBA_GREEN_MASK, FI_RGBA_BLUE_MASK, 1
 		);
 	}
 
 	if (snapshotImage != NULL) {
 		SDL_Rect scaledSize = VM_Graphics::GetScaledSize(videoFrameYUV->width, videoFrameYUV->height);
-		snapshotImage = VM_Graphics::ResizeImage(&snapshotImage, scaledSize.w, scaledSize.h);
+		snapshotImage       = VM_Graphics::ResizeImage(&snapshotImage, scaledSize.w, scaledSize.h);
 	}
 
 	FREE_STREAM(videoStream);
 	FREE_SWS(videoScaleContext);
-	FREE_AVPICTURE(videoFrameRGB);
+	LIB_FFMPEG::av_frame_free(&videoFrameRGB);
 	LIB_FFMPEG::av_frame_free(&videoFrameYUV);
 
 	return snapshotImage;
@@ -703,8 +698,12 @@ int Graphics::VM_Graphics::CreateThumbITunes(const String &fileName, const Strin
 
 int Graphics::VM_Graphics::CreateThumbThread(void* userData)
 {
-	if (userData == NULL)
+	if (userData == NULL) {
+		VM_GUI::ListTable->removeThumbThread();
+		VM_GUI::ListTable->refreshThumbs();
+
 		return ERROR_INVALID_ARGUMENTS;
+	}
 
 	int  result     = ERROR_UNKNOWN;
 	auto threadData = static_cast<VM_ThreadData*>(userData);
@@ -716,7 +715,8 @@ int Graphics::VM_Graphics::CreateThumbThread(void* userData)
 	#endif
 
 	// INTERNET MEDIA
-	if (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE)
+	//if (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE)
+	if (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST)
 	{
 		LIB_FREEIMAGE::FIBITMAP* thumbImage = VM_Graphics::OpenImageHTTP(threadData->data["full_path"]);
 		result = VM_Graphics::SaveImage(thumbImage, thumbPath);
@@ -747,8 +747,8 @@ int Graphics::VM_Graphics::CreateThumbThread(void* userData)
 
 	DELETE_POINTER(threadData);
 
-	if ((result == RESULT_OK) && !VM_Window::Quit)
-		VM_GUI::ListTable->refreshRows();
+	VM_GUI::ListTable->removeThumbThread();
+	VM_GUI::ListTable->refreshThumbs();
 
 	return RESULT_OK;
 }
@@ -885,7 +885,7 @@ Graphics::VM_Texture* Graphics::VM_Graphics::GetButtonLabel(const String &label,
 		return NULL;
 	}
 
-	TTF_SetFontHinting(font, TTF_HINTING_LIGHT);
+	//TTF_SetFontHinting(font, TTF_HINTING_LIGHT);
 
 	SDL_Surface* surface = NULL;
 	VM_Texture*  texture = NULL;
@@ -1066,10 +1066,7 @@ StringMap Graphics::VM_Graphics::getImageMeta(LIB_FREEIMAGE::FIBITMAP* image, LI
 
 String Graphics::VM_Graphics::GetImageResolutionString(int width, int height)
 {
-	char resolution[DEFAULT_CHAR_BUFFER_SIZE];
-	snprintf(resolution, DEFAULT_CHAR_BUFFER_SIZE, "%.2f MegaPixels (%dx%d)", (float)((float)(width * height) / (float)ONE_MILLION), width, height);
-
-	return String(resolution);
+	return VM_Text::Format("%.2f MegaPixels (%dx%d)", (float)((float)(width * height) / (float)ONE_MILLION), width, height);
 }
 
 SDL_Rect Graphics::VM_Graphics::GetScaledSize(int width, int height)
@@ -1420,7 +1417,7 @@ Graphics::VM_Border Graphics::VM_Graphics::ToVMBorder(const String &borderWidth)
 */
 Graphics::VM_Color Graphics::VM_Graphics::ToVMColor(const String &colorHex)
 {
-	VM_Color color   = { 0, 0, 0, 0xFF };
+	VM_Color color   = VM_Color(SDL_COLOR_BLACK);
 	bool     invertA = false;
 	off_t    offsetR = -1;
 	off_t    offsetG = -1;

@@ -5,10 +5,12 @@
     <panel id="modal_top" height="15%" border-width="1">
       <button id="modal_desc" halign="center" valign="middle">%dropbox.auth_code</button>
     </panel>
+
     <panel id="modal_middle" halign="center" valign="middle" border-width="1">
       <button id="modal_dropbox_input" valign="middle" height="20%" width="60%" margin="0 10 0 0" border-width="2"></button>
       <button id="modal_dropbox_paste" halign="center" valign="middle" height="20%" width="30%" border-width="1">%paste</button>
     </panel>
+
     <panel id="modal_bottom" halign="center" valign="middle" height="20%" border-width="1" margin="10">
       <button id="modal_ok" halign="center" valign="middle" height="50%" border-width="1">OK</button>
       <button id="modal_cancel" halign="center" valign="middle" height="50%" border-width="1">%cancel</button>

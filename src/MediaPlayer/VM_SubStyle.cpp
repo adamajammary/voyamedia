@@ -7,7 +7,7 @@ MediaPlayer::VM_SubStyle::VM_SubStyle()
 {
 	this->alignment      = SUB_ALIGN_BOTTOM_CENTER;
 	this->blur           = 0;
-	this->colorPrimary   = { 0xFF, 0xFF, 0xFF, 0xFF };
+	this->colorPrimary   = VM_Color(SDL_COLOR_WHITE);
 	this->colorOutline   = {};
 	this->colorShadow    = {};
 	this->font           = NULL;
@@ -263,9 +263,9 @@ TTF_Font* MediaPlayer::VM_SubStyle::getFont()
 }
 
 #if defined _windows
-void MediaPlayer::VM_SubStyle::openFont(umap<WString, TTF_Font*> &styleFonts, const VM_PointF &subScale, VM_Subtitle* sub)
+void MediaPlayer::VM_SubStyle::openFont(umap<WString, TTF_Font*> &styleFonts, const SDL_FPoint &subScale, VM_Subtitle* sub)
 #else
-void MediaPlayer::VM_SubStyle::openFont(umap<String, TTF_Font*> &styleFonts, const VM_PointF &subScale, VM_Subtitle* sub)
+void MediaPlayer::VM_SubStyle::openFont(umap<String, TTF_Font*> &styleFonts, const SDL_FPoint &subScale, VM_Subtitle* sub)
 #endif
 {
 	this->fontSizeScaled = (int)((float)this->fontSize * subScale.y);

@@ -1,6 +1,6 @@
 ## Voya Media
 ### Media player that easily plays your music, pictures and videos
-#### Copyright (C) 2012 Adam A. Jammary (Jammary Consulting)
+#### Copyright (C) 2012 Adam A. Jammary (Jammary Studio)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

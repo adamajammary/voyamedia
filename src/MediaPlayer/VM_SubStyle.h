@@ -28,21 +28,21 @@ namespace VoyaMedia
 			~VM_SubStyle() {}
 
 		public:
-			VM_SubAlignment     alignment;
-			int                 blur;
-			Graphics::VM_Color  colorOutline;
-			Graphics::VM_Color  colorPrimary;
-			Graphics::VM_Color  colorShadow;
-			Graphics::VM_PointF fontScale;
-			int                 fontSize;
-			int                 fontStyle;
-			int                 marginL;
-			int                 marginR;
-			int                 marginV;
-			String              name;
-			int                 outline;
-			double              rotation;
-			SDL_Point           shadow;
+			VM_SubAlignment    alignment;
+			int                blur;
+			Graphics::VM_Color colorOutline;
+			Graphics::VM_Color colorPrimary;
+			Graphics::VM_Color colorShadow;
+			SDL_FPoint         fontScale;
+			int                fontSize;
+			int                fontStyle;
+			int                marginL;
+			int                marginR;
+			int                marginV;
+			String             name;
+			int                outline;
+			double             rotation;
+			SDL_Point          shadow;
 
 			#if defined _windows
 				WString fontName;
@@ -60,9 +60,9 @@ namespace VoyaMedia
 			TTF_Font*    getFont();
 
 			#if defined _windows
-				void openFont(umap<WString, TTF_Font*> &styleFonts, const Graphics::VM_PointF &subScale, VM_Subtitle* sub = NULL);
+				void openFont(umap<WString, TTF_Font*> &styleFonts, const SDL_FPoint &subScale, VM_Subtitle* sub = NULL);
 			#else
-				void openFont(umap<String, TTF_Font*> &styleFonts, const Graphics::VM_PointF &subScale, VM_Subtitle* sub = NULL);
+				void openFont(umap<String, TTF_Font*> &styleFonts, const SDL_FPoint &subScale, VM_Subtitle* sub = NULL);
 			#endif
 
 			static bool            IsAlignedBottom(VM_SubAlignment a);

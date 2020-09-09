@@ -23,6 +23,7 @@ namespace VoyaMedia
 			int         addFile(const String &fullPath, const String &name, const String &path, size_t size, VM_MediaType mediaType, const String &mimeType);
 			int         addPlaylist(const String &name, const String &search);
 			int         deleteMediaFile(int mediaID);
+			int         deleteMediaPath(int mediaID);
 			int         deletePlaylist(const String &name);
 			int         getID(const String &filePath);
 			VM_DBResult getRows(const String &sqlQuery, int maxFiles = MAX_DB_RESULT);

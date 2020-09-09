@@ -5,9 +5,11 @@
     <panel id="modal_top" height="15%" border-width="1">
       <button id="modal_title" halign="center" valign="middle"></button>
     </panel>
+
     <panel id="modal_middle" orientation="vertical" halign="center" valign="middle" border-width="1">
         <button id="modal_message_text" halign="center" valign="middle" width="95%" height="95%" font-size="8" wrap="true"></button>
     </panel>
+
     <panel id="modal_bottom" orientation="vertical" halign="center" valign="middle" height="30%" border-width="1">
       <button id="modal_ok" halign="center" valign="middle" width="50%" height="30%" border-width="1">OK</button>
     </panel>

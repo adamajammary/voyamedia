@@ -34,6 +34,7 @@ MediaPlayer::VM_PlayerSubContext   MediaPlayer::VM_Player::subContext;
 Strings                            MediaPlayer::VM_Player::SubsExternal;
 VM_TimeOut*                        MediaPlayer::VM_Player::TimeOut;
 MediaPlayer::VM_PlayerVideoContext MediaPlayer::VM_Player::videoContext;
+SDL_Rect                           MediaPlayer::VM_Player::VideoDimensions;
 bool                               MediaPlayer::VM_Player::videoFrameAvailable;
 
 void MediaPlayer::VM_Player::Init()
@@ -55,7 +56,7 @@ void MediaPlayer::VM_Player::Init()
 		{
 			VM_Player::State.isMuted         = (isMuted == "1");
 			VM_Player::State.audioVolume     = (VM_Player::State.isMuted ? 0 : std::atoi(db->getSettings("audio_volume").c_str()));
-			VM_Player::State.loopType        = (VM_PlayType)std::atoi(db->getSettings("playlist_loop_type").c_str());
+			VM_Player::State.loopType        = (VM_LoopType)std::atoi(db->getSettings("playlist_loop_type").c_str());
 			VM_Player::State.keepAspectRatio = (db->getSettings("keep_aspect_ratio") == "1");
 		}
 		else
@@ -138,7 +139,7 @@ int MediaPlayer::VM_Player::closeAudio()
 	if ((VM_Player::audioContext.index < 0) || (VM_Player::audioContext.stream == NULL))
 		return ERROR_UNKNOWN;
 
-	FREE_FRAME(VM_Player::audioContext.frame, false);
+	LIB_FFMPEG::av_frame_free(&VM_Player::audioContext.frame);
 	FREE_POINTER(VM_Player::audioContext.frameEncoded);
 	FREE_SWR(VM_Player::resampleContext);
 	FREE_THREAD_COND(VM_Player::audioContext.condition);
@@ -233,8 +234,8 @@ int MediaPlayer::VM_Player::closeVideo()
 	if ((VM_Player::videoContext.index < 0) || (VM_Player::videoContext.stream == NULL))
 		return ERROR_UNKNOWN;
 
-	FREE_FRAME(VM_Player::videoContext.frame, false);
-	FREE_AVPICTURE(VM_Player::videoContext.frameEncoded);
+	LIB_FFMPEG::av_frame_free(&VM_Player::videoContext.frame);
+	LIB_FFMPEG::av_frame_free(&VM_Player::videoContext.frameEncoded);
 	DELETE_POINTER(VM_Player::videoContext.texture);
 	FREE_SWS(VM_Player::scaleContextVideo);
 	FREE_THREAD_COND(VM_Player::videoContext.condition);
@@ -245,23 +246,25 @@ int MediaPlayer::VM_Player::closeVideo()
 
 int MediaPlayer::VM_Player::cursorHide()
 {
-	#if defined _linux || defined _macosx || defined _windows
-		if (VM_Player::isCursorHidden || !VM_Player::State.isPlaying || ((SDL_GetTicks() - VM_Player::CursorLastVisible) < CURSOR_HIDE_DELAY))
-			return ERROR_INVALID_ARGUMENTS;
+	if (!VIDEO_IS_SELECTED || (SDL_GetTicks() - VM_Player::CursorLastVisible) < CURSOR_HIDE_DELAY)
+		return ERROR_INVALID_ARGUMENTS;
 
-		SDL_Rect mousePosition = { 0, 0, 0, 0 };
-		SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
+	if ((!VM_Player::isCursorHidden || VM_PlayerControls::IsVisible()) && !VM_Player::State.isPaused)
+	{
+		#if defined _linux || defined _macosx || defined _windows
+			SDL_Rect mousePosition = {};
+			SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
 
-		if (!VM_Graphics::ButtonHovered(&mousePosition, VM_GUI::Components["bottom_player_snapshot"]->backgroundArea))
-			return ERROR_UNKNOWN;
+			if (!VM_Graphics::ButtonHovered(&mousePosition, VM_GUI::Components["bottom_player_snapshot"]->backgroundArea))
+				return RESULT_OK;
 
-		SDL_ShowCursor(0);
-	#endif
+			SDL_ShowCursor(0);
+		#endif
 
-	VM_Player::isCursorHidden = true;
+		VM_Player::isCursorHidden = true;
 
-	if (VM_Window::FullScreenMaximized)
 		VM_PlayerControls::Hide();
+	}
 
 	return RESULT_OK;
 }
@@ -273,17 +276,16 @@ int MediaPlayer::VM_Player::CursorShow()
 	if (VM_Window::Inactive)
 		VM_Window::Refresh();
 
-	if (!VM_Player::isCursorHidden)
-		return ERROR_UNKNOWN;
-
-	#if defined _linux || defined _macosx || defined _windows
-		SDL_ShowCursor(1);
-	#endif
+	if ((VM_Player::isCursorHidden || !VM_PlayerControls::IsVisible()) && !VM_Player::State.isStopped)
+	{
+		#if defined _linux || defined _macosx || defined _windows
+			SDL_ShowCursor(1);
+		#endif
 	
-	VM_Player::isCursorHidden = false;
+		VM_Player::isCursorHidden = false;
 
-	if (!VM_PlayerControls::IsVisible())
 		VM_PlayerControls::Show();
+	}
 
 	return RESULT_OK;
 }
@@ -303,8 +305,8 @@ int MediaPlayer::VM_Player::FreeTextures()
 
 int MediaPlayer::VM_Player::FullScreenEnter(bool windowMode)
 {
-	VM_Player::State.fullscreenEnter    = true;
-	VM_Player::fullscreenEnterWindowed  = windowMode;
+	VM_Player::State.fullscreenEnter   = true;
+	VM_Player::fullscreenEnterWindowed = windowMode;
 
 	return RESULT_OK;
 }
@@ -315,8 +317,9 @@ int MediaPlayer::VM_Player::FullScreenEnter()
 	{
 		VM_Window::FullScreenMaximized = true;
 
-		#if !defined _android && !defined _ios
+		#if defined _linux || defined _macosx || defined _windows
 			int mouseX, mouseY;
+
 			SDL_GetGlobalMouseState(&mouseX, &mouseY);
 			SDL_SetWindowFullscreen(VM_Window::MainWindow, SDL_WINDOW_FULLSCREEN_DESKTOP);
 			SDL_WarpMouseGlobal(mouseX, mouseY);
@@ -351,16 +354,15 @@ int MediaPlayer::VM_Player::FullScreenExit()
 
 	if (VM_Window::FullScreenMaximized)
 	{
-		#if !defined _android && !defined _ios
+		#if defined _linux || defined _macosx || defined _windows
 			int mouseX, mouseY;
-			SDL_GetGlobalMouseState(&mouseX, &mouseY);
 
+			SDL_GetGlobalMouseState(&mouseX, &mouseY);
 			SDL_SetWindowFullscreen(VM_Window::MainWindow, 0);
 
 			bool windowIsMaximized = ((SDL_GetWindowFlags(VM_Window::MainWindow) & SDL_WINDOW_MAXIMIZED) != 0);
 
-			if (windowIsMaximized)
-			{
+			if (windowIsMaximized) {
 				SDL_RestoreWindow(VM_Window::MainWindow);
 				SDL_SetWindowPosition(VM_Window::MainWindow, VM_Window::DimensionsBeforeFS.x, VM_Window::DimensionsBeforeFS.y);
 				SDL_SetWindowSize(VM_Window::MainWindow,     VM_Window::DimensionsBeforeFS.w, VM_Window::DimensionsBeforeFS.h);
@@ -457,7 +459,7 @@ int MediaPlayer::VM_Player::GetStreamIndex(VM_MediaType mediaType)
 	return -1;
 }
 
-VM_PointF MediaPlayer::VM_Player::GetSubScale()
+SDL_FPoint MediaPlayer::VM_Player::GetSubScale()
 {
 	return VM_Player::subContext.scale;
 }
@@ -497,7 +499,8 @@ bool MediaPlayer::VM_Player::IsYUV(LIB_FFMPEG::AVPixelFormat pixelFormat)
 
 void MediaPlayer::VM_Player::KeepAspectRatioToggle()
 {
-	if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	//if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	if (VIDEO_IS_SELECTED)
 	{
 		VM_Player::State.keepAspectRatio = !VM_Player::State.keepAspectRatio;
 
@@ -541,7 +544,11 @@ int MediaPlayer::VM_Player::OpenFilePath(const String &filePath)
 	VM_Player::State.openFile = true;
 	VM_Player::State.filePath = filePath;
 
-	VM_Player::FullScreenEnter(true);
+	#if defined _android || defined _ios
+		VM_Player::FullScreenEnter(!VIDEO_IS_SELECTED);
+	#else
+		VM_Player::FullScreenEnter(true);
+	#endif
 
 	return RESULT_OK;
 }
@@ -628,8 +635,8 @@ int MediaPlayer::VM_Player::Open()
 	// PLAY
 	VM_Player::Play();
 
-	VM_Window::StatusString[0] = '\0';
-	VM_Player::State.openFile  = false;
+	VM_Window::StatusString   = "";
+	VM_Player::State.openFile = false;
 
 	return RESULT_OK;
 }
@@ -750,30 +757,30 @@ int MediaPlayer::VM_Player::openFormatContext()
 {
 	VM_Player::TimeOut = new VM_TimeOut();
 
-	if (YOUTUBE_IS_SELECTED)
-	{
-		VM_Player::FormatContext = VM_FileSystem::GetMediaFormatContext(VM_Player::State.filePath, true);
+	//if (YOUTUBE_IS_SELECTED)
+	//{
+	//	VM_Player::FormatContext = VM_FileSystem::GetMediaFormatContext(VM_Player::State.filePath, true);
 
-		if (VM_Player::FormatContext == NULL)
-		{
-			for (const auto &mediaURL : VM_Player::State.urls)
-			{
-				VM_Player::FormatContext = VM_FileSystem::GetMediaFormatContext(mediaURL, true);
+	//	if (VM_Player::FormatContext == NULL)
+	//	{
+	//		for (const auto &mediaURL : VM_Player::State.urls)
+	//		{
+	//			VM_Player::FormatContext = VM_FileSystem::GetMediaFormatContext(mediaURL, true);
 
-				if ((VM_Player::FormatContext != NULL) && 
-					(VM_FileSystem::GetMediaStreamCount(VM_Player::FormatContext, MEDIA_TYPE_AUDIO) > 0) &&
-					(VM_FileSystem::GetMediaStreamCount(VM_Player::FormatContext, MEDIA_TYPE_VIDEO) > 0))
-				{
-					VM_Player::State.filePath = mediaURL;
-					break;
-				}
+	//			if ((VM_Player::FormatContext != NULL) && 
+	//				(VM_FileSystem::GetMediaStreamCount(VM_Player::FormatContext, MEDIA_TYPE_AUDIO) > 0) &&
+	//				(VM_FileSystem::GetMediaStreamCount(VM_Player::FormatContext, MEDIA_TYPE_VIDEO) > 0))
+	//			{
+	//				VM_Player::State.filePath = mediaURL;
+	//				break;
+	//			}
 
-				VM_Player::closeFormatContext();
-			}
-		}
-	}
+	//			VM_Player::closeFormatContext();
+	//		}
+	//	}
+	//}
 	// DROPBOX
-	else if (VM_FileSystem::IsHttp(VM_Player::State.filePath) && (VM_Player::State.filePath.find("dropbox") != String::npos))
+	if (VM_FileSystem::IsHttp(VM_Player::State.filePath) && (VM_Player::State.filePath.find("dropbox") != String::npos))
 	{
 		if (!VM_FileSystem::FileExists(VM_Player::State.filePath, L""))
 			VM_Player::State.filePath = VM_FileSystem::GetDropboxURL2(VM_Player::State.filePath);
@@ -809,22 +816,22 @@ int MediaPlayer::VM_Player::openPlaylist(bool stop, bool next)
 
 	if (next) {
 		switch (VM_Player::State.loopType) {
-			case PLAY_TYPE_NORMAL:  VM_GUI::ListTable->selectNext();     break;
-			case PLAY_TYPE_LOOP:    VM_GUI::ListTable->selectNext(true); break;
-			case PLAY_TYPE_SHUFFLE: VM_GUI::ListTable->selectRandom();   break;
+			case LOOP_TYPE_NORMAL:  VM_GUI::ListTable->selectNext();     break;
+			case LOOP_TYPE_LOOP:    VM_GUI::ListTable->selectNext(true); break;
+			case LOOP_TYPE_SHUFFLE: VM_GUI::ListTable->selectRandom();   break;
 		}
 	} else {
 		switch (VM_Player::State.loopType) {
-			case PLAY_TYPE_NORMAL:  VM_GUI::ListTable->selectPrev();     break;
-			case PLAY_TYPE_LOOP:    VM_GUI::ListTable->selectPrev(true); break;
-			case PLAY_TYPE_SHUFFLE: VM_GUI::ListTable->selectRandom();   break;
+			case LOOP_TYPE_NORMAL:  VM_GUI::ListTable->selectPrev();     break;
+			case LOOP_TYPE_LOOP:    VM_GUI::ListTable->selectPrev(true); break;
+			case LOOP_TYPE_SHUFFLE: VM_GUI::ListTable->selectRandom();   break;
 		}
 	}
 
 	String nextFile = VM_GUI::ListTable->getSelectedFile();
 
 	if (nextFile.empty() ||
-		((VM_Player::State.loopType != PLAY_TYPE_SHUFFLE) && (nextFile != REFRESH_PENDING) && 
+		((VM_Player::State.loopType != LOOP_TYPE_SHUFFLE) && (nextFile != REFRESH_PENDING) &&
 		((nextFile == VM_Player::State.filePath) || (nextFile == previousFile))))
 	{
 		return ERROR_UNKNOWN;
@@ -851,7 +858,8 @@ int MediaPlayer::VM_Player::openStreams()
 		return ERROR_UNKNOWN;
 
 	// VIDEO + SUB STREAMS
-	if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	//if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	if (VIDEO_IS_SELECTED)
 	{
 		VM_Player::videoContext.stream = VM_FileSystem::GetMediaStreamBest(
 			VM_Player::FormatContext, MEDIA_TYPE_VIDEO
@@ -937,21 +945,8 @@ int MediaPlayer::VM_Player::openSub()
 			float subVideoScale        = ((float)subHeight / (float)videoHeight);
 			VM_Player::subContext.size = { (int)((float)videoWidth * subVideoScale), subHeight };
 		} else {
-			VM_Player::subContext.size = { 384, 288 };
+			VM_Player::subContext.size = DEFAULT_SUB_SCREEN_SIZE;
 		}
-
-		auto bottom = VM_GUI::Components["bottom"];
-		auto topBar = VM_GUI::Components["top_bar"];
-
-		SDL_Point playerSnapshot = {
-			VM_Window::Dimensions.w,
-			(VM_Window::Dimensions.h - topBar->backgroundArea.h - bottom->backgroundArea.h)
-		};
-
-		VM_Player::subContext.scale = {
-			(float)((float)playerSnapshot.x / (float)VM_Player::subContext.size.x * 0.9f),
-			(float)((float)playerSnapshot.y / (float)VM_Player::subContext.size.y * 0.9f)
-		};
 
 		// STYLE VERSION
 		if (!subHeader.empty())
@@ -984,10 +979,6 @@ int MediaPlayer::VM_Player::openSub()
 				}
 
 				VM_SubStyle* subStyle = new VM_SubStyle(subHeaderParts, version);
-
-				if (!subStyle->fontName.empty())
-					subStyle->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale);
-
 				VM_Player::subContext.styles.push_back(subStyle);
 			}
 		}
@@ -1071,7 +1062,9 @@ int MediaPlayer::VM_Player::openVideo()
 	if ((VM_Player::videoContext.stream == NULL) || (VM_Player::videoContext.stream->codec == NULL))
 		return ERROR_INVALID_ARGUMENTS;
 
-	VM_Player::videoContext.frameEncoded.linesize[0] = 0;
+	if (VM_Player::videoContext.frameEncoded != NULL)
+		VM_Player::videoContext.frameEncoded->linesize[0] = 0;
+
 	VM_Player::videoContext.index     = VM_Player::videoContext.stream->index;
 	VM_Player::videoContext.frame     = LIB_FFMPEG::av_frame_alloc();
 	VM_Player::videoContext.condition = SDL_CreateCond();
@@ -1162,8 +1155,6 @@ int MediaPlayer::VM_Player::Pause()
 	if (!PICTURE_IS_SELECTED)
 		SDL_PauseAudioDevice(VM_Player::audioContext.deviceID, 1);
 
-	VM_PlayerControls::Refresh();
-
 	return RESULT_OK;
 }
 
@@ -1184,8 +1175,6 @@ int MediaPlayer::VM_Player::Play()
 	else
 		VM_Player::pictureProgressTime = SDL_GetTicks();
 
-	VM_PlayerControls::Refresh();
-
 	return RESULT_OK;
 }
 
@@ -1201,15 +1190,16 @@ int MediaPlayer::VM_Player::PlayPauseToggle()
 
 int MediaPlayer::VM_Player::PlaylistLoopTypeToggle()
 {
-	if (YOUTUBE_IS_SELECTED || SHOUTCAST_IS_SELECTED) {
-		VM_Player::State.loopType = PLAY_TYPE_NORMAL;
+	//if (YOUTUBE_IS_SELECTED || SHOUTCAST_IS_SELECTED) {
+	if (SHOUTCAST_IS_SELECTED) {
+		VM_Player::State.loopType = LOOP_TYPE_NORMAL;
 		return RESULT_OK;
 	}
 
 	switch (VM_Player::State.loopType) {
-		case PLAY_TYPE_NORMAL:  VM_Player::State.loopType = PLAY_TYPE_LOOP;    break;
-		case PLAY_TYPE_LOOP:    VM_Player::State.loopType = PLAY_TYPE_SHUFFLE; break;
-		case PLAY_TYPE_SHUFFLE: VM_Player::State.loopType = PLAY_TYPE_NORMAL;  break;
+		case LOOP_TYPE_NORMAL:  VM_Player::State.loopType = LOOP_TYPE_LOOP;    break;
+		case LOOP_TYPE_LOOP:    VM_Player::State.loopType = LOOP_TYPE_SHUFFLE; break;
+		case LOOP_TYPE_SHUFFLE: VM_Player::State.loopType = LOOP_TYPE_NORMAL;  break;
 		default: return ERROR_UNKNOWN;
 	}
 
@@ -1226,25 +1216,25 @@ int MediaPlayer::VM_Player::PlaylistLoopTypeToggle()
 
 void MediaPlayer::VM_Player::Refresh()
 {
-	auto snapshot = VM_GUI::Components["bottom_player_snapshot"];
+	if (!SDL_RectEmpty(&VM_Player::VideoDimensions)) {
+		VM_Player::subContext.scale = {
+			(float)((float)VM_Player::VideoDimensions.w / (float)VM_Player::subContext.size.x * DEFAULT_FONT_DPI_RATIO),
+			(float)((float)VM_Player::VideoDimensions.h / (float)VM_Player::subContext.size.y * DEFAULT_FONT_DPI_RATIO)
+		};
 
-	VM_Player::subContext.scale = {
-		(float)((float)snapshot->backgroundArea.w / (float)VM_Player::subContext.size.x * 0.9f),
-		(float)((float)snapshot->backgroundArea.h / (float)VM_Player::subContext.size.y * 0.9f)
-	};
+		for (auto sub : VM_Player::subContext.subs)
+		{
+			sub->skip = false;
 
-	for (auto sub : VM_Player::subContext.subs)
-	{
-		sub->skip = false;
+			if ((sub->style != NULL) && !sub->style->fontName.empty())
+				sub->style->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale, sub);
+		}
 
-		if ((sub->style != NULL) && !sub->style->fontName.empty())
-			sub->style->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale, sub);
+		VM_SubFontEngine::RemoveSubs();
+		DELETE_POINTER(VM_Player::subContext.texture);
+
+		VM_Player::refreshSub = true;
 	}
-
-	VM_SubFontEngine::RemoveSubs();
-	DELETE_POINTER(VM_Player::subContext.texture);
-
-	VM_Player::refreshSub = true;
 }
 
 int MediaPlayer::VM_Player::Render(const SDL_Rect &location)
@@ -1258,7 +1248,8 @@ int MediaPlayer::VM_Player::Render(const SDL_Rect &location)
 	{
 		VM_Player::renderPicture();
 	}
-	else if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	//else if (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED)
+	else if (VIDEO_IS_SELECTED)
 	{
 		if (VM_Player::State.isPaused && (VM_Player::subContext.texture == NULL))
 			VM_Player::refreshSub = true;
@@ -1280,7 +1271,7 @@ void MediaPlayer::VM_Player::renderPicture()
 		VM_Player::pictureProgressTime = (uint32_t)(VM_Player::ProgressTime * (double)ONE_SECOND_MS);
 		VM_Player::seekRequested       = false;
 
-		VM_PlayerControls::Refresh();
+		VM_PlayerControls::Refresh(REFRESH_PROGRESS);
 	}
 
 	if (VM_Player::State.isPlaying)
@@ -1307,6 +1298,16 @@ int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
 	if (!VM_Player::subContext.available)
 		SDL_CondWait(VM_Player::subContext.subsCondition, VM_Player::subContext.subsMutex);
 
+	if (VM_Player::seekRequested)
+	{
+		for (auto sub : VM_Player::subContext.subs) {
+			VM_SubFontEngine::RemoveSubs(sub->id);
+			DELETE_POINTER(sub);
+		}
+
+		VM_Player::subContext.subs.clear();
+	}
+
 	// REMOVE EXPIRED SUBS
 	for (auto sub = VM_Player::subContext.subs.begin(); sub != VM_Player::subContext.subs.end();)
 	{
@@ -1315,6 +1316,7 @@ int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
 		{
 			#if defined _DEBUG
 				auto delay = (VM_Player::ProgressTime - (*sub)->pts.end);
+
 				if (delay > 0) {
 					LOG("VM_Player::renderSub:\n");
 					LOG("\tREMOVE_SUB: %s\n", (*sub)->text.c_str());
@@ -1395,12 +1397,11 @@ void MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 
 				for (auto subIter2 = subIter; subIter2 != VM_Player::subContext.subs.end(); subIter2++)
 				{
-					SDL_Rect     collRect = {};
 					VM_Subtitle* sub2     = *subIter2;
 					SDL_Rect     sub2Rect = { sub2->subRect->x, sub2->subRect->y, sub2->subRect->w, sub2->subRect->h };
 					SDL_Rect     subRect  = { sub->subRect->x,  sub->subRect->y,  sub->subRect->w,  sub->subRect->h };
 
-					if ((subIter2 != subIter) && SDL_IntersectRect(&sub2Rect, &subRect, &collRect))
+					if ((subIter2 != subIter) && SDL_HasIntersection(&sub2Rect, &subRect))
 					{
 						skipSub      = true;
 						sub->pts.end = VM_Player::ProgressTime;
@@ -1412,11 +1413,11 @@ void MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 				if (skipSub)
 					continue;
 
-				LIB_FFMPEG::AVPicture frameEncoded;
-				int                   scaleResult = 0;
-				VM_Texture*           texture     = NULL;
+				LIB_FFMPEG::AVFrame* frameEncoded = LIB_FFMPEG::av_frame_alloc();
+				int                  scaleResult  = 0;
+				VM_Texture*          texture      = NULL;
 
-				if (avpicture_alloc(&frameEncoded, ffmpegPixelFormat, sub->subRect->w, sub->subRect->h) == 0)
+				if (av_image_alloc(frameEncoded->data, frameEncoded->linesize, sub->subRect->w, sub->subRect->h, ffmpegPixelFormat, 32) > 0)
 				{
 					VM_Player::scaleContextSub = sws_getCachedContext(
 						VM_Player::scaleContextSub,
@@ -1430,7 +1431,7 @@ void MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 					scaleResult = sws_scale(
 						VM_Player::scaleContextSub,
 						sub->subRect->data, sub->subRect->linesize, 0, sub->subRect->h,
-						frameEncoded.data, frameEncoded.linesize
+						frameEncoded->data, frameEncoded->linesize
 					);
 				}
 
@@ -1444,13 +1445,13 @@ void MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 					};
 
 					SDL_SetTextureBlendMode(texture->data, SDL_BLENDMODE_BLEND);
-					SDL_UpdateTexture(texture->data, NULL, frameEncoded.data[0], frameEncoded.linesize[0]);
+					SDL_UpdateTexture(texture->data, NULL, frameEncoded->data[0], frameEncoded->linesize[0]);
 					SDL_RenderCopy(VM_Window::Renderer, texture->data, NULL, &renderLocation);
 
 					DELETE_POINTER(texture);
 				}
 
-				FREE_AVPICTURE(frameEncoded);
+				LIB_FFMPEG::av_frame_free(&frameEncoded);
 			}
 
 			SDL_SetRenderTarget(VM_Window::Renderer, NULL);
@@ -1480,8 +1481,7 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 		if (VM_Player::subContext.texture == NULL)
 		{
 			VM_Player::subContext.texture = new VM_Texture(
-				SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET,
-				VM_Window::Dimensions.w, VM_Window::Dimensions.h
+				SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_TARGET, VM_Player::VideoDimensions.w, VM_Player::VideoDimensions.h
 			);
 		}
 
@@ -1494,8 +1494,7 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 			SDL_SetTextureBlendMode(VM_Player::subContext.texture->data, SDL_BLENDMODE_BLEND);
 
 			VM_SubFontEngine::RenderSubText(
-				VM_Player::subContext.subs,
-				VM_Player::subContext.fonts[FONT_MERGED], VM_Player::subContext.fonts[FONT_CJK]
+				VM_Player::subContext.subs, VM_Player::subContext.fonts[FONT_MERGED], VM_Player::subContext.fonts[FONT_CJK]
 			);
 
 			SDL_SetRenderTarget(VM_Window::Renderer, NULL);
@@ -1516,10 +1515,7 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 		(VM_Player::subContext.texture != NULL) && 
 		(VM_Player::subContext.texture->data != NULL))
 	{
-		SDL_RenderCopy(
-			VM_Window::Renderer, VM_Player::subContext.texture->data,
-			NULL, &VM_Player::videoContext.renderLocation
-		);
+		SDL_RenderCopy(VM_Window::Renderer, VM_Player::subContext.texture->data, NULL, &VM_Player::VideoDimensions);
 	}
 }
 
@@ -1540,12 +1536,12 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 		if (updateTexture)
 			VM_Player::renderVideoUpdateTexture();
 
-		if (!SDL_RectEmpty(&VM_Player::videoContext.renderLocation) && !VM_Player::State.quit)
+		if (!SDL_RectEmpty(&VM_Player::VideoDimensions) && !VM_Player::State.quit)
 		{
-			VM_Color backgroundColor = SDL_COLOR_BLACK;
+			VM_Color backgroundColor = VM_Color(SDL_COLOR_BLACK);
 			VM_Graphics::FillArea(&backgroundColor, &location);
 
-			SDL_RenderCopy(VM_Window::Renderer, VM_Player::videoContext.texture->data, NULL, &VM_Player::videoContext.renderLocation);
+			SDL_RenderCopy(VM_Window::Renderer, VM_Player::videoContext.texture->data, NULL, &VM_Player::VideoDimensions);
 		}
 	}
 }
@@ -1570,7 +1566,9 @@ int MediaPlayer::VM_Player::renderVideoCreateTexture()
 	// CREATE A SCALING CONTEXT FOR NON-YUV420P VIDEOS
 	if ((videoStream->codec->pix_fmt != LIB_FFMPEG::AV_PIX_FMT_YUV420P) && (VM_Player::videoContext.texture->data != NULL))
 	{
-		if (avpicture_alloc(&VM_Player::videoContext.frameEncoded, ffmpegPixelFormat, videoFrame->width, videoFrame->height) < 0)
+		VM_Player::videoContext.frameEncoded = LIB_FFMPEG::av_frame_alloc();
+
+		if (av_image_alloc(VM_Player::videoContext.frameEncoded->data, VM_Player::videoContext.frameEncoded->linesize, videoFrame->width, videoFrame->height, ffmpegPixelFormat, 32) <= 0)
 			DELETE_POINTER(VM_Player::videoContext.texture);
 
 		VM_Player::scaleContextVideo = sws_getCachedContext(
@@ -1581,7 +1579,7 @@ int MediaPlayer::VM_Player::renderVideoCreateTexture()
 		);
 					
 		if (VM_Player::scaleContextVideo == NULL) {
-			FREE_AVPICTURE(VM_Player::videoContext.frameEncoded);
+			LIB_FFMPEG::av_frame_free(&VM_Player::videoContext.frameEncoded);
 			DELETE_POINTER(VM_Player::videoContext.texture);
 		}
 	}
@@ -1609,11 +1607,17 @@ int MediaPlayer::VM_Player::renderVideoScaleRenderLocation(const SDL_Rect &locat
 		scaledHeight = (maxHeight <= location.h ? maxHeight : location.h);
 	}
 
+	bool isVideoDimensionsEmpty = SDL_RectEmpty(&VM_Player::VideoDimensions);
+
 	// CALCULATE THE RENDER LOCATION
-	VM_Player::videoContext.renderLocation.x = (location.x + ((location.w - scaledWidth)  / 2));
-	VM_Player::videoContext.renderLocation.y = (location.y + ((location.h - scaledHeight) / 2));
-	VM_Player::videoContext.renderLocation.w = scaledWidth;
-	VM_Player::videoContext.renderLocation.h = scaledHeight;
+	VM_Player::VideoDimensions.x = (location.x + ((location.w - scaledWidth)  / 2));
+	VM_Player::VideoDimensions.y = (location.y + ((location.h - scaledHeight) / 2));
+	VM_Player::VideoDimensions.w = scaledWidth;
+	VM_Player::VideoDimensions.h = scaledHeight;
+
+	if (isVideoDimensionsEmpty) {
+		VM_Player::Refresh();
+	}
 
 	return RESULT_OK;
 }
@@ -1641,16 +1645,16 @@ int MediaPlayer::VM_Player::renderVideoUpdateTexture()
 	{
 		int scaleResult = sws_scale(
 			VM_Player::scaleContextVideo, videoFrame->data, videoFrame->linesize, 0, videoFrame->height,
-			VM_Player::videoContext.frameEncoded.data, VM_Player::videoContext.frameEncoded.linesize
+			VM_Player::videoContext.frameEncoded->data, VM_Player::videoContext.frameEncoded->linesize
 		);
 
 		// COPY THE CONVERTED FRAME TO THE TEXTURE
 		if (scaleResult > 0) {
 			SDL_UpdateYUVTexture(
 				VM_Player::videoContext.texture->data, NULL, 
-				VM_Player::videoContext.frameEncoded.data[0], VM_Player::videoContext.frameEncoded.linesize[0],
-				VM_Player::videoContext.frameEncoded.data[1], VM_Player::videoContext.frameEncoded.linesize[1],
-				VM_Player::videoContext.frameEncoded.data[2], VM_Player::videoContext.frameEncoded.linesize[2]
+				VM_Player::videoContext.frameEncoded->data[0], VM_Player::videoContext.frameEncoded->linesize[0],
+				VM_Player::videoContext.frameEncoded->data[1], VM_Player::videoContext.frameEncoded->linesize[1],
+				VM_Player::videoContext.frameEncoded->data[2], VM_Player::videoContext.frameEncoded->linesize[2]
 			);
 		}
 	}
@@ -1684,6 +1688,7 @@ void MediaPlayer::VM_Player::reset()
 	VM_Player::SelectedRow              = {};
 	VM_Player::TimeOut                  = NULL;
 	VM_Player::videoFrameAvailable      = false;
+	VM_Player::VideoDimensions          = {};
 
 	VM_Player::audioContext.reset();
 	VM_Player::subContext.reset();
@@ -1764,8 +1769,6 @@ int MediaPlayer::VM_Player::Seek(int64_t seekTime)
 
 void MediaPlayer::VM_Player::seek()
 {
-	//SDL_Delay(DELAY_TIME_DEFAULT);
-
 	int seekFlags = AV_SEEK_FLAGS(VM_Player::FormatContext->iformat);
 
 	if (avformat_seek_file(VM_Player::FormatContext, -1, INT64_MIN, VM_Player::seekToPosition, INT64_MAX, seekFlags) >= 0)
@@ -1773,24 +1776,9 @@ void MediaPlayer::VM_Player::seek()
 		if (VM_Player::subContext.index >= SUB_STREAM_EXTERNAL)
 			avformat_seek_file(VM_Player::formatContextExternal, -1, INT64_MIN, VM_Player::seekToPosition, INT64_MAX, seekFlags);
 
-		//SDL_Delay(DELAY_TIME_DEFAULT);
-
 		VM_Player::packetsClear(VM_Player::audioContext.packets, VM_Player::audioContext.mutex, VM_Player::audioContext.condition, VM_Player::audioContext.packetsAvailable);
 		VM_Player::packetsClear(VM_Player::subContext.packets,   VM_Player::subContext.mutex,   VM_Player::subContext.condition,   VM_Player::subContext.packetsAvailable);
 		VM_Player::packetsClear(VM_Player::videoContext.packets, VM_Player::videoContext.mutex, VM_Player::videoContext.condition, VM_Player::videoContext.packetsAvailable);
-				
-		SDL_LockMutex(VM_Player::subContext.subsMutex);
-		VM_Player::subContext.available = false;
-
-		for (auto sub : VM_Player::subContext.subs) {
-			VM_SubFontEngine::RemoveSubs(sub->id);
-			DELETE_POINTER(sub);
-		}
-		VM_Player::subContext.subs.clear();
-
-		VM_Player::subContext.available = true;
-		SDL_CondSignal(VM_Player::subContext.subsCondition);
-		SDL_UnlockMutex(VM_Player::subContext.subsMutex);
 
 		VM_Player::audioContext.bufferOffset    = 0;
 		VM_Player::audioContext.bufferRemaining = 0;
@@ -1799,7 +1787,7 @@ void MediaPlayer::VM_Player::seek()
 		VM_Player::ProgressTime                 = (double)((double)VM_Player::seekToPosition / AV_TIME_BASE_D);
 		VM_Player::videoContext.pts             = 0.0;
 
-		VM_PlayerControls::Refresh();
+		VM_PlayerControls::Refresh(REFRESH_PROGRESS);
 	}
 
 	VM_Player::seekRequested = false;
@@ -1807,6 +1795,8 @@ void MediaPlayer::VM_Player::seek()
 
 int MediaPlayer::VM_Player::SetAudioVolume(int volume)
 {
+	bool muteState = VM_Player::State.isMuted;
+
 	if (volume <= 5) {
 		VM_Player::State.audioVolume = 0;
 		VM_Player::State.isMuted     = true;
@@ -1817,6 +1807,11 @@ int MediaPlayer::VM_Player::SetAudioVolume(int volume)
 		VM_Player::State.audioVolume = volume;
 		VM_Player::State.isMuted     = false;
 	}
+
+	if (VM_Player::State.isMuted == muteState)
+		VM_PlayerControls::Refresh(REFRESH_VOLUME);
+	else
+		VM_PlayerControls::Refresh(REFRESH_VOLUME_AND_MUTE);
 
 	int  dbResult;
 	auto db = new VM_Database(dbResult, DATABASE_SETTINGSv3);
@@ -2230,10 +2225,9 @@ int MediaPlayer::VM_Player::threadPackets(void* userData)
 		VM_Player::TimeOut->stop();
 
 		// WAIT IF THE QUEUES ARE FULL
-		while ((VM_Player::isPacketQueueFull(MEDIA_TYPE_AUDIO) || VM_Player::isPacketQueueFull(MEDIA_TYPE_VIDEO)) &&
-			!VM_Player::seekRequested && !VM_Player::State.quit)
+		while ((VM_Player::isPacketQueueFull(MEDIA_TYPE_AUDIO) || VM_Player::isPacketQueueFull(MEDIA_TYPE_VIDEO)) && !VM_Player::seekRequested && !VM_Player::State.quit)
 		{
-			if (VIDEO_IS_SELECTED && VM_Player::videoContext.packets.empty())
+			if (VIDEO_IS_SELECTED && (VM_Player::audioContext.packets.empty() || VM_Player::videoContext.packets.empty()))
 				break;
 
 			SDL_Delay(DELAY_TIME_ONE_MS);
@@ -2344,13 +2338,8 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		// Some sub types, like PGS, come in pairs:
 		// - The first one with data but without duration or end PTS
 		// - The second one has no data, but contains the end PTS
-		if ((strcmp(codecName, "pgssub") == 0) &&
-			(subFrame.num_rects == 0) && (packet->size > 0) && !VM_Player::subContext.subs.empty())
-		{
-			VM_Player::subContext.subs.back()->pts = VM_SubFontEngine::GetSubPTS(
-				packet, subFrame, VM_Player::subContext.stream
-			);
-		}
+		if ((strcmp(codecName, "pgssub") == 0) && (packet->size < MIN_SUB_PACKET_SIZE) && !VM_Player::subContext.subs.empty())
+			VM_Player::subContext.subs.back()->pts = VM_SubFontEngine::GetSubPTS(packet, subFrame, VM_Player::subContext.stream);
 
 		VM_Player::subContext.available = true;
 		SDL_CondSignal(VM_Player::subContext.subsCondition);
@@ -2409,9 +2398,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		switch (VM_Player::subContext.type) {
 		case LIB_FFMPEG::SUBTITLE_ASS:
 		case LIB_FFMPEG::SUBTITLE_TEXT:
-			textSubs = VM_SubFontEngine::SplitAndFormatSub(
-				subTexts, VM_Player::subContext.styles, VM_Player::subContext.subs
-			);
+			textSubs = VM_SubFontEngine::SplitAndFormatSub(subTexts, VM_Player::subContext.styles, VM_Player::subContext.subs);
 
 			for (auto textSub : textSubs)
 				textSub->pts = VM_PTS(pts.start, pts.end);

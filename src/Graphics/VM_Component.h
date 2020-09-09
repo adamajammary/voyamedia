@@ -28,6 +28,7 @@ namespace VoyaMedia
 			VM_Color          highlightColor;
 			String            id;
 			VM_Border         margin;
+			VM_Color          overlayColor;
 			VM_Component*     parent;
 			bool              selected;
 			VM_Components     tables;

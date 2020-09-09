@@ -31,7 +31,8 @@ namespace VoyaMedia
 			static int HandleMediaPlayer();
 
 			#if defined _android
-				static int  HandleHeadSetUnpluggedAndroid(JNIEnv* jniEnvironment);
+				static int  HandleHeadSetUnpluggedAndroid();
+				static int  HandleStoragePermissionAndroid();
 				static void WakeLockStart();
 				static void WakeLockStop();
 			#elif defined _ios

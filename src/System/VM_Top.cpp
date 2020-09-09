@@ -31,8 +31,8 @@ String System::VM_Top::MediaTypeToId(VM_MediaType mediaType)
 		return "top_picture";
 	else if (mediaType == MEDIA_TYPE_VIDEO)
 		return "top_video";
-	else if (mediaType == MEDIA_TYPE_YOUTUBE)
-		return "top_youtube";
+	//else if (mediaType == MEDIA_TYPE_YOUTUBE)
+	//	return "top_youtube";
 	else if (mediaType == MEDIA_TYPE_SHOUTCAST)
 		return "top_shoutcast";
 	else if (mediaType == MEDIA_TYPE_TMDB_MOVIE)
@@ -51,8 +51,8 @@ VM_MediaType System::VM_Top::IdToMediaType(const String &mediaType)
 		return MEDIA_TYPE_PICTURE;
 	else if (mediaType == "top_video")
 		return MEDIA_TYPE_VIDEO;
-	else if (mediaType == "top_youtube")
-		return MEDIA_TYPE_YOUTUBE;
+	//else if (mediaType == "top_youtube")
+	//	return MEDIA_TYPE_YOUTUBE;
 	else if (mediaType == "top_shoutcast")
 		return MEDIA_TYPE_SHOUTCAST;
 	else if (mediaType == "top_tmdb_movie")
@@ -82,11 +82,12 @@ int System::VM_Top::Refresh()
 int System::VM_Top::SelectType(VM_MediaType mediaType)
 {
 	// CHECK INTERNET CONNECTION
-	VM_Window::StatusString[0] = '\0';
+	VM_Window::StatusString = "";
 
-	if ((mediaType >= MEDIA_TYPE_YOUTUBE) && !VM_FileSystem::HasInternetConnection())
+	//if ((mediaType >= MEDIA_TYPE_YOUTUBE) && !VM_FileSystem::HasInternetConnection())
+	if ((mediaType >= MEDIA_TYPE_SHOUTCAST) && !VM_FileSystem::HasInternetConnection())
 	{
-		snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_nics"].c_str());
+		VM_Window::StatusString = VM_Window::Labels["error.no_nics"];
 		VM_Modal::ShowMessage(VM_Window::StatusString);
 
 		return ERROR_UNKNOWN;

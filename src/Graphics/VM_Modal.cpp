@@ -115,7 +115,7 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 			}
 			#endif
 		} else {
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_nics"].c_str());
+			VM_Window::StatusString = VM_Window::Labels["error.no_nics"];
 		}
 	}
 	// UPNP - DEVICES
@@ -126,7 +126,7 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 		if (!device.empty())
 			VM_UPNP::Device = device;
 		else
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s", VM_Window::Labels["error.no_upnp"].c_str());
+			VM_Window::StatusString = VM_Window::Labels["error.no_upnp"];
 	}
 	// SETTINGS
 	else if (VM_Modal::File == "modal_settings")
@@ -155,7 +155,7 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 	// RIGHT-CLICK
 	else if (VM_Modal::File == "modal_right_click")
 	{
-		if (buttonID == "modal_right_click_remove_file")
+		if ((buttonID == "modal_right_click_remove_file") || (buttonID == "modal_right_click_remove_path"))
 		{
 			String name    = "";
 			int    mediaID = 0;
@@ -165,20 +165,24 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 				name    = selectedGuiRow[1]->getText();
 			}
 
-			snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.removing"].c_str(), name.c_str());
+			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.removing"].c_str(), name.c_str());
 
 			int  dbResult;
 			auto db = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
 
-			if (DB_RESULT_OK(dbResult) && (mediaID > 0))
-				dbResult = db->deleteMediaFile(mediaID);
+			if (DB_RESULT_OK(dbResult) && (mediaID > 0)) {
+				if (buttonID == "modal_right_click_remove_file")
+					dbResult = db->deleteMediaFile(mediaID);
+				else
+					dbResult = db->deleteMediaPath(mediaID);
+			}
 
 			DELETE_POINTER(db);
 
 			if ((mediaID > 0) && DB_RESULT_OK(dbResult))
-				snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["status.removed"].c_str(), name.c_str());
+				VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.removed"].c_str(), name.c_str());
 			else
-				snprintf(VM_Window::StatusString, DEFAULT_CHAR_BUFFER_SIZE, "%s '%s'", VM_Window::Labels["error.remove"].c_str(), name.c_str());
+				VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.remove"].c_str(), name.c_str());
 		}
 		else if ((buttonID == "modal_right_click_tmbd_movie") || (buttonID == "modal_right_click_tmbd_tv"))
 		{
@@ -557,18 +561,18 @@ int Graphics::VM_Modal::UpdateLabelsDetails()
 	{
 		VM_Modal::updateLabelsDetailsVideo(mediaID, filePath2, filePath);
 	}
-	else if (YOUTUBE_IS_SELECTED)
-	{
-		StringMap details = VM_FileSystem::GetYouTubeDetails(row[1]->mediaID2);
+	//else if (YOUTUBE_IS_SELECTED)
+	//{
+	//	StringMap details = VM_FileSystem::GetYouTubeDetails(row[1]->mediaID2);
 
-		text.append(!details["date"].empty()        ? VM_Text::GetTimeFormatted(details["date"], false, false) + "\n" : "");
-		text.append(!details["channel"].empty()     ? "#" + details["channel"] + "\n" : "");
-		text.append(!details["duration_yt"].empty() ? VM_Text::ToDuration(details["duration_yt"]) + "\n" : "");
-		text.append(!details["views"].empty()       ? VM_Text::ToViewCount(std::atoll(details["views"].c_str())) + " " + VM_Window::Labels["views"] + "\n" : "");
-		text.append(!details["likes"].empty()       ? details["likes"] : "");
+	//	text.append(!details["date"].empty()        ? VM_Text::GetTimeFormatted(details["date"], false, false) + "\n" : "");
+	//	text.append(!details["channel"].empty()     ? "#" + details["channel"] + "\n" : "");
+	//	text.append(!details["duration_yt"].empty() ? VM_Text::ToDuration(details["duration_yt"]) + "\n" : "");
+	//	text.append(!details["views"].empty()       ? VM_Text::ToViewCount(std::atoll(details["views"].c_str())) + " " + VM_Window::Labels["views"] + "\n" : "");
+	//	text.append(!details["likes"].empty()       ? details["likes"] : "");
 
-		text2.append(!details["description"].empty() ? details["description"] : "");
-	}
+	//	text2.append(!details["description"].empty() ? details["description"] : "");
+	//}
 	else if (SHOUTCAST_IS_SELECTED)
 	{
 		StringMap details = VM_FileSystem::GetShoutCastDetails(row[1]->getText(), mediaID);
@@ -622,7 +626,7 @@ int Graphics::VM_Modal::UpdateLabelsDetails()
 	if (!row.empty())
 	{
 		thumbButton->mediaID  = row[0]->mediaID;
-		thumbButton->mediaID2 = row[0]->mediaID2;
+		//thumbButton->mediaID2 = row[0]->mediaID2;
 		thumbButton->mediaURL = row[0]->mediaURL;
 
 		thumbButton->setThumb(VM_GUI::ListTable->id);
@@ -785,7 +789,7 @@ int Graphics::VM_Modal::updateLabelsDetailsVideo(int mediaID, const String &file
 
 		for (uint32_t i = 0; i < min(formatContext->nb_streams, 7); i++)
 		{
-			String            streamDesc = "";
+			String                streamDesc = "";
 			LIB_FFMPEG::AVStream* stream     = VM_FileSystem::GetMediaStreamByIndex(formatContext, i);
 
 			if ((stream != NULL) && (stream->codec != NULL))
@@ -829,22 +833,22 @@ int Graphics::VM_Modal::updateLabelsDetailsVideo(int mediaID, const String &file
 					text.append(streamDesc + "\n");
 			}
 		}
-
-		String duration = "";
-		String path     = "";
-		String size     = "";
-
-		if (VM_Modal::updateMediaDB(formatContext, filePath, mediaID, duration, size, path))
-		{
-			text2.append(!path.empty()                      ? path + "\n" : "");
-			text2.append(!size.empty()                      ? size : "");
-			text2.append(!size.empty() && !duration.empty() ? " (" : "");
-			text2.append(!duration.empty()                  ? duration : "");
-			text2.append(!size.empty() && !duration.empty() ? ")" : "");
-		}
-
-		VM_FileSystem::CloseMediaFormatContext(formatContext, mediaID);
 	}
+
+	String duration = "";
+	String path     = "";
+	String size     = "";
+
+	if (VM_Modal::updateMediaDB(formatContext, filePath, mediaID, duration, size, path))
+	{
+		text2.append(!path.empty()                      ? path + "\n" : "");
+		text2.append(!size.empty()                      ? size : "");
+		text2.append(!size.empty() && !duration.empty() ? " (" : "");
+		text2.append(!duration.empty()                  ? duration : "");
+		text2.append(!size.empty() && !duration.empty() ? ")" : "");
+	}
+
+	VM_FileSystem::CloseMediaFormatContext(formatContext, mediaID);
 
 	if (!text.empty())
 		details->setText(text);
