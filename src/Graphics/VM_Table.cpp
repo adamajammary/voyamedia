@@ -1198,39 +1198,27 @@ void Graphics::VM_Table::selectRow(int row)
 
 bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 {
-	SHOW_MESSAGE("selectRow: 1");
 	if ((mouseEvent == nullptr) || !VM_Graphics::ButtonPressed(mouseEvent, this->backgroundArea))
 		return false;
 
-	SHOW_MESSAGE("selectRow: 2");
 	// CHECK IF THE SELECTED ROW IS CLICKABLE (VISIBLE WITHIN SCROLLED AREA)
 	SDL_Point position = VM_EventManager::GetMousePosition(mouseEvent);
 
-	SHOW_MESSAGE(VM_Text::Format(
-		"position.y: %d - Dimensions.y: %d - Dimensions.h: %d",
-		position.y, VM_Window::Dimensions.y, VM_Window::Dimensions.h
-	).c_str());
 	int offset    = this->states[VM_Top::Selected].scrollOffset;
 	int rowHeight = this->getRowHeight();
 	int startY    = (this->backgroundArea.y + rowHeight);
 	int offsetY   = (rowHeight * offset);
 	int row       = ((position.y + offsetY - startY) / rowHeight);
 
-	SHOW_MESSAGE(VM_Text::Format(
-		"offset: %d - rowHeight: %d - startY: %d - offsetY: %d - row: %d",
-		offset, rowHeight, startY, offsetY, row
-	).c_str());
 	if ((row < 0) || (row >= (int)this->rows.size()))
 		return false;
 
 	this->selectRow(row);
 
-	SHOW_MESSAGE("selectRow: 3");
 	// CHECK IF THE SELECTED ROW IS VALID (PART OF TOTAL ROWS)
 	if (this->rows[row].size() < 3)
 		return false;
 
-	SHOW_MESSAGE("selectRow: 4");
 	if ((this->id != "list_table") || VM_Modal::IsVisible())
 		return true;
 
@@ -1242,14 +1230,9 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 	areaThumb.y -= offsetY;
 	areaInfo.y  -= offsetY;
 
-	SHOW_MESSAGE(VM_Text::Format(
-		"areaThumb.y: %d - areaInfo.y: %d",
-		areaThumb.y, areaInfo.y
-	).c_str());
 	// SINGLE-CLICKED INFO/DETAILS ICON
 	if (info->selected && VM_Graphics::ButtonPressed(mouseEvent, areaInfo))
 	{
-		SHOW_MESSAGE("selectRow: A");
 		if (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST)
 			VM_Modal::Open("modal_details");
 		else
@@ -1258,7 +1241,6 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 	// SINGLE-CLICKED PLAY/THUMB ICON
 	else if (thumb->selected && VM_Graphics::ButtonPressed(mouseEvent, areaThumb))
 	{
-		SHOW_MESSAGE("selectRow: B");
 		//if (YOUTUBE_IS_SELECTED)
 		//	VM_Player::OpenFilePath(VM_FileSystem::GetYouTubeVideo(thumb->mediaID2));
 		if (SHOUTCAST_IS_SELECTED)
@@ -1268,7 +1250,6 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 	}
 	else
 	{
-		SHOW_MESSAGE("selectRow: C");
 		for (auto button : this->rows[row])
 		{
 			SDL_Rect area = SDL_Rect(button->backgroundArea);
@@ -1300,7 +1281,6 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 		}
 	}
 
-	SHOW_MESSAGE("selectRow: 5");
 	return true;
 }
 
