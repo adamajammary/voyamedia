@@ -54,6 +54,30 @@ int System::VM_EventManager::ConfigureAudioSessionIOS()
 }
 #endif
 
+SDL_Point System::VM_EventManager::GetMousePosition(const SDL_Event* mouseEvent)
+{
+	SDL_Point position = {};
+
+	#if defined _android || defined _ios
+		position.x = (int)(mouseEvent->tfinger.x * (float)VM_Window::Dimensions.w);
+		position.y = (int)(mouseEvent->tfinger.y * (float)VM_Window::Dimensions.h);
+	#elif defined _macosx
+		int windowWidth, windowHeight;
+		SDL_GetWindowSize(VM_Window::MainWindow, &windowWidth, &windowHeight);
+		
+		float scaleRatioX = ((float)VM_Window::Dimensions.w / (float)windowWidth);
+		float scaleRatioY = ((float)VM_Window::Dimensions.h / (float)windowHeight);
+		
+		position.x = (int)((float)mouseEvent->button.x * scaleRatioX);
+		position.y = (int)((float)mouseEvent->button.y * scaleRatioY);
+	#else
+		position.x = mouseEvent->button.x;
+		position.y = mouseEvent->button.y;
+	#endif
+
+	return position;
+}
+
 int System::VM_EventManager::HandleEvents()
 {
 	SDL_Event event;

@@ -1204,21 +1204,17 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 
 	SHOW_MESSAGE("selectRow: 2");
 	// CHECK IF THE SELECTED ROW IS CLICKABLE (VISIBLE WITHIN SCROLLED AREA)
-	#if defined _android || defined _ios
-		int positionY = (int)(mouseEvent->tfinger.y * (float)VM_Window::Dimensions.h);
-	#else
-		int positionY = mouseEvent->button.y;
-	#endif
+	SDL_Point position = VM_EventManager::GetMousePosition(mouseEvent);
 
 	SHOW_MESSAGE(VM_Text::Format(
-		"positionY: %d - Dimensions.y: %d - Dimensions.h: %d",
-		positionY, VM_Window::Dimensions.y, VM_Window::Dimensions.h
+		"position.y: %d - Dimensions.y: %d - Dimensions.h: %d",
+		position.y, VM_Window::Dimensions.y, VM_Window::Dimensions.h
 	).c_str());
 	int offset    = this->states[VM_Top::Selected].scrollOffset;
 	int rowHeight = this->getRowHeight();
 	int startY    = (this->backgroundArea.y + rowHeight);
 	int offsetY   = (rowHeight * offset);
-	int row       = ((positionY + offsetY - startY) / rowHeight);
+	int row       = ((position.y + offsetY - startY) / rowHeight);
 
 	SHOW_MESSAGE(VM_Text::Format(
 		"offset: %d - rowHeight: %d - startY: %d - offsetY: %d - row: %d",
