@@ -351,14 +351,9 @@ void System::VM_Window::resize()
 		}
 		#endif
 
-		SHOW_MESSAGE(VM_Text::Format(
-			"SDL_SetWindowSize: w1: %d, h1: %d - w2: %d, h2: %d",
-			dimensions.w, dimensions.h, VM_Window::Dimensions.w, VM_Window::Dimensions.h
-		).c_str());
 		if (setMinSize)
 			SDL_SetWindowSize(VM_Window::MainWindow, dimensions.w, dimensions.h);
 
-		//VM_Window::DimensionsBeforeFS = VM_Window::Display.getDimensions();
 		SDL_GetWindowPosition(VM_Window::MainWindow, &VM_Window::DimensionsBeforeFS.x, &VM_Window::DimensionsBeforeFS.y);
 		SDL_GetWindowSize(VM_Window::MainWindow, &VM_Window::DimensionsBeforeFS.w, &VM_Window::DimensionsBeforeFS.h);
 	}
