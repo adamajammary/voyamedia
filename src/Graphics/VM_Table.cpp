@@ -1210,6 +1210,10 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 		int positionY = mouseEvent->button.y;
 	#endif
 
+	SHOW_MESSAGE(VM_Text::Format(
+		"positionY: %d - Dimensions.y: %d - Dimensions.h: %d",
+		positionY, VM_Window::Dimensions.y, VM_Window::Dimensions.h
+	).c_str());
 	int offset    = this->states[VM_Top::Selected].scrollOffset;
 	int rowHeight = this->getRowHeight();
 	int startY    = (this->backgroundArea.y + rowHeight);
