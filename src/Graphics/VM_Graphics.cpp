@@ -140,9 +140,6 @@ bool Graphics::VM_Graphics::ButtonPressed(const SDL_Event* mouseEvent, const SDL
 	if (mouseEvent == NULL)
 		return false;
 
-	int positionX = -1;
-	int positionY = -1;
-
 	if (doubleClicked) {
 		#if defined _android || defined _ios
 			if (VM_EventManager::TouchEvent != TOUCH_EVENT_DOUBLE_TAP)
@@ -163,25 +160,10 @@ bool Graphics::VM_Graphics::ButtonPressed(const SDL_Event* mouseEvent, const SDL
 		#endif
 	}
 
-	#if defined _android || defined _ios
-		positionX = (int)(mouseEvent->tfinger.x * (float)VM_Window::Dimensions.w);
-		positionY = (int)(mouseEvent->tfinger.y * (float)VM_Window::Dimensions.h);
-    #elif defined _macosx
-        int windowWidth, windowHeight;
-        SDL_GetWindowSize(VM_Window::MainWindow, &windowWidth, &windowHeight);
-		
-        float scaleRatioX = ((float)VM_Window::Dimensions.w / (float)windowWidth);
-        float scaleRatioY = ((float)VM_Window::Dimensions.h / (float)windowHeight);
-		
-        positionX = (int)((float)mouseEvent->button.x * scaleRatioX);
-        positionY = (int)((float)mouseEvent->button.y * scaleRatioY);
-	#else
-		positionX = mouseEvent->button.x;
-		positionY = mouseEvent->button.y;
-	#endif
+	SDL_Point position = VM_EventManager::GetMousePosition(mouseEvent);
 
-	if ((positionX < button.x) || (positionX > (button.x + button.w)) || 
-		(positionY < button.y) || (positionY > (button.y + button.h))) 
+	if ((position.x < button.x) || (position.x > (button.x + button.w)) || 
+		(position.y < button.y) || (position.y > (button.y + button.h))) 
 	{
 		return false;
 	}

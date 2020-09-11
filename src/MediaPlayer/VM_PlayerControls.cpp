@@ -357,7 +357,7 @@ int MediaPlayer::VM_PlayerControls::Seek(SDL_Event* mouseEvent)
 	if (mouseEvent == NULL)
 		return ERROR_INVALID_ARGUMENTS;
 
-	int     barClickedPos, mousePos;
+	int     barClickedPos;
 	double  barClickedPercent, fileSize;
 	int64_t seekPos;
 	bool    seekBinary;
@@ -367,19 +367,15 @@ int MediaPlayer::VM_PlayerControls::Seek(SDL_Event* mouseEvent)
 	else
 		seekBinary = false;
 
-	VM_Button* button      = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_middle_bar"]);
-	String     orientation = VM_XML::GetAttribute(button->xmlNode, "orientation");
+	VM_Button* button        = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_middle_bar"]);
+	String     orientation   = VM_XML::GetAttribute(button->xmlNode, "orientation");
+	SDL_Point  mousePosition = VM_EventManager::GetMousePosition(mouseEvent);
 
-	if (orientation == "vertical")
-	{
-		mousePos          = ((mouseEvent->tfinger.type == SDL_FINGERUP) ? (int)(mouseEvent->tfinger.y * (float)VM_Window::Dimensions.h) : mouseEvent->button.y);
-		barClickedPos     = (mousePos - button->backgroundArea.y);
+	if (orientation == "vertical") {
+		barClickedPos     = (mousePosition.y - button->backgroundArea.y);
 		barClickedPercent = (double)(1.0 - ((double)barClickedPos / (double)button->backgroundArea.h));
-	}
-	else
-	{
-		mousePos          = ((mouseEvent->tfinger.type == SDL_FINGERUP) ? (int)(mouseEvent->tfinger.x * (float)VM_Window::Dimensions.w) : mouseEvent->button.x);
-		barClickedPos     = (mousePos - button->backgroundArea.x);
+	} else {
+		barClickedPos     = (mousePosition.x - button->backgroundArea.x);
 		barClickedPercent = (double)((double)barClickedPos / (double)button->backgroundArea.w);
 	}
 
@@ -410,31 +406,17 @@ int MediaPlayer::VM_PlayerControls::SetVolume(SDL_Event* mouseEvent)
 	if (mouseEvent == NULL)
 		return ERROR_INVALID_ARGUMENTS;
 
-	double barClickedPercent;
-	int    barClickedPos;
-	int    mousePos = -1;
+	double     barClickedPercent;
+	int        barClickedPos;
+	VM_Button* button        = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_volume_bar"]);
+	String     orientation   = VM_XML::GetAttribute(button->xmlNode, "orientation");
+	SDL_Point  mousePosition = VM_EventManager::GetMousePosition(mouseEvent);
 
-	VM_Button* button      = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_volume_bar"]);
-	String     orientation = VM_XML::GetAttribute(button->xmlNode, "orientation");
-
-	if (orientation == "vertical")
-	{
-		if (mouseEvent->tfinger.type == SDL_FINGERUP)
-			mousePos = (int)(mouseEvent->tfinger.y * (double)VM_Window::Dimensions.h);
-		else if (mouseEvent->button.button == SDL_BUTTON_LEFT)
-			mousePos = mouseEvent->button.y;
-
-		barClickedPos     = (mousePos - button->backgroundArea.y);
+	if (orientation == "vertical") {
+		barClickedPos     = (mousePosition.y - button->backgroundArea.y);
 		barClickedPercent = (float)(1.0 - (double)((double)barClickedPos / (double)button->backgroundArea.h));
-	}
-	else
-	{
-		if (mouseEvent->tfinger.type == SDL_FINGERUP)
-			mousePos = (int)(mouseEvent->tfinger.x * (double)VM_Window::Dimensions.w);
-		else if (mouseEvent->button.button == SDL_BUTTON_LEFT)
-			mousePos = mouseEvent->button.x;
-
-		barClickedPos     = (mousePos - button->backgroundArea.x);
+	} else {
+		barClickedPos     = (mousePosition.x - button->backgroundArea.x);
 		barClickedPercent = (double)((double)barClickedPos / (double)button->backgroundArea.w);
 	}
 

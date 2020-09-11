@@ -27,8 +27,9 @@ namespace VoyaMedia
 			#endif
 
 		public:
-			static int HandleEvents();
-			static int HandleMediaPlayer();
+			static SDL_Point GetMousePosition(const SDL_Event* mouseEvent);
+			static int       HandleEvents();
+			static int       HandleMediaPlayer();
 
 			#if defined _android
 				static int  HandleHeadSetUnpluggedAndroid();
