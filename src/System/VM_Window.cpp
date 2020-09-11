@@ -314,9 +314,11 @@ int System::VM_Window::Reset(const char* guiXML, const char* title)
 
 void System::VM_Window::resize()
 {
-	//VM_Window::Dimensions  = VM_Window::Display.getDimensions();
-	SDL_GetWindowPosition(VM_Window::MainWindow, &VM_Window::Dimensions.x, &VM_Window::Dimensions.y);
-	SDL_GetWindowSize(VM_Window::MainWindow, &VM_Window::Dimensions.w, &VM_Window::Dimensions.h);
+	VM_Window::Dimensions = VM_Window::Display.getDimensions();
+
+	SDL_Rect dimensions;
+	SDL_GetWindowPosition(VM_Window::MainWindow, &dimensions.x, &dimensions.y);
+	SDL_GetWindowSize(VM_Window::MainWindow, &dimensions.w, &dimensions.h);
 
 	bool windowIsMaximized = ((SDL_GetWindowFlags(VM_Window::MainWindow) & SDL_WINDOW_MAXIMIZED) != 0);
 
@@ -325,36 +327,40 @@ void System::VM_Window::resize()
 		bool setMinSize = false;
 
 	    #if defined _linux || defined _macosx || defined _windows
-		if (VM_Window::Dimensions.w < MIN_WINDOW_SIZE) {
-			VM_Window::Dimensions.w = MIN_WINDOW_SIZE;
-			setMinSize = true;
-		}
-		if (VM_Window::Dimensions.h < MIN_WINDOW_SIZE) {
-			VM_Window::Dimensions.h = MIN_WINDOW_SIZE;
-			setMinSize = true;
+		if (dimensions.w < MIN_WINDOW_SIZE) {
+			dimensions.w = MIN_WINDOW_SIZE;
+			setMinSize   = true;
 		}
 
-		int maxWidth  = (int)((float)VM_Window::Dimensions.h * MAX_ASPECT_RATIO);
-		int maxHeight = (int)((float)VM_Window::Dimensions.w * MAX_ASPECT_RATIO);
-
-		if (VM_Window::Dimensions.w > maxWidth) {
-			VM_Window::Dimensions.w = maxWidth;
-			setMinSize = true;
+		if (dimensions.h < MIN_WINDOW_SIZE) {
+			dimensions.h = MIN_WINDOW_SIZE;
+			setMinSize   = true;
 		}
-		if (VM_Window::Dimensions.h > maxHeight) {
-			VM_Window::Dimensions.h = maxHeight;
-			setMinSize = true;
+
+		int maxWidth  = (int)((float)dimensions.h * MAX_ASPECT_RATIO);
+		int maxHeight = (int)((float)dimensions.w * MAX_ASPECT_RATIO);
+
+		if (dimensions.w > maxWidth) {
+			dimensions.w = maxWidth;
+			setMinSize   = true;
+		}
+
+		if (dimensions.h > maxHeight) {
+			dimensions.h = maxHeight;
+			setMinSize   = true;
 		}
 		#endif
 
 		SHOW_MESSAGE(VM_Text::Format(
-			"SDL_SetWindowSize: w: %d - h: %d",
-			VM_Window::Dimensions.w, VM_Window::Dimensions.h
+			"SDL_SetWindowSize: w1: %d, h1: %d - w2: %d, h2: %d",
+			dimensions.w, dimensions.h, VM_Window::Dimensions.w, VM_Window::Dimensions.h
 		).c_str());
 		if (setMinSize)
-			SDL_SetWindowSize(VM_Window::MainWindow, VM_Window::Dimensions.w, VM_Window::Dimensions.h);
+			SDL_SetWindowSize(VM_Window::MainWindow, dimensions.w, dimensions.h);
 
-		VM_Window::DimensionsBeforeFS = VM_Window::Display.getDimensions();
+		//VM_Window::DimensionsBeforeFS = VM_Window::Display.getDimensions();
+		SDL_GetWindowPosition(VM_Window::MainWindow, &VM_Window::DimensionsBeforeFS.x, &VM_Window::DimensionsBeforeFS.y);
+		SDL_GetWindowSize(VM_Window::MainWindow, &VM_Window::DimensionsBeforeFS.w, &VM_Window::DimensionsBeforeFS.h);
 	}
 
 	VM_Window::saveToDB();
@@ -382,9 +388,7 @@ void System::VM_Window::resize()
 
 void System::VM_Window::Save()
 {
-	//VM_Window::Dimensions = VM_Window::Display.getDimensions();
-	SDL_GetWindowPosition(VM_Window::MainWindow, &VM_Window::Dimensions.x, &VM_Window::Dimensions.y);
-	SDL_GetWindowSize(VM_Window::MainWindow, &VM_Window::Dimensions.w, &VM_Window::Dimensions.h);
+	VM_Window::Dimensions = VM_Window::Display.getDimensions();
 
 	VM_Window::saveToDB();
 }
