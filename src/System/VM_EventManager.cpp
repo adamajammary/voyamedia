@@ -1109,36 +1109,41 @@ bool System::VM_EventManager::isKeyPressedPlayer(SDL_Keycode key, uint16_t mod)
 	case SDLK_AC_BACK:
 	case SDLK_AUDIOSTOP:
 		VM_Player::FullScreenExit(true);
-		return true;
+		break;
 	case SDLK_SPACE:
 	case SDLK_RETURN:
 	case SDLK_RETURN2:
 	case SDLK_KP_ENTER:
 	case SDLK_AUDIOPLAY:
 		VM_Player::PlayPauseToggle();
-		return true;
+		VM_PlayerControls::Refresh(REFRESH_PLAY);
+		break;
 	case SDLK_DOWN:
 	case SDLK_RIGHT:
 	case SDLK_AUDIONEXT:
 		VM_Player::OpenNext(true);
-		return true;
+		break;
 	case SDLK_UP:
 	case SDLK_LEFT:
 	case SDLK_AUDIOPREV:
 		VM_Player::OpenPrevious(true);
-		return true;
-	case SDLK_a:
-		VM_Modal::Open("modal_player_settings_audio");
-		return true;
+		break;
 	case SDLK_f:
 		VM_Player::FullScreenToggle(false);
-		return true;
+		break;
+	case SDLK_a:
+		VM_Modal::Open("modal_player_settings_audio");
+		VM_PlayerControls::Refresh(REFRESH_PLAY);
+		break;
 	case SDLK_s:
 		VM_Modal::Open("modal_player_settings_subs");
-		return true;
+		VM_PlayerControls::Refresh(REFRESH_PLAY);
+		break;
+	default:
+		return false;
 	}
 
-	return false;
+	return true;
 }
 
 bool System::VM_EventManager::isKeyPressedTable(SDL_Keycode key, VM_Table* table)
