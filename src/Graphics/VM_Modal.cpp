@@ -861,19 +861,20 @@ int Graphics::VM_Modal::updateLabelsDetailsVideo(int mediaID, const String &file
 
 void Graphics::VM_Modal::updateLabelsPlaylistSave()
 {
+	VM_Button* input        = dynamic_cast<VM_Button*>(VM_GUI::Components["middle_search_input"]);
 	VM_Button* playlistName = dynamic_cast<VM_Button*>(VM_Modal::Components["modal_playlist_name_input"]);
 	VM_Button* searchValue  = dynamic_cast<VM_Button*>(VM_Modal::Components["modal_playlist_search_value"]);
 
-	if ((playlistName != NULL) && (searchValue != NULL))
+	if ((input != NULL) && (playlistName != NULL) && (searchValue != NULL))
 	{
-		String search = VM_GUI::ListTable->getSearch();
+		String text = VM_Text::Trim(input->getInputText());
 
 		if (playlistName->getInputText().empty()) {
-			playlistName->setInputText(search);
-			playlistName->setText(search);
+			playlistName->setInputText(text);
+			playlistName->setText(text);
 		}
 
-		searchValue->setText(search);
+		searchValue->setText(text);
 	}
 }
 

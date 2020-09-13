@@ -23,11 +23,9 @@ void Graphics::VM_TextInput::Backspace()
 	}
 }
 
-void Graphics::VM_TextInput::Clear()
+void Graphics::VM_TextInput::Clear(VM_Button* input)
 {
 	VM_TextInput::text = "";
-
-	VM_Button* input = dynamic_cast<VM_Button*>(VM_GUI::Components["middle_search_input"]);
 
 	if (input != NULL)
 	{
@@ -110,15 +108,15 @@ void Graphics::VM_TextInput::SaveToDB()
 	if ((VM_TextInput::activeButton != NULL) && (VM_TextInput::activeButton->id == "middle_search_input"))
 	{
 		int    dbResult;
-		auto   db     = new VM_Database(dbResult, DATABASE_SETTINGSv3);
-		String search = VM_TextInput::activeButton->getInputText();
+		auto   db   = new VM_Database(dbResult, DATABASE_SETTINGSv3);
+		String text = VM_Text::Trim(VM_TextInput::activeButton->getInputText());
 
 		if (DB_RESULT_OK(dbResult))
-			db->updateSettings(("list_search_text_" + std::to_string(VM_Top::Selected)), search);
+			db->updateSettings(("list_search_text_" + std::to_string(VM_Top::Selected)), text);
 
 		DELETE_POINTER(db);
 
-		VM_GUI::ListTable->setSearch(search);
+		VM_GUI::ListTable->setSearch(text);
 	}
 }
 

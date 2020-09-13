@@ -52,6 +52,7 @@ error.play=An error occured during playback.
 error.remove=Failed to remove
 error.renderer=Failed to create the graphics renderer.
 error.save_playlist=Failed to save the playlist - the name already exists.
+error.save_playlist_empty=Failed to save the playlist - the search input is empty.
 error.sdl=Failed to initialize the SDL2 library.
 error.sdl_ttf=Failed to initialize the SDL2_ttf library.
 error.share_invalid=Can only share local music, pictures and video.

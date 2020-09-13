@@ -52,6 +52,7 @@ error.play=En feil oppstod under avspilling.
 error.remove=Klarte ikke å fjerne
 error.renderer=Klarte ikke å lage grafikkrendereren.
 error.save_playlist=Klarte ikke å lagre spillelisten - navnet existerer allerede.
+error.save_playlist_empty=Klarte ikke å lagre spillelisten - søkefeltet er tomt.
 error.sdl=Klarte ikke å initialisere SDL2 biblioteket.
 error.sdl_ttf=Klarte ikke å initialisere SDL2_ttf biblioteket.
 error.share_invalid=Kan bare dele lokale musikk, bilder og video.
