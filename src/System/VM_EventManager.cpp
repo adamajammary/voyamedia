@@ -981,7 +981,10 @@ bool System::VM_EventManager::isClickedTextInput(SDL_Event* mouseEvent, VM_Compo
 	if ((mouseEvent == NULL) || (inputPanel == NULL) || !VM_Player::State.isStopped)
 		return false;
 
-	VM_Button* input = NULL;
+	VM_Button* input = dynamic_cast<VM_Button*>(VM_GUI::Components["middle_search_input"]);
+
+	if (input == NULL)
+		return false;
 
 	for (auto component : inputPanel->buttons)
 	{
@@ -990,54 +993,56 @@ bool System::VM_EventManager::isClickedTextInput(SDL_Event* mouseEvent, VM_Compo
 
 		VM_Button* button = dynamic_cast<VM_Button*>(component);
 
+		if (!VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
+			continue;
+
+		// INPUT
 		if (button->id.find("_input") != String::npos)
-			input = button;
-
-		if (VM_Graphics::ButtonPressed(mouseEvent, button->backgroundArea))
 		{
-			// INPUT
-			if (button->id.find("_input") != String::npos)
-			{
-				VM_TextInput::SetActive(true, button);
-			}
-			// PASTE
-			else if (button->id.find("_paste") != String::npos)
-			{
-				bool activate = (!VM_TextInput::IsActive() && (input != NULL));
-
-				if (activate)
-					VM_TextInput::SetActive(true, input);
-
-				VM_TextInput::Paste();
-
-				if (activate)
-					VM_TextInput::Unfocus();
-			}
-			// CLEAR/SEARCH
-			else if ((button->id == "middle_search_clear") || (button->id == "middle_search_button"))
-			{
-				if (button->id == "middle_search_clear")
-					VM_TextInput::Clear();
-
-				VM_TextInput::SaveToDB();
-				VM_TextInput::SetActive(false);
-
-				if (!VM_Modal::IsVisible())
-				{
-					if (VM_GUI::ListTable != NULL)
-						VM_GUI::ListTable->resetState();
-
-					VM_Window::Refresh();
-				}
-			}
-			// SAVE SEARCH TO PLAYLIST
-			else if (button->id == "middle_search_playlist_save")
-			{
-				VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));
-			}
-
-			return true;
+			VM_TextInput::SetActive(true, button);
 		}
+		// PASTE
+		else if (button->id.find("_paste") != String::npos)
+		{
+			bool activate = (!VM_TextInput::IsActive() && (input != NULL));
+
+			if (activate)
+				VM_TextInput::SetActive(true, input);
+
+			VM_TextInput::Paste();
+
+			if (activate)
+				VM_TextInput::Unfocus();
+		}
+		// CLEAR / SEARCH / SAVE SEARCH TO PLAYLIST
+		else if ((button->id == "middle_search_clear")  ||
+				(button->id  == "middle_search_button") ||
+				(button->id  == "middle_search_playlist_save"))
+		{
+			if (button->id == "middle_search_clear")
+				VM_TextInput::Clear(input);
+
+			VM_TextInput::SaveToDB();
+			VM_TextInput::SetActive(false);
+
+			if (!VM_Modal::IsVisible())
+			{
+				if (VM_GUI::ListTable != NULL)
+					VM_GUI::ListTable->resetState();
+
+				VM_Window::Refresh();
+			}
+
+			if (button->id == "middle_search_playlist_save")
+			{
+				if (VM_Text::Trim(input->getInputText()).empty())
+					VM_Modal::ShowMessage(VM_Window::Labels["error.save_playlist_empty"]);
+				else
+					VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));
+			}
+		}
+
+		return true;
 	}
 
 	VM_TextInput::SetActive(false);
@@ -1109,36 +1114,41 @@ bool System::VM_EventManager::isKeyPressedPlayer(SDL_Keycode key, uint16_t mod)
 	case SDLK_AC_BACK:
 	case SDLK_AUDIOSTOP:
 		VM_Player::FullScreenExit(true);
-		return true;
+		break;
 	case SDLK_SPACE:
 	case SDLK_RETURN:
 	case SDLK_RETURN2:
 	case SDLK_KP_ENTER:
 	case SDLK_AUDIOPLAY:
 		VM_Player::PlayPauseToggle();
-		return true;
+		VM_PlayerControls::Refresh(REFRESH_PLAY);
+		break;
 	case SDLK_DOWN:
 	case SDLK_RIGHT:
 	case SDLK_AUDIONEXT:
 		VM_Player::OpenNext(true);
-		return true;
+		break;
 	case SDLK_UP:
 	case SDLK_LEFT:
 	case SDLK_AUDIOPREV:
 		VM_Player::OpenPrevious(true);
-		return true;
-	case SDLK_a:
-		VM_Modal::Open("modal_player_settings_audio");
-		return true;
+		break;
 	case SDLK_f:
 		VM_Player::FullScreenToggle(false);
-		return true;
+		break;
+	case SDLK_a:
+		VM_Modal::Open("modal_player_settings_audio");
+		VM_PlayerControls::Refresh(REFRESH_PLAY);
+		break;
 	case SDLK_s:
 		VM_Modal::Open("modal_player_settings_subs");
-		return true;
+		VM_PlayerControls::Refresh(REFRESH_PLAY);
+		break;
+	default:
+		return false;
 	}
 
-	return false;
+	return true;
 }
 
 bool System::VM_EventManager::isKeyPressedTable(SDL_Keycode key, VM_Table* table)
