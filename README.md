@@ -19,7 +19,7 @@
 
 Voya Media is a cross-platform media player that easily plays your music, pictures and videos.
 
-Supports the most popular codecs*
+#### Supports the most popular codecs*
 
 - Music AAC, AC3, DTS, FLAC, MP3, TrueHD, Vorbis, WMA
 - Pictures BMP, DDS, GIF, ICO, JPEG, PNG, PSD, TIFF, WebP
@@ -29,7 +29,7 @@ Supports the most popular codecs*
 
 *No support for DRM-encrypted media like WMDRM (WMA), CSS (DVD) or AACS (Blu-ray)
 
-Features
+#### Features
 
 - Add files from local storage, Dropbox, UPnP or iCloud Photos (on iOS)
 - Listen to internet radio stations from SHOUTcast
