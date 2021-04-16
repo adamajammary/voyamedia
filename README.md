@@ -1,50 +1,26 @@
 ## Voya Media
-### Media player that easily plays your music, pictures and videos
+### A free cross-platform media player that easily plays your music, pictures and videos.
 #### Copyright (C) 2012 Adam A. Jammary (Jammary Studio)
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ![Voya Media screenshot](https://www.jammary.com/img/player/VoyaMedia-1.jpg)
 
-Voya Media is a cross-platform media player that easily plays your music, pictures and videos.
+Voya Player is a free cross-platform media player that easily plays your music, pictures and videos.
 
-__Supports the most popular codecs*__
+__Music__
 
-- Music AAC, AC3, DTS, FLAC, MP3, TrueHD, Vorbis, WMA
-- Pictures BMP, DDS, GIF, ICO, JPEG, PNG, PSD, TIFF, WebP
-- Videos H.264, H.265, DivX, MPEG, Theora, WMV, XviD
-- Subtitles MicroDVD, PGS, SSA/ASS, SubRip, VobSub
-- Metadata APE, ASF/WMA, Exif, ID3, M4A, Vorbis
+Supports most popular audio codecs like AAC, FLAC, MP3, Vorbis and WMA.
 
-_*No support for DRM-encrypted media like WMDRM (WMA), CSS (DVD) or AACS (Blu-ray)_
+__Pictures__
 
-__Features__
+Supports most popular image formats like BMP, GIF, JPEG, PNG, TIFF and WebP.
 
-- Add files from local storage, Dropbox, UPnP or iCloud Photos (on iOS)
-- Listen to internet radio stations from SHOUTcast
-- Get details on movies and TV shows from TMDb
+__Video__
 
-## Supported Platforms
+Supports most popular video codecs like H.26x, DivX, MPEG, Theora, WMV and XviD.
 
-Platform | Minimum Version | CPU Architecture
--------- | --------------- | ----------------
-[Android](https://play.google.com/store/apps/details?id=com.voyamedia.android) | 8 (Oreo) | ARMv8/ARM64
-[iOS](https://itunes.apple.com/us/app/voya-media/id1009917954) | 10 | ARMv8/ARM64
-[Linux](https://sourceforge.net/projects/voyamedia/files/VoyaMedia/3.x/Linux/) | Fedora 20, Ubuntu 14.04 | x86_64
-[Mac OS X](https://itunes.apple.com/us/app/voya-media/id1009333985) | 10.11 (El Capitan) | x86_64
-[Windows](https://www.microsoft.com/store/apps/9NBLGGH52684) | 10 | x86_64
-[Windows](https://sourceforge.net/projects/voyamedia/files/VoyaMedia/3.x/Windows/) | 7 | x86_64
+__Radio__
+
+Listen to more than 80 000 streaming radio stations provided by [SHOUTcast](https://directory.shoutcast.com/).
 
 ## 3rd Party Libraries
 
