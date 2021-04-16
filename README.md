@@ -4,7 +4,7 @@
 
 ![Voya Media screenshot](https://www.jammary.com/img/player/VoyaMedia-1.jpg)
 
-Voya Player is a free cross-platform media player that easily plays your music, pictures and videos.
+Voya Media is a free cross-platform media player that easily plays your music, pictures and videos.
 
 __Music__
 
