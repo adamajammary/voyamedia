@@ -1,5 +1,3 @@
-#define SDL_MAIN_HANDLED
-
 #ifndef VM_GLOBAL_H
 	#include "../Global/VM_Global.h"
 #endif
@@ -16,7 +14,7 @@ int wmain(const int argc, wchar_t* argv[])
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 // Release mode on all other platforms
 #else
-int SDL_main(const int argc, char* argv[])
+int main(const int argc, char* argv[])
 #endif
 {
 	// Get command line arguments in Windows Release mode
@@ -135,17 +133,3 @@ int SDL_main(const int argc, char* argv[])
 	
 	return RESULT_OK;
 }
-
-#if !defined _windows
-#if defined __cplusplus
-extern "C"
-#endif
-int main(int argc, char* argv[])
-{
-#if defined _ios
-	return SDL_UIKitRunApp(argc, argv, SDL_main);
-#else
-	return SDL_main(argc, argv);
-#endif
-}
-#endif
