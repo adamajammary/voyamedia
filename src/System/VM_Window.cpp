@@ -14,7 +14,6 @@ bool             System::VM_Window::Inactive            = false;
 bool             System::VM_Window::IsDoneRendering     = false;
 StringMap        System::VM_Window::Labels;
 SDL_Window*      System::VM_Window::MainWindow          = NULL;
-String           System::VM_Window::OpenURL             = "";
 bool             System::VM_Window::PauseRendering      = false;
 bool             System::VM_Window::Quit                = false;
 SDL_Renderer*    System::VM_Window::Renderer            = NULL;
@@ -31,7 +30,6 @@ WString          System::VM_Window::WorkingDirectoryW   = L"";
 	using namespace VoyaMedia::Android;
 
 	Strings     System::VM_Window::AndroidMediaFiles;
-	//String      System::VM_Window::AndroidStoragePath = "";
 	VM_JavaJNI* System::VM_Window::JNI                = NULL;
 	SDL_Thread* System::VM_Window::MedaPlayerThread   = NULL;
 	bool        System::VM_Window::MinimizeWindow     = false;
@@ -107,9 +105,7 @@ int System::VM_Window::Open(const char* guiXML, const char* title)
 			return ERROR_UNKNOWN;
 		}
 
-		//VM_Window::AndroidStoragePath = VM_FileSystem::GetAndroidStoragePath();
 	#elif defined _windows
-	//if (!IsProcessDPIAware())
 		SetProcessDPIAware();
 	#endif
 
@@ -241,7 +237,6 @@ int System::VM_Window::Render()
 						VM_ThreadManager::Mutex.unlock();
 					}
 					#endif
-					//else if (PICTURE_IS_SELECTED || YOUTUBE_IS_SELECTED || SHOUTCAST_IS_SELECTED)
 					else if (PICTURE_IS_SELECTED || SHOUTCAST_IS_SELECTED)
 					{
 						VM_ThreadManager::Mutex.lock();
@@ -265,10 +260,6 @@ int System::VM_Window::Render()
 
 int System::VM_Window::Reset(const char* guiXML, const char* title)
 {
-	//SDL_SetRenderDrawColor(VM_Window::Renderer, 0, 0, 0, 0xFF);
-	//SDL_RenderClear(VM_Window::Renderer);
-	//SDL_RenderPresent(VM_Window::Renderer);
-
 	VM_TableState tableState = {};
 
 	if (VM_GUI::ListTable != NULL)

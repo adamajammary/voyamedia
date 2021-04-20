@@ -697,7 +697,6 @@ int Graphics::VM_Graphics::CreateThumbThread(void* userData)
 	#endif
 
 	// INTERNET MEDIA
-	//if (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE)
 	if (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST)
 	{
 		LIB_FREEIMAGE::FIBITMAP* thumbImage = VM_Graphics::OpenImageHTTP(threadData->data["full_path"]);
@@ -867,8 +866,6 @@ Graphics::VM_Texture* Graphics::VM_Graphics::GetButtonLabel(const String &label,
 		return NULL;
 	}
 
-	//TTF_SetFontHinting(font, TTF_HINTING_LIGHT);
-
 	SDL_Surface* surface = NULL;
 	VM_Texture*  texture = NULL;
 
@@ -962,58 +959,6 @@ String Graphics::VM_Graphics::GetImageDateTaken(LIB_FREEIMAGE::FIBITMAP* image)
 	}
 
 	return dateTaken;
-}
-
-String Graphics::VM_Graphics::GetImageGPS(LIB_FREEIMAGE::FIBITMAP* image)
-{
-	if (image == NULL)
-		return "";
-
-	StringMap metas = VM_Graphics::getImageMeta(image, LIB_FREEIMAGE::FIMD_EXIF_GPS);
-
-	if (metas.empty())
-		return "";
-
-	String address   = "";
-	double latitude  = (INVALID_COORDINATE + 1.0);
-	double longitude = (INVALID_COORDINATE + 1.0);
-
-	for (const auto &meta : metas)
-	{
-		if (meta.first == "GPSLatitude" || meta.first == "GPSLongitude")
-		{
-			Strings textSplit = VM_Text::Split(meta.second, ":");
-
-			if (textSplit.size() > 2)
-			{
-				double coordinates = std::atof(textSplit[0].c_str());
-
-				coordinates += (((std::atof(textSplit[1].c_str()) * 60.0) + std::atof(textSplit[2].c_str())) / 3600.0);
-
-				if (meta.first == "GPSLatitude")
-					latitude = coordinates;
-				else
-					longitude = coordinates;
-			}
-		}
-
-		if ((latitude < INVALID_COORDINATE) && (longitude < INVALID_COORDINATE))
-		{
-			String apiKey     = VM_Text::Decrypt(GOOGLE_MAPS_API_KEY);
-			String apiURL     = (GOOGLE_MAPS_API_URL + std::to_string(latitude) + "," + std::to_string(longitude) + "&key=" + apiKey);
-			String response   = VM_FileSystem::DownloadToString(apiURL);
-			size_t addressPos = response.find("formatted_address");
-
-			if (addressPos != String::npos) {
-				address = response.substr(addressPos + 22);
-				address = address.substr(0, address.find("\","));
-			}
-
-			break;
-		}
-	}
-
-	return address;
 }
 
 StringMap Graphics::VM_Graphics::getImageMeta(LIB_FREEIMAGE::FIBITMAP* image, LIB_FREEIMAGE::FREE_IMAGE_MDMODEL metaType)

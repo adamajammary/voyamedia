@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 3.12)
 project (VoyaMedia)
 
 # Voya Media depends on the following libraries:
-# - curl, ffmpeg, FreeImage, freetype, libupnp, libxml2, mjson, openssl, sdl2, sdl2_ttf, sqlite, zlib
+# - curl, ffmpeg, FreeImage, freetype, libxml2, mjson, openssl, sdl2, sdl2_ttf, sqlite, zlib
 # You can find the library sources in SOURCEFORGE_URL below:
 
 set(SOURCEFORGE_URL "https://sourceforge.net/projects/voyamedia/files/VoyaMedia/3.x")
-set(EXT_LIB_DIR     "")
+set(EXT_LIB_DIR     "D:/Jenkins/workspace/libs/x64")
 set(INC_DIR         "${EXT_LIB_DIR}/include")
 set(LIB_DIR         "${EXT_LIB_DIR}/lib")
 set(CPP_VERSION     "14")
@@ -36,8 +36,7 @@ elseif (WIN32)
     file(GLOB LIBS_LIB RELATIVE ${LIB_DIR} "${LIB_DIR}/*.lib")
     
     set(OS     "_windows")
-    set(DEFS   "UPNP_INLINE=_inline")
-    set(DIRENT "C:/BUILD_TOOLS/dirent")
+    set(DIRENT "D:/BUILD_TOOLS/dirent")
     set(LIBS   ${LIBS_LIB} IPHLPAPI.lib Ws2_32.lib)
     set(RES    "build/windows/VoyaMedia.rc")
 
@@ -47,9 +46,9 @@ endif()
 file(GLOB SOURCES_H   "src/*/*.h")
 file(GLOB SOURCES_CPP "src/*/*.cpp")
 
-add_compile_definitions(${OS} ${DEFS})
+add_compile_definitions(${OS})
 
-include_directories(${INC_DIR} ${INC_DIR}/freetype2 ${INC_DIR}/libxml2 ${INC_DIR}/mjson-1.7 ${DIRENT} ${GTK})
+include_directories(${INC_DIR} ${INC_DIR}/freetype ${INC_DIR}/libxml2 ${DIRENT} ${GTK})
 link_directories(${LIB_DIR})
 
 add_executable(VoyaMedia ${SOURCES_CPP} ${SOURCES_H} ${RES})
@@ -74,17 +73,18 @@ if (APPLE OR UNIX)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/gui  dist/)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/img  dist/)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/lang dist/)
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/web  dist/)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND mv -f  VoyaMedia  dist/)
 elseif (WIN32)
     set_target_properties(VoyaMedia PROPERTIES LINK_FLAGS_DEBUG   "-SUBSYSTEM:CONSOLE,5.02")
     set_target_properties(VoyaMedia PROPERTIES LINK_FLAGS_RELEASE "-SUBSYSTEM:WINDOWS,5.02")
 
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND if not exist $(OutputPath)fonts/ mkdir $(OutputPath)fonts)
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f *.tt[cf]    $(OutputPath)fonts/)
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/gui  $(OutputPath))
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/img  $(OutputPath))
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/lang $(OutputPath))
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf build/web  $(OutputPath))
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f ${LIB_DIR}/*.dll $(OutputPath))
+    string(REPLACE "/" "\\" LIB_DIR_WIN ${LIB_DIR})
+
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND if not exist $(OutputPath)fonts mkdir $(OutputPath)fonts)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND copy /y *.ttc                 $(OutputPath)fonts\\)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND copy /y *.ttf                 $(OutputPath)fonts\\)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND xcopy /e /i /y build\\gui     $(OutputPath)gui)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND xcopy /e /i /y build\\img     $(OutputPath)img)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND xcopy /e /i /y build\\lang    $(OutputPath)lang)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND copy /y ${LIB_DIR_WIN}\\*.dll $(OutputPath))
 endif()

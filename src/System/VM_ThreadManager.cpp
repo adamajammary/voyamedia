@@ -2,7 +2,6 @@
 
 using namespace VoyaMedia::Graphics;
 using namespace VoyaMedia::MediaPlayer;
-using namespace VoyaMedia::UPNP;
 
 std::mutex           System::VM_ThreadManager::DBMutex;
 VM_ImageButtonMap    System::VM_ThreadManager::ImageButtons;
@@ -17,10 +16,7 @@ void System::VM_ThreadManager::AddThreads()
 	VM_ThreadManager::Threads.insert({ THREAD_CLEAN_THUMBS,  new VM_Thread(VM_FileSystem::CleanThumbs) });
 	VM_ThreadManager::Threads.insert({ THREAD_CREATE_IMAGES, new VM_Thread(VM_Graphics::OpenImagesThread) });
 	VM_ThreadManager::Threads.insert({ THREAD_GET_DATA,      new VM_Thread(VM_ThreadManager::GetData) });
-	VM_ThreadManager::Threads.insert({ THREAD_SCAN_DROPBOX,  new VM_Thread(VM_FileSystem::ScanDropboxFiles) });
 	VM_ThreadManager::Threads.insert({ THREAD_SCAN_FILES,    new VM_Thread(VM_FileSystem::ScanMediaFiles) });
-	VM_ThreadManager::Threads.insert({ THREAD_UPNP_CLIENT,   new VM_Thread(VM_UPNP::ScanDevices) });
-	VM_ThreadManager::Threads.insert({ THREAD_UPNP_SERVER,   new VM_Thread(VM_UPNP::Start) });
 
 	#if defined _android
 		VM_ThreadManager::Threads.insert({ THREAD_SCAN_ANDROID, new VM_Thread(VM_FileSystem::ScanAndroid) });
@@ -193,11 +189,6 @@ int System::VM_ThreadManager::HandleThreads()
 		}
 		else if (thread.second->start)
 		{
-			if ((thread.first == THREAD_UPNP_CLIENT) && VM_UPNP::ClientIP.empty())
-				continue;
-			else if ((thread.first == THREAD_UPNP_SERVER) && VM_UPNP::ServerIP.empty())
-				continue;
-
 			if ((thread.second->thread == NULL) && thread.second->completed)
 				thread.second->thread = SDL_CreateThread(thread.second->function, thread.first.c_str(), thread.second->data);
 		}

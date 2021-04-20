@@ -344,10 +344,10 @@ void System::VM_FileSystem::CloseMediaFormatContext(LIB_FFMPEG::AVFormatContext*
 
 int System::VM_FileSystem::CreateDefaultDirectoryStructure()
 {
-	Strings  copyDirs    = { "doc", "fonts", "gui", "img", "lang", "web" };
-	WStrings copyDirsW   = { L"doc", L"fonts", L"gui", L"img", L"lang", L"web" };
-	Strings  createDirs  = { "db", "doc", "fonts", "gui", "img", "lang", "thumbs", "web" };
-	WStrings createDirsW = { L"db", L"doc", L"fonts", L"gui", L"img", L"lang", L"thumbs", L"web" };
+	Strings  copyDirs    = { "doc", "fonts", "gui", "img", "lang" };
+	WStrings copyDirsW   = { L"doc", L"fonts", L"gui", L"img", L"lang" };
+	Strings  createDirs  = { "db", "doc", "fonts", "gui", "img", "lang", "thumbs" };
+	WStrings createDirsW = { L"db", L"doc", L"fonts", L"gui", L"img", L"lang", L"thumbs" };
 
 	#if defined _android
 		Strings      androidAssets;
@@ -947,24 +947,6 @@ Strings System::VM_FileSystem::GetAndroidMediaFiles()
 
 	return files;
 }
-
-//String System::VM_FileSystem::GetAndroidStoragePath()
-//{
-//	jclass    jniClass          = VM_Window::JNI->getClass();
-//	JNIEnv*   jniEnvironment    = VM_Window::JNI->getEnvironment();
-//	jmethodID jniGetStoragePath = jniEnvironment->GetStaticMethodID(jniClass, "GetStoragePath", "()Ljava/lang/String;");
-//
-//	if (jniGetStoragePath == NULL)
-//		return "";
-//
-//	jstring     jString = (jstring)jniEnvironment->CallStaticObjectMethod(jniClass, jniGetStoragePath);
-//	const char* cString = jniEnvironment->GetStringUTFChars(jString, NULL);
-//	String      path    = String(cString);
-//	
-//	jniEnvironment->ReleaseStringUTFChars(jString, cString);
-//
-//	return path;
-//}
 #endif
 
 Strings System::VM_FileSystem::getDirectoryContent(const String &directoryPath, bool returnFiles, bool checkSystemFiles)
@@ -1073,68 +1055,6 @@ String System::VM_FileSystem::getDriveName(const String &drivePath)
 	#endif
 
 	return driveName;
-}
-
-String System::VM_FileSystem::GetDropboxURL(const String &path)
-{
-	int    dbResult;
-	auto   db    = new VM_Database(dbResult, DATABASE_SETTINGSv3);
-	String token = "";
-
-	if (DB_RESULT_OK(dbResult))
-		token = db->getSettings("dropbox_token");
-
-	DELETE_POINTER(db);
-
-	if (!token.empty())
-		token = VM_Text::Decrypt(token);
-
-	// CHECK IF TOKEN IS EXPIRED - RE-AUTHENTICATE
-	if (token.empty() || VM_FileSystem::isExpiredDropboxTokenOAuth2(token))
-		return "";
-
-	Strings headers      = { String("Authorization: Bearer " + token), "Content-Type: application/json" };
-	String  data         = "{ \"path\":\"" + path + "\" }";
-	String  response     = VM_FileSystem::PostData("https://api.dropboxapi.com/2/files/get_temporary_link", data, headers);
-	size_t  findPosition = response.find("\"link\": \"");
-	String  mediaURL     = "";
-
-	if (findPosition != String::npos) {
-		mediaURL = response.substr(findPosition + 9);
-		mediaURL = mediaURL.substr(0, mediaURL.find("\""));
-	}
-
-	return mediaURL;
-}
-
-String System::VM_FileSystem::GetDropboxURL2(const String &mediaURL)
-{
-	int    dbResult;
-	auto   db      = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
-	int    mediaID = 0;
-	String path    = "";
-
-	if (DB_RESULT_OK(dbResult))
-		mediaID = db->getID(mediaURL);
-
-	if (mediaID > 0)
-		path = db->getValue(mediaID, "path");
-
-	DELETE_POINTER(db);
-
-	String url2 = VM_FileSystem::GetDropboxURL(path);
-
-	if (mediaID > 0)
-	{
-		db = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
-
-		if (DB_RESULT_OK(dbResult))
-			db->updateText(mediaID, "full_path", url2);
-	}
-
-	DELETE_POINTER(db);
-
-	return url2;
 }
 
 String System::VM_FileSystem::getFileContent(const String &filePath)
@@ -2595,291 +2515,6 @@ String System::VM_FileSystem::GetShoutCastStation(int stationID)
 	return stationLink;
 }
 
-StringMap System::VM_FileSystem::GetTmdbDetails(int mediaID, VM_MediaType mediaType)
-{
-	StringMap details;
-
-	if ((mediaID < 1) || ((mediaType != MEDIA_TYPE_TMDB_MOVIE) && (mediaType != MEDIA_TYPE_TMDB_TV)))
-		return details;
-
-	// https://developers.themoviedb.org/3/movies/get-movie-details
-
-	String            apiKey     = VM_Text::Decrypt(TMDB_API_KEY);
-	String            mediaTypeS = (mediaType == MEDIA_TYPE_TMDB_MOVIE ? "movie" : "tv");
-	String            mediaURL   = (TMDB_API_URL + mediaTypeS + "/" + std::to_string(mediaID) + "?api_key=" + apiKey);
-	String            response   = VM_FileSystem::DownloadToString(mediaURL);
-	LIB_JSON::json_t* document   = VM_JSON::Parse(response.c_str());
-
-	if (document == NULL)
-		return details;
-
-	// GENRES
-	std::vector<LIB_JSON::json_t*> genresArray = VM_JSON::GetArray(VM_JSON::GetItem(document, "genres"));
-
-	details["genres"] = "";
-
-	for (int i = 0; i < (int)genresArray.size(); i++)
-	{
-		details["genres"].append(VM_JSON::GetValueString(VM_JSON::GetItem(genresArray[i], "name")));
-
-		if (i < (int)genresArray.size() - 1)
-			details["genres"].append(", ");
-	}
-
-	// OVERVIEW / DESCRIPTION
-	details["overview"] = VM_JSON::GetValueString(VM_JSON::GetItem(document, "overview"));
-	details["overview"] = VM_Text::Replace(details["overview"], "\\\"",   "\"");
-	details["overview"] = VM_Text::Replace(details["overview"], "\\n\\n", "\n");
-	details["overview"] = VM_Text::Replace(details["overview"], "\\n",    "\n");
-
-	// RELEASE DATE
-	if (mediaType == MEDIA_TYPE_TMDB_MOVIE)
-		details["date"] = std::to_string(std::atoi(VM_JSON::GetValueString(VM_JSON::GetItem(document, "release_date")).c_str()));
-	else
-		details["date"] = std::to_string(std::atoi(VM_JSON::GetValueString(VM_JSON::GetItem(document, "first_air_date")).c_str()));
-
-	// RATING
-	const signed char star[4] = { 0xE2 - 256, 0x98 - 256, 0x85 - 256, 0 };
-	double            voteAvg = VM_JSON::GetValueNumber(VM_JSON::GetItem(document, "vote_average"));
-	int64_t           votes   = (int64_t)VM_JSON::GetValueNumber(VM_JSON::GetItem(document, "vote_count"));
-
-	details["rating"] = VM_Text::Format("%s %.1f/10 (%lld %s)", star, voteAvg, votes, VM_Window::Labels["votes"].c_str());
-
-	// DURATION
-	if (mediaType == MEDIA_TYPE_TMDB_TV)
-	{
-		std::vector<double> durationArray = VM_JSON::GetArrayNumbers(VM_JSON::GetItem(document, "episode_run_time"));
-
-		if (!durationArray.empty())
-			details["duration"] = std::to_string((int64_t)durationArray[0] * 60);
-		else
-			details["duration"] = "0";
-	} else {
-		details["duration"] = std::to_string((int64_t)VM_JSON::GetValueNumber(VM_JSON::GetItem(document, "runtime")) * 60);
-	}
-
-	// TV SEASONS / EPISODES
-	if (mediaType == MEDIA_TYPE_TMDB_TV) {
-		details["seasons"]  = std::to_string((int64_t)VM_JSON::GetValueNumber(VM_JSON::GetItem(document, "number_of_seasons")));
-		details["episodes"] = std::to_string((int64_t)VM_JSON::GetValueNumber(VM_JSON::GetItem(document, "number_of_episodes")));
-	}
-
-	// LANGUAGE
-	details["language"] = VM_JSON::GetValueString(VM_JSON::GetItem(document, "original_language"));
-
-	// BACKDROP IMAGE
-	details["backdrop_url"] = VM_JSON::GetValueString(VM_JSON::GetItem(document, "backdrop_path"));
-
-	if (!details["backdrop_url"].empty())
-		details["backdrop_url"] = ("https://image.tmdb.org/t/p/original/" + details["backdrop_url"].substr(1));
-
-	FREE_JSON_DOC(document);
-
-	return details;
-}
-
-String System::VM_FileSystem::GetURL(VM_UrlType urlType, const String &data)
-{
-	String apiKey    = VM_Text::Decrypt(DROPBOX_API_KEY);
-	String apiSecret = VM_Text::Decrypt(DROPBOX_API_SECRET);
-	String mediaURL  = "";
-
-	switch (urlType) {
-	case URL_DROPBOX_AUTH_CODE:
-		mediaURL = ("https://www.dropbox.com/1/oauth2/authorize?response_type=code&client_id=" + apiKey);
-		break;
-	case URL_DROPBOX_OAUTH2_TOKEN:
-		mediaURL = "https://api.dropboxapi.com/1/oauth2/token";
-		break;
-	case URL_DROPBOX_OAUTH2_DATA:
-		mediaURL = ("code=" + data + "&grant_type=authorization_code&client_id=" + apiKey + "&client_secret=" + apiSecret);
-		break;
-	case URL_DROPBOX_TOKEN_EXPIRED:
-		mediaURL = "https://api.dropboxapi.com/2/users/get_current_account";
-		break;
-	case URL_DROPBOX_FILES:
-		mediaURL = "https://api.dropboxapi.com/2/files/list_folder";
-		break;
-	}
-
-	return mediaURL;
-}
-
-/*StringMap System::VM_FileSystem::GetYouTubeDetails(const String &mediaID)
-{
-	StringMap         details;
-	String            apiKey   = VM_Text::Decrypt(YOUTUBE_API_KEY);
-	String            mediaURL = (YOUTUBE_API_URL + "videos?part=snippet,contentDetails,statistics&id=" + mediaID + "&key=" + apiKey);
-	String            response = VM_FileSystem::DownloadToString(mediaURL);
-	LIB_JSON::json_t* document = VM_JSON::Parse(response.c_str());
-
-	details["id"] = mediaID;
-
-	if (document == NULL)
-		return details;
-
-	std::vector<LIB_JSON::json_t*> objectItems;
-	LIB_JSON::json_t*              items      = VM_JSON::GetItem(document, "items");
-	std::vector<LIB_JSON::json_t*> itemsArray = VM_JSON::GetArray(items);
-
-	for (auto itemsObject : itemsArray)
-	{
-		objectItems = VM_JSON::GetItems(itemsObject);
-
-		for (auto item : objectItems)
-		{
-			if (VM_JSON::GetKey(item) == "snippet")
-			{
-				details["channel"]     = VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "channelTitle"));
-				details["date"]        = VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "publishedAt"));
-
-				details["description"] = VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "description"));
-				details["description"] = VM_Text::Replace(details["description"], "\\\"",   "\"");
-				details["description"] = VM_Text::Replace(details["description"], "\\n\\n", "\n");
-				details["description"] = VM_Text::Replace(details["description"], "\\n",    "\n");
-			}
-			else if (VM_JSON::GetKey(item) == "contentDetails")
-			{
-				details["duration_yt"] = VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "duration"));
-			}
-			else if (VM_JSON::GetKey(item) == "statistics")
-			{
-				details["views"] = VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "viewCount"));
-
-				String likeCount    = VM_Text::ToViewCount(std::atoll(VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "likeCount")).c_str()));
-				String dislikeCount = VM_Text::ToViewCount(std::atoll(VM_JSON::GetValueString(VM_JSON::GetItem(item->child, "dislikeCount")).c_str()));
-
-				details["likes"] = VM_Text::Format("%s likes   %s dislikes", likeCount.c_str(), dislikeCount.c_str());
-
-			}
-		}
-	}
-
-	FREE_JSON_DOC(document);
-
-	return details;
-}
-
-Strings System::VM_FileSystem::GetYouTubeVideos(const String &videoID)
-{
-	Strings links;
-
-	if (videoID.empty())
-		return links;
-
-	String mediaURL = String("http://www.youtube.com/get_video_info?video_id=" + videoID + "&gl=US&hl=en");
-	String response = VM_FileSystem::DownloadToString(mediaURL);
-
-	// ERROR MESSAGE
-	size_t findPos = response.find("reason=");
-
-	if (findPos != String::npos)
-	{
-		String error = response.substr(findPos + 7);
-		error = error.substr(0, error.find("%"));
-		error = error.substr(0, error.find("&"));
-		error = VM_Text::Replace(error, "+", " ");
-
-		VM_Window::StatusString = error;
-	}
-
-	if ((response.find("status=ok") == String::npos) || (response.find("signature=True") != String::npos))
-		return links;
-
-	// TODO: Allow selecting 3D youtube video stream if found
-	ints validItagIDs = {
-		 22, // MP4  1280 x 720
-		 18, // MP4   640 x 360
-		 43, // WEBM  640 x 360
-		  5, // FLV   400 x 240
-		 36, // 3GP   320 x 240
-		 17, // 3GP   176 x 144
-		 84, // MP4  1280 x 720 3D
-		 82, // MP4   640 x 360 3D
-		100  // WEBM  640 x 360 3D
-	};
-
-	response = VM_Text::Replace(response, "http", "^");
-
-	IntStringMap validItags, invalidTags;
-	Strings      textSplit = VM_Text::Split(response, "^");
-
-	for (const auto &line : textSplit)
-	{
-		int itagI = 0;
-		findPos   = line.find("itag%253D");
-
-		if (findPos != String::npos) {
-			String itagS = line.substr(findPos + 9);
-			itagI        = std::atoi(itagS.c_str());
-		}
-
-		if (itagI == 0)
-			continue;
-
-		String videoLink = "";
-
-		if (line.find("%253A%252F%252Fr") != String::npos)
-		{
-			videoLink = String("http" + line);
-			videoLink = VM_Text::Replace(videoLink, "%253A", ":");
-			videoLink = VM_Text::Replace(videoLink, "%253F", "?");
-			videoLink = VM_Text::Replace(videoLink, "%252F", "/");
-			videoLink = VM_Text::Replace(videoLink, "%253D", "=");
-			videoLink = VM_Text::Replace(videoLink, "%2526", "&");
-
-			findPos = videoLink.find("%26");
-			
-			if (findPos != String::npos)
-				videoLink = videoLink.substr(0, findPos);
-
-			findPos = videoLink.find("%2C");
-
-			if (findPos != String::npos)
-				videoLink = videoLink.substr(0, findPos);
-
-			videoLink = VM_Text::Replace(videoLink, "%2525", "%");
-		}
-		// LIVE STREAM - HLS PLAYLIST
-		else if (line.find(".m3u8") != String::npos)
-		{
-			videoLink = String("http" + line);
-			videoLink = VM_Text::Replace(videoLink, "%3A", ":");
-			videoLink = VM_Text::Replace(videoLink, "%3F", "?");
-			videoLink = VM_Text::Replace(videoLink, "%2F", "/");
-			videoLink = VM_Text::Replace(videoLink, "%3D", "=");
-			videoLink = VM_Text::Replace(videoLink, "%26", "&");
-			videoLink = VM_Text::Replace(videoLink, "%25", "%");
-
-			videoLink = videoLink.substr(0, videoLink.find(".m3u8") + 5);
-		}
-
-		if (VM_Text::VectorContains(validItagIDs, itagI))
-			validItags[itagI] = videoLink;
-		else
-			invalidTags[itagI] = videoLink;
-	}
-
-	// ADD VALID LINKS SORTED BY ITAGS
-	for (auto itag : validItagIDs) {
-		if (!validItags[itag].empty())
-			links.push_back(validItags[itag]);
-	}
-
-	// ADD INVALID (NON-OPTIMAL) LINKS
-	for (const auto &link : invalidTags)
-		links.push_back(link.second);
-
-	return links;
-}
-
-String System::VM_FileSystem::GetYouTubeVideo(const String &videoID)
-{
-	VM_Player::State.urls = VM_FileSystem::GetYouTubeVideos(videoID);
-
-	return (!VM_Player::State.urls.empty() ? VM_Player::State.urls[0] : "");
-}*/
-
 bool System::VM_FileSystem::hasFileExtension(const String &filePath)
 {
 	return (!VM_FileSystem::GetFileExtension(filePath, false).empty());
@@ -3077,14 +2712,6 @@ bool System::VM_FileSystem::IsDVDCSS(const String &filePath, size_t fileSize)
 bool System::VM_FileSystem::IsDRM(LIB_FFMPEG::AVDictionary* metaData)
 {
 	return (av_dict_get(metaData, "encryption", NULL, 0) != NULL);
-}
-
-bool System::VM_FileSystem::isExpiredDropboxTokenOAuth2(const String &oauth2)
-{
-	Strings headers = { ("Authorization: Bearer " + oauth2), "Content-Type: application/json" };
-	String  response = VM_FileSystem::PostData(VM_FileSystem::GetURL(URL_DROPBOX_TOKEN_EXPIRED), "null", headers);
-
-	return response.empty();
 }
 
 bool System::VM_FileSystem::isFile(uint16_t statMode)
@@ -3293,11 +2920,6 @@ bool System::VM_FileSystem::isSystemFile(const String &fileName)
 	return ((file[0] == '.') || (file[0] == '$') || (file == "RECYCLER") || (file == "WINSXS"));
 }
 
-bool System::VM_FileSystem::isYouTube(const String &mediaURL)
-{
-	return (((mediaURL.find("youtube.com") != String::npos) || (mediaURL.find("youtu.be") != String::npos)) && (mediaURL.find("watch?v=") != String::npos));
-}
-
 CURL* System::VM_FileSystem::openCURL(const String &mediaURL)
 {
 	if (mediaURL.empty())
@@ -3487,48 +3109,6 @@ String System::VM_FileSystem::OpenFileBrowser(bool selectDirectory)
 	return directoryPath;
 }
 
-void System::VM_FileSystem::OpenWebBrowser(const String &mediaURL)
-{
-	VM_Window::OpenURL = mediaURL;
-}
-
-int System::VM_FileSystem::OpenWebBrowserT(const String &mediaURL)
-{
-	if (!VM_FileSystem::IsHttp(mediaURL))
-		return ERROR_INVALID_ARGUMENTS;
-
-	#if defined _android
-		jclass    jniClass          = VM_Window::JNI->getClass();
-		JNIEnv*   jniEnvironment    = VM_Window::JNI->getEnvironment();
-		jmethodID jniOpenWebBrowser = jniEnvironment->GetStaticMethodID(jniClass, "OpenWebBrowser", "(Ljava/lang/String;)V");
-
-		if (jniOpenWebBrowser == NULL)
-			return ERROR_UNKNOWN;
-
-		jstring jURL = jniEnvironment->NewStringUTF(mediaURL.c_str());
-
-		jniEnvironment->CallStaticVoidMethod(jniClass, jniOpenWebBrowser, jURL);
-	#elif defined _ios || defined _macosx
-		NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-
-		#if defined _ios
-			[[UIApplication sharedApplication] openURL:[[NSURL alloc] initWithString:[[NSString alloc] initWithUTF8String:mediaURL.c_str()]]];
-		#elif defined _macosx
-			[[NSWorkspace sharedWorkspace] openURL:[[NSURL alloc] initWithString:[[NSString alloc] initWithUTF8String:mediaURL.c_str()]]];
-		#endif
-
-		[pool release];
-	#elif defined _linux
-		std::system(String("xdg-open '" + mediaURL + "'").c_str());
-	#elif defined _windows
-		ShellExecuteA(NULL, "open", mediaURL.c_str(), NULL, NULL, SW_SHOWNORMAL);
-	#endif
-
-	VM_Window::OpenURL = "";
-
-	return RESULT_OK;
-}
-
 String System::VM_FileSystem::PostData(const String &mediaURL, const String &data, const Strings &headers)
 {
 	String      content     = "";
@@ -3573,34 +3153,6 @@ void System::VM_FileSystem::RequestAndroidStoragePermission()
 }
 #endif
 
-void System::VM_FileSystem::SaveDropboxTokenOAuth2(const String &userCode)
-{
-	// USE THE USER TOKEN TO GET AN OAUTH2 TOKEN
-	String urlData  = VM_FileSystem::GetURL(URL_DROPBOX_OAUTH2_DATA, userCode);
-	String urlToken = VM_FileSystem::GetURL(URL_DROPBOX_OAUTH2_TOKEN);
-	String oauth2   = VM_FileSystem::PostData(urlToken, urlData, {});
-	String token    = "";
-
-	// SAVE AND RE-USE THE OAUTH2 TOKEN FOR REMAINING REQUESTS TO DROPBOX API
-	LIB_JSON::json_t* document = VM_JSON::Parse(oauth2.c_str());
-
-	if (document != NULL)
-		token = VM_JSON::GetValueString(VM_JSON::GetItem(document, "access_token"));
-
-	if (!token.empty())
-	{
-		int  dbResult;
-		auto db = new VM_Database(dbResult, DATABASE_SETTINGSv3);
-
-		if (DB_RESULT_OK(dbResult))
-			db->updateSettings("dropbox_token", VM_Text::Encrypt(token));
-
-		DELETE_POINTER(db);
-	}
-
-	FREE_JSON_DOC(document);
-}
-
 #if defined _android
 int System::VM_FileSystem::ScanAndroid(void* userData)
 {
@@ -3613,18 +3165,14 @@ int System::VM_FileSystem::ScanAndroid(void* userData)
 	int result = RESULT_OK;
 
 	for (const auto &dir : VM_Window::AndroidMediaFiles) {
-		//result = VM_FileSystem::addMediaFile(file);
 		result = VM_FileSystem::AddMediaFilesRecursively(dir);
 
 		if (result != RESULT_OK)
 			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), dir.c_str());
 	}
 
-	//if (VM_FileSystem::AddMediaFilesRecursively(VM_Window::AndroidStoragePath) == RESULT_OK)
 	if (result == RESULT_OK)
 		VM_Window::StatusString = VM_Window::Labels["status.scan.finished"];
-	//else
-	//	VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), VM_Window::AndroidStoragePath.c_str());
 
 	VM_GUI::ListTable->refreshRows();
 
@@ -3636,153 +3184,6 @@ int System::VM_FileSystem::ScanAndroid(void* userData)
 	return RESULT_OK;
 }
 #endif
-
-int System::VM_FileSystem::ScanDropboxFiles(void* userData)
-{
-	VM_ThreadManager::Threads[THREAD_SCAN_DROPBOX]->completed = false;
-
-	VM_Window::StatusString = VM_Window::Labels["status.validate_dropbox"];
-
-	int    dbResult;
-	auto   db    = new VM_Database(dbResult, DATABASE_SETTINGSv3);
-	String token = "";
-
-	if (DB_RESULT_OK(dbResult))
-		token = db->getSettings("dropbox_token");
-
-	DELETE_POINTER(db);
-
-	if (!token.empty())
-		token = VM_Text::Decrypt(token);
-
-	// CHECK IF TOKEN IS EXPIRED - RE-AUTHENTICATE
-	if (token.empty() || VM_FileSystem::isExpiredDropboxTokenOAuth2(token))
-	{
-		VM_Window::StatusString = VM_Window::Labels["error.validate_dropbox"];
-
-		VM_ThreadManager::Threads[THREAD_SCAN_DROPBOX]->start     = false;
-		VM_ThreadManager::Threads[THREAD_SCAN_DROPBOX]->completed = true;
-
-		return ERROR_UNKNOWN;
-	}
-
-	VM_Window::StatusString = VM_Window::Labels["status.validate_dropbox.finished"];
-
-	// https://www.dropbox.com/developers/documentation/http/documentation#files-list_folder
-
-	String            data     = "{ \"path\":\"\", \"recursive\":true, \"include_media_info\":false, \"include_deleted\":false, \"include_has_explicit_shared_members\":false, \"include_mounted_folders\":true }";
-	Strings           headers  = { String("Authorization: Bearer " + token), "Content-Type: application/json" };
-	String            response = VM_FileSystem::PostData(VM_FileSystem::GetURL(URL_DROPBOX_FILES), data, headers);
-	LIB_JSON::json_t* document = VM_JSON::Parse(response.c_str());
-
-	VM_Window::StatusString = VM_Window::Labels["status.scan.dropbox"];
-
-	std::vector<LIB_JSON::json_t*> entryItems;
-	LIB_JSON::json_t*              entries      = VM_JSON::GetItem(document, "entries");
-	std::vector<LIB_JSON::json_t*> entriesArray = VM_JSON::GetArray(entries);
-
-	for (auto entry : entriesArray)
-	{
-		if (VM_Window::Quit)
-			break;
-
-		if (VM_JSON::GetValueString(VM_JSON::GetItem(entry, ".tag")) != "file")
-			continue;
-
-		String name = VM_JSON::GetValueString(VM_JSON::GetItem(entry, "name"));
-
-		if (name.find("\\u") != String::npos)
-			name = VM_Text::ToUTF8(name);
-
-		name = ("[Dropbox] " + name);
-
-		if (!VM_FileSystem::IsMediaFile(name)) {
-			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
-			continue;
-		}
-
-		String path = VM_JSON::GetValueString(VM_JSON::GetItem(entry, "path_display"));
-		size_t size = (size_t)VM_JSON::GetValueNumber(VM_JSON::GetItem(entry, "size"));
-		String mime = VM_FileSystem::GetFileMIME(name);
-		String mediaURL  = VM_FileSystem::GetDropboxURL(path);
-
-		if (mediaURL.empty()) {
-			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
-			continue;
-		}
-
-		VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.adding"].c_str(), name.c_str());
-
-		db = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
-
-		int mediaID = 0;
-
-		if (DB_RESULT_OK(dbResult))
-			mediaID = db->getID(mediaURL);
-
-		DELETE_POINTER(db);
-
-		if (mediaID > 0) {
-			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.already_added"].c_str(), name.c_str());
-			continue;
-		}
-
-		VM_MediaType mediaType  = MEDIA_TYPE_UNKNOWN;
-		bool         validMedia = false;
-
-		if (VM_FileSystem::IsPicture(name))
-		{
-			mediaType  = MEDIA_TYPE_PICTURE;
-			validMedia = true;
-		}
-		else
-		{
-			LIB_FFMPEG::AVFormatContext* formatContext = VM_FileSystem::GetMediaFormatContext(mediaURL, false);
-
-			mediaType = VM_FileSystem::GetMediaType(formatContext);
-
-			// GET MEDIA TYPE, AND PERFORM EXTRA VALIDATIONS
-			validMedia = ((mediaType == MEDIA_TYPE_AUDIO) || (mediaType == MEDIA_TYPE_VIDEO));
-
-			// WMA DRM
-			if ((formatContext != NULL) && VM_FileSystem::IsDRM(formatContext->metadata))
-				validMedia = false;
-
-			FREE_AVFORMAT(formatContext);
-		}
-
-		if (!validMedia) {
-			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
-			continue;
-		}
-
-		db = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
-
-		if (DB_RESULT_OK(dbResult))
-			dbResult = db->addFile(mediaURL, name, path, size, mediaType, mime);
-
-		DELETE_POINTER(db);
-
-		if (DB_RESULT_OK(dbResult))
-			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.added"].c_str(), name.c_str());
-		else
-			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.add"].c_str(), name.c_str());
-	}
-
-	if (!VM_Window::Quit)
-	{
-		VM_Window::StatusString = VM_Window::Labels["status.scan.finished"];
-
-		VM_GUI::ListTable->refreshRows();
-	}
-
-	if (VM_ThreadManager::Threads[THREAD_SCAN_DROPBOX] != NULL) {
-		VM_ThreadManager::Threads[THREAD_SCAN_DROPBOX]->start     = false;
-		VM_ThreadManager::Threads[THREAD_SCAN_DROPBOX]->completed = true;
-	}
-
-	return RESULT_OK;
-}
 
 #if defined _ios
 int System::VM_FileSystem::ScanITunesLibrary(void* userData)

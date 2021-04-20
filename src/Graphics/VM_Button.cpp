@@ -30,7 +30,6 @@ void Graphics::VM_Button::init(const String &id)
 {
 	this->id        = id;
 	this->mediaID   = 0;
-	//this->mediaID2  = "";
 	this->imageArea = {};
 	this->imageData = NULL;
 	this->inputText = "";
@@ -152,7 +151,6 @@ int Graphics::VM_Button::render()
 	if (!this->visible)
 		return ERROR_INVALID_ARGUMENTS;
 
-	//if ((this->id == "list_offset_end") && (SHOUTCAST_IS_SELECTED || YOUTUBE_IS_SELECTED))
 	if ((this->id == "list_offset_end") && SHOUTCAST_IS_SELECTED)
 		return RESULT_OK;
 
@@ -221,12 +219,12 @@ int Graphics::VM_Button::setImage(const String &file, bool thumb, int width, int
 		#if defined _windows
 			filePath = VM_FileSystem::GetPathThumbnailsW(VM_Text::ToUTF16(file.c_str()));
 
-			if (!VM_FileSystem::FileExists("", filePath))// {
+			if (!VM_FileSystem::FileExists("", filePath))
 				filePath = L"";
 		#else
 			filePath = VM_FileSystem::GetPathThumbnails(file.c_str());
 
-			if (!VM_FileSystem::FileExists(filePath, L""))// {
+			if (!VM_FileSystem::FileExists(filePath, L""))
 				filePath = "";
 		#endif
 	}
@@ -453,19 +451,12 @@ int Graphics::VM_Button::setText(const String &text)
 
 void Graphics::VM_Button::setThumb(const String &tableID)
 {
-	//if ((tableID == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE))// && (VM_Top::Selected <= MEDIA_TYPE_TMDB_TV))
 	if ((tableID == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST))
 	{
 		String filename = "";
 
-		//if (YOUTUBE_IS_SELECTED && !this->mediaID2.empty())
-		//	filename = ("youtube_" + this->mediaID2);
 		if (SHOUTCAST_IS_SELECTED && (this->mediaID > 0))
 			filename = ("shoutcast_" + std::to_string(this->mediaID));
-		else if (TMDB_MOVIE_IS_SELECTED && (this->mediaID > 0))
-			filename = ("tmbd_movie_" + std::to_string(this->mediaID));
-		else if (TMDB_TV_IS_SELECTED && (this->mediaID > 0))
-			filename = ("tmdb_tv_" + std::to_string(this->mediaID));
 
 		if (!filename.empty())
 		{

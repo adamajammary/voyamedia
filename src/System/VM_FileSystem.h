@@ -43,8 +43,6 @@ namespace VoyaMedia
 			static bool                         FileExists(const String &filePath, const WString &filePathW);
 			static SDL_RWops*                   FileOpenSDLRWops(FILE* file);
 			static Strings                      GetDirectoryFiles(const String &directoryPath, bool checkSystemFiles = true);
-			static String                       GetDropboxURL(const String &path);
-			static String                       GetDropboxURL2(const String &mediaURL);
 			static String                       GetFileDLNA(const String &filePath);
 			static String                       GetFileExtension(const String &filePath, bool upperCase);
 			static String                       GetFileMIME(const String &filePath);
@@ -78,11 +76,6 @@ namespace VoyaMedia
 			static String                       GetPathThumbnails(const String &fileName);
 			static StringMap                    GetShoutCastDetails(const String &stationName, int stationID);
 			static String                       GetShoutCastStation(int stationID);
-			static StringMap                    GetTmdbDetails(int mediaID, VM_MediaType mediaType);
-			static String                       GetURL(VM_UrlType urlType, const String &data = "");
-			//static StringMap                    GetYouTubeDetails(const String &mediaID);
-			//static Strings                      GetYouTubeVideos(const String &mediaURL);
-			//static String                       GetYouTubeVideo(const String &videoID);
 			static bool                         HasInternetConnection();
 			static void                         InitFFMPEG();
 			static int                          InitLibraries();
@@ -97,18 +90,13 @@ namespace VoyaMedia
 			static bool                         IsPicture(const String &filePath);
 			static bool                         IsSambaServer(const String &filePath);
 			static bool                         IsServerAccessible(const String &serverAddress, const String &localAddress);
-			static void                         OpenWebBrowser(const String &mediaURL);
-			static int                          OpenWebBrowserT(const String &mediaURL);
 			static String                       PostData(const String &mediaURL, const String &data, const Strings &headers);
 			static void                         RefreshMetaData();
-			static void                         SaveDropboxTokenOAuth2(const String &userCode);
-			static int                          ScanDropboxFiles(void* userData);
 			static int                          ScanMediaFiles(void* userData);
 			static int                          SetWorkingDirectory();
 		
 			#if defined _android
 				static Strings   GetAndroidMediaFiles();
-				//static String    GetAndroidStoragePath();
 				static void      RequestAndroidStoragePermission();
 				static int       ScanAndroid(void* userData);
 			#elif defined _ios
@@ -163,12 +151,10 @@ namespace VoyaMedia
 			static Strings getOpticalFileDVD(const String &path);
 			static bool    hasFileExtension(const String &filePath);
 			static bool    isDirectory(uint16_t statMode);
-			static bool    isExpiredDropboxTokenOAuth2(const String &oauth2);
 			static bool    isFile(uint16_t statMode);
 			static bool    isRootDrive(const String &filePath);
 			static bool    isSubtitle(const String &filePath);
 			static bool    isSystemFile(const String &fileName);
-			static bool    isYouTube(const String &mediaURL);
 			static CURL*   openCURL(const String &mediaURL);
 
 			#if defined _android

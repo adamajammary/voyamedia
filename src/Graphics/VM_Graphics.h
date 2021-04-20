@@ -33,7 +33,6 @@ namespace VoyaMedia
 			static VM_Texture*              GetButtonLabel(const String &label, VM_Color color, const uint32_t wrapLength = 0, const int fontSize = DEFAULT_FONT_SIZE);
 			static String                   GetImageCamera(LIB_FREEIMAGE::FIBITMAP* image);
 			static String                   GetImageDateTaken(LIB_FREEIMAGE::FIBITMAP* image);
-			static String                   GetImageGPS(LIB_FREEIMAGE::FIBITMAP* image);
 			static String                   GetImageResolutionString(int width, int height);
 			static SDL_Rect                 GetScaledSize(int width, int height);
 			static SDL_Surface*             GetSurface(VM_Image* image);

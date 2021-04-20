@@ -66,9 +66,6 @@ int main(const int argc, char* argv[])
 			if (VM_GUI::ListTable != NULL)
 				VM_GUI::ListTable->refresh();
 
-			// Release allocated resources for the graphics renderer
-			//FREE_RENDERER(VM_Window::Renderer);
-
 			// Sleep to save system resource usage
 			SDL_Delay(DELAY_TIME_BACKGROUND);
 
@@ -115,12 +112,6 @@ int main(const int argc, char* argv[])
 			openFile = false;
 		}
 
-		// Try to open the requested URL in a web browser in the main UI thread (can be requested from other threads)
-		if (!VM_Window::OpenURL.empty() && (VM_FileSystem::OpenWebBrowserT(VM_Window::OpenURL) != RESULT_OK)) {
-			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.open"].c_str(), VM_Window::OpenURL.c_str());
-			VM_Window::OpenURL      = "";
-		}
-
 		// Update the status text if it has changed
 		VM_Button* statusText = dynamic_cast<VM_Button*>(VM_GUI::Components["status_text"]);
 
@@ -131,7 +122,6 @@ int main(const int argc, char* argv[])
 		VM_Window::Render();
 
 		// Sleep to save system resource usage
-		//if ((VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED) && VM_Player::State.isPlaying)
 		if (VIDEO_IS_SELECTED && VM_Player::State.isPlaying)
 			SDL_Delay(DELAY_TIME_DEFAULT);
 		else

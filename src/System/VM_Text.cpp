@@ -211,8 +211,14 @@ String System::VM_Text::GetFullPath(const String &directory, const String &file)
 
 StringMap System::VM_Text::GetLabels()
 {
-	StringMap labels;
-	String    lang = "en";
+	String lang;
+
+	if (VM_Window::SystemLocale) {
+		lang = "no";
+	} else {
+		lang = "en";
+		std::setlocale(LC_ALL, "C");
+	}
 
 	#if defined _windows
 		String languageFilePath = VM_Text::ToUTF8(VM_FileSystem::GetPathLanguagesW().c_str(), false);
@@ -220,21 +226,10 @@ StringMap System::VM_Text::GetLabels()
 		String languageFilePath = VM_FileSystem::GetPathLanguages();
 	#endif
 
-	if (VM_Window::SystemLocale)
-	{
-		String locale = VM_Text::GetLocale();
-
-		// "nb-NO", "nn-NO", "no", "Norwegian Bokmaal_Norway.1252"
-		if ((locale.substr(0, 2) == "nb") || (locale.substr(0, 2) == "nn") || (locale.substr(0, 2) == "no"))// {
-			lang = "no";
-	} else {
-		std::setlocale(LC_ALL, "C");
-	}
-
 	if (!lang.empty())
 		languageFilePath.append(lang + ".lang");
 
-	Strings       pair;
+	StringMap     labels;
 	std::ifstream languageFile(languageFilePath);
 
 	if (languageFile.good())
@@ -247,7 +242,7 @@ StringMap System::VM_Text::GetLabels()
 			if (line.empty() || line[0] == '#')
 				continue;
 
-			pair = VM_Text::Split(line, "=");
+			Strings pair = VM_Text::Split(line, "=");
 
 			if (pair.size() > 1)
 				labels.insert({ pair[0], VM_Text::Replace(pair[1], "\\n", "\n") });
@@ -316,33 +311,6 @@ wchar_t System::VM_Text::GetLastCharacter(const WString &text)
 	return (!text.empty() ? text[text.size() - 1] : '\0');
 }
 #endif
-
-String System::VM_Text::GetLocale()
-{
-	String locale = "C";
-
-	#if defined _android
-		jclass    jniClass       = VM_Window::JNI->getClass();
-		JNIEnv*   jniEnvironment = VM_Window::JNI->getEnvironment();
-		jmethodID jniGetLocale   = jniEnvironment->GetStaticMethodID(jniClass, "GetLocale", "()Ljava/lang/String;");
-
-		if (jniGetLocale == NULL)
-			return locale;
-
-		jstring     jString = (jstring)jniEnvironment->CallStaticObjectMethod(jniClass, jniGetLocale);
-		const char* cString = jniEnvironment->GetStringUTFChars(jString, NULL);
-
-		locale = VM_Text::ToLower(cString);
-		
-		jniEnvironment->ReleaseStringUTFChars(jString, cString);
-	#elif defined _ios || defined _macosx
-		locale = VM_Text::ToLower([[[NSLocale preferredLanguages] objectAtIndex:0] UTF8String]);
-	#else
-		locale = VM_Text::ToLower(std::setlocale(LC_ALL, ""));
-	#endif
-
-	return locale;
-}
 
 String System::VM_Text::GetMediaAudioLayoutString(const int channelCount)
 {
@@ -778,24 +746,6 @@ String System::VM_Text::ToDuration(int64_t duration)
 	}
 
 	return durationStringBuffer;
-}
-
-String System::VM_Text::ToDuration(const String &text)
-{
-	String duration = "";
-
-	// YOUTUBE: "PT1H23M45S"
-	if ((text.size() > 2) && (text.substr(0, 2) == "PT"))
-	{
-		duration = text.substr(2);
-		duration = VM_Text::Replace(duration, "H", "h ");
-		duration = VM_Text::Replace(duration, "M", "m ");
-		duration = VM_Text::Replace(duration, "S", "s ");
-	} else {
-		duration = "N/A";
-	}
-
-	return duration;
 }
 
 String System::VM_Text::ToViewCount(int64_t views)

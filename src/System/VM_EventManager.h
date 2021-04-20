@@ -20,8 +20,6 @@ namespace VoyaMedia
 
 		private:
 			#if defined _android || defined _ios
-				//static float    swipeDistanceX;
-				//static float    swipeDistanceY;
 				static uint32_t touchDownTimestamp;
 				static uint32_t touchUpTimestamp;
 			#endif
