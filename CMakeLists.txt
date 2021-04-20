@@ -66,6 +66,7 @@ if (APPLE OR UNIX)
         set_target_properties(VoyaMedia PROPERTIES LINK_FLAGS "-Wl,-rpath,../Frameworks -F${OSX_FRAMEWORKS_PATH} -framework AppKit -framework SystemConfiguration")
         add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -af ${LIB_DIR}/*.dylib dist/)
     elseif (UNIX)
+        set_target_properties(VoyaMedia PROPERTIES LINK_FLAGS "-pthread")
         add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -df ${LIB_DIR}/*.so* dist/)
     endif()
 
