@@ -7,7 +7,7 @@ project (VoyaMedia)
 # You can find the library sources in SOURCEFORGE_URL below:
 
 set(SOURCEFORGE_URL "https://sourceforge.net/projects/voyamedia/files/VoyaMedia/3.x")
-set(EXT_LIB_DIR     "D:/Jenkins/workspace/libs/x64")
+set(EXT_LIB_DIR     "__EXT_LIB_DIR__")
 set(INC_DIR         "${EXT_LIB_DIR}/include")
 set(LIB_DIR         "${EXT_LIB_DIR}/lib")
 set(CPP_VERSION     "14")
@@ -36,7 +36,7 @@ elseif (WIN32)
     file(GLOB LIBS_LIB RELATIVE ${LIB_DIR} "${LIB_DIR}/*.lib")
     
     set(OS     "_windows")
-    set(DIRENT "D:/BUILD_TOOLS/dirent")
+    set(DIRENT "__DIRENT__")
     set(LIBS   ${LIBS_LIB} IPHLPAPI.lib Ws2_32.lib)
     set(RES    "build/windows/VoyaMedia.rc")
 
