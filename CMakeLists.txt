@@ -46,7 +46,7 @@ endif()
 file(GLOB SOURCES_H   "src/*/*.h")
 file(GLOB SOURCES_CPP "src/*/*.cpp")
 
-add_compile_options(-D${CPP_OS})
+add_compile_options(-D${CPP_OS} -DSDL_MAIN_HANDLED)
 
 include_directories(${INC_DIR} ${INC_DIR}/freetype ${INC_DIR}/freetype2 ${INC_DIR}/libxml2 ${INC_DIR}/mjson-1.7 ${DIRENT} ${GTK})
 link_directories(${LIB_DIR})
