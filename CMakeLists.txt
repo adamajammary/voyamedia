@@ -48,7 +48,7 @@ file(GLOB SOURCES_CPP "src/*/*.cpp")
 
 add_compile_definitions(${OS})
 
-include_directories(${INC_DIR} ${INC_DIR}/freetype ${INC_DIR}/libxml2 ${DIRENT} ${GTK})
+include_directories(${INC_DIR} ${INC_DIR}/freetype ${INC_DIR}/freetype2 ${INC_DIR}/libxml2 ${INC_DIR}/mjson-1.7 ${DIRENT} ${GTK})
 link_directories(${LIB_DIR})
 
 add_executable(VoyaMedia ${SOURCES_CPP} ${SOURCES_H} ${RES})
