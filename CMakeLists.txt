@@ -15,16 +15,16 @@ set(CPP_VERSION     "14")
 if (APPLE)
     file(GLOB LIBS_DYLIB "${LIB_DIR}/*.dylib")
 
-    set(OS                  "_macosx")
-    set(CMAKE_CXX_FLAGS     "${CMAKE_CXX_FLAGS} -ObjC++ -std=c++${CPP_VERSION}")
-    set(LIBS                ${LIBS_DYLIB})
+    set(CPP_OS          "_macosx")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ObjC++ -std=c++${CPP_VERSION}")
+    set(LIBS            ${LIBS_DYLIB})
 
     execute_process(COMMAND xcrun --sdk macosx --show-sdk-path OUTPUT_VARIABLE OSX_SDK_PATH)
 	set(OSX_FRAMEWORKS_PATH "${OSX_SDK_PATH}/System/Library/Frameworks")
 elseif (UNIX)
     file(GLOB LIBS_SO "${LIB_DIR}/*.so")
 
-    set(OS "_linux")
+    set(CPP_OS "_linux")
 
     execute_process(COMMAND pkg-config --cflags gtk+-3.0 OUTPUT_VARIABLE GTK_CFLAGS)
     string(REPLACE "-I" " -I " GTK_CFLAGS2 ${GTK_CFLAGS})
@@ -35,7 +35,7 @@ elseif (UNIX)
 elseif (WIN32)
     file(GLOB LIBS_LIB RELATIVE ${LIB_DIR} "${LIB_DIR}/*.lib")
     
-    set(OS     "_windows")
+    set(CPP_OS "_windows")
     set(DIRENT "__DIRENT__")
     set(LIBS   ${LIBS_LIB} IPHLPAPI.lib Ws2_32.lib)
     set(RES    "build/windows/VoyaMedia.rc")
@@ -46,7 +46,7 @@ endif()
 file(GLOB SOURCES_H   "src/*/*.h")
 file(GLOB SOURCES_CPP "src/*/*.cpp")
 
-add_definitions(-D_${OS})
+add_compile_options(-D${CPP_OS})
 
 include_directories(${INC_DIR} ${INC_DIR}/freetype ${INC_DIR}/freetype2 ${INC_DIR}/libxml2 ${INC_DIR}/mjson-1.7 ${DIRENT} ${GTK})
 link_directories(${LIB_DIR})
