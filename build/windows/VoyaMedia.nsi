@@ -15,7 +15,7 @@ ShowUnInstDetails show
 
 !insertmacro MUI_PAGE_WELCOME
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW KillProcess
-!insertmacro MUI_PAGE_LICENSE "VoyaMedia\docs\LICENSE.txt"
+!insertmacro MUI_PAGE_LICENSE "Release\docs\LICENSE.txt"
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
 !insertmacro MUI_UNPAGE_WELCOME
@@ -27,7 +27,7 @@ ShowUnInstDetails show
 Section Install
    SetOutPath "$INSTDIR"
    
-   File /r VoyaMedia\*
+   File /r Release\*
    
    ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
    
