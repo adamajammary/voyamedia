@@ -125,7 +125,6 @@ elseif (WIN32)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND xcopy /e /i /y ..\\build\\img     $(OutputPath)img)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND xcopy /e /i /y ..\\build\\lang    $(OutputPath)lang)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND copy /y ${LIB_DIR_WIN}\\*.dll     $(OutputPath))
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND move /y *.exe                     $(OutputPath))
 
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND makensis.exe VoyaMedia.nsi)
 endif()
