@@ -80,9 +80,9 @@ if (APPLE)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -af ${LIB_DIR}/*.dylib ${FWK_DIR}/)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND mv -f  VoyaMedia          ${BIN_DIR}/)
 
-    #add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f  ../build/macosx/Info.plist ${OUT_DIR}/)
-    #add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f  ../build/macosx/PkgInfo    ${OUT_DIR}/)
-    #add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f  ../build/macosx/img/*      ${RES_DIR}/)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f  ../build/macosx/Info.plist ${OUT_DIR}/)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f  ../build/macosx/PkgInfo    ${OUT_DIR}/)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f  ../build/macosx/img/*      ${RES_DIR}/)
 
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND codesign --entitlements ../build/macosx/Entitlements.plist --deep -i __APP_IDENTITY__ -s "__OSX_SIGN_APP__" -fv ${APP_DIR})
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND productbuild --component ${APP_DIR} /Applications --sign "__OSX_SIGN_INSTALLER__" voyamedia.pkg)
