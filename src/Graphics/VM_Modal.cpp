@@ -3,7 +3,6 @@
 using namespace VoyaMedia::Database;
 using namespace VoyaMedia::MediaPlayer;
 using namespace VoyaMedia::System;
-using namespace VoyaMedia::UPNP;
 using namespace VoyaMedia::XML;
 
 bool                      Graphics::VM_Modal::centered        = true;
@@ -78,56 +77,6 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 			}
 		}
 	}
-	// DROPBOX
-	else if (VM_Modal::File == "modal_dropbox")
-	{
-		VM_Button* authCode = dynamic_cast<VM_Button*>(VM_Modal::Components["modal_dropbox_input"]);
-
-		if (authCode != NULL) {
-			VM_FileSystem::SaveDropboxTokenOAuth2(authCode->getText());
-			VM_ThreadManager::Threads[THREAD_SCAN_DROPBOX]->start = true;
-		}
-	}
-	// UPNP
-	else if (VM_Modal::File == "modal_upnp")
-	{
-		String nic = "";
-
-		if (VM_Modal::ListTable != NULL)
-			nic = VM_Modal::ListTable->getSelectedMediaURL();
-
-		if (!nic.empty())
-		{
-			if (buttonID == "modal_upnp_add")
-			{
-				VM_UPNP::ClientIP = nic;
-				VM_ThreadManager::Threads[THREAD_UPNP_CLIENT]->start = true;
-			}
-			#if !defined _ios
-			else if (buttonID == "modal_upnp_share")
-			{
-				if (VM_ThreadManager::Threads[THREAD_UPNP_SERVER]->completed) {
-					VM_UPNP::ServerIP = nic;
-					VM_ThreadManager::Threads[THREAD_UPNP_SERVER]->start = true;
-				} else {
-					VM_ThreadManager::Threads[THREAD_UPNP_SERVER]->start = false;
-				}
-			}
-			#endif
-		} else {
-			VM_Window::StatusString = VM_Window::Labels["error.no_nics"];
-		}
-	}
-	// UPNP - DEVICES
-	else if (VM_Modal::File == "modal_upnp_devices")
-	{
-		String device = VM_Modal::ListTable->getSelectedMediaURL();
-
-		if (!device.empty())
-			VM_UPNP::Device = device;
-		else
-			VM_Window::StatusString = VM_Window::Labels["error.no_upnp"];
-	}
 	// SETTINGS
 	else if (VM_Modal::File == "modal_settings")
 	{
@@ -183,23 +132,6 @@ int Graphics::VM_Modal::Apply(const String &buttonID)
 				VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["status.removed"].c_str(), name.c_str());
 			else
 				VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.remove"].c_str(), name.c_str());
-		}
-		else if ((buttonID == "modal_right_click_tmbd_movie") || (buttonID == "modal_right_click_tmbd_tv"))
-		{
-			VM_MediaType mediaType = (buttonID == "modal_right_click_tmbd_movie" ? MEDIA_TYPE_TMDB_MOVIE : MEDIA_TYPE_TMDB_TV);
-			VM_Button*   desc      = dynamic_cast<VM_Button*>(VM_Modal::Components["modal_desc"]);
-
-			if (desc != NULL)
-			{
-				Strings delims     = { ".", ",", "-", "_", ":", ";" };
-				String  searchText = desc->getText();
-
-				for (const auto &delim : delims)
-					searchText = VM_Text::Replace(searchText, delim, " ");
-
-				VM_Top::SelectType(mediaType);
-				VM_GUI::ListTable->setSearch(searchText, true);
-			}
 		}
 	}
 
@@ -282,9 +214,6 @@ int Graphics::VM_Modal::Open(const String &id)
 	VM_Modal::File           = id;
 	VM_Modal::refreshPending = true;
 	VM_Modal::visible        = true;
-
-	if ((id == "modal_dropbox") && !VM_Window::ResetRenderer)
-		VM_FileSystem::OpenWebBrowser(VM_FileSystem::GetURL(URL_DROPBOX_AUTH_CODE));
 
 	return RESULT_OK;
 }
@@ -372,8 +301,6 @@ void Graphics::VM_Modal::Update()
 	{
 		if (VM_Modal::File == "modal_playlist_save")
 			VM_Modal::TextInput = VM_Modal::Components["modal_playlist_input"];
-		else if (VM_Modal::File == "modal_dropbox")
-			VM_Modal::TextInput = VM_Modal::Components["modal_middle"];
 	}
 
 	if (VM_Modal::ListTable == NULL)
@@ -384,10 +311,6 @@ void Graphics::VM_Modal::Update()
 			VM_Modal::ListTable = dynamic_cast<VM_Table*>(VM_Modal::Components["modal_player_settings_audio_list_table"]);
 		else if (VM_Modal::File == "modal_player_settings_subs")
 			VM_Modal::ListTable = dynamic_cast<VM_Table*>(VM_Modal::Components["modal_player_settings_subs_list_table"]);
-		else if (VM_Modal::File == "modal_upnp")
-			VM_Modal::ListTable = dynamic_cast<VM_Table*>(VM_Modal::Components["modal_upnp_list_table"]);
-		else if (VM_Modal::File == "modal_upnp_devices")
-			VM_Modal::ListTable = dynamic_cast<VM_Table*>(VM_Modal::Components["modal_upnp_devices_list_table"]);
 
 		if (VM_Modal::ListTable != NULL) {
 			VM_Modal::ListTable->refreshRows();
@@ -474,17 +397,11 @@ int Graphics::VM_Modal::updateLabels()
 		VM_Modal::updateLabelsRightClick();
 	else if (VM_Modal::File == "modal_details")
 		return VM_Modal::UpdateLabelsDetails();
-	else
+	else if (VM_Modal::ListTable != NULL)
 	{
-		if (VM_Modal::File == "modal_upnp")
-			VM_Modal::updateLabelsUPNP();
-
-		if (VM_Modal::ListTable != NULL)
-		{
-			VM_Modal::ListTable->refreshRows();
-			VM_Modal::ListTable->refreshSelected();
-			VM_Modal::ListTable->refresh();
-		}
+		VM_Modal::ListTable->refreshRows();
+		VM_Modal::ListTable->refreshSelected();
+		VM_Modal::ListTable->refresh();
 	}
 
 	return RESULT_OK;
@@ -561,18 +478,6 @@ int Graphics::VM_Modal::UpdateLabelsDetails()
 	{
 		VM_Modal::updateLabelsDetailsVideo(mediaID, filePath2, filePath);
 	}
-	//else if (YOUTUBE_IS_SELECTED)
-	//{
-	//	StringMap details = VM_FileSystem::GetYouTubeDetails(row[1]->mediaID2);
-
-	//	text.append(!details["date"].empty()        ? VM_Text::GetTimeFormatted(details["date"], false, false) + "\n" : "");
-	//	text.append(!details["channel"].empty()     ? "#" + details["channel"] + "\n" : "");
-	//	text.append(!details["duration_yt"].empty() ? VM_Text::ToDuration(details["duration_yt"]) + "\n" : "");
-	//	text.append(!details["views"].empty()       ? VM_Text::ToViewCount(std::atoll(details["views"].c_str())) + " " + VM_Window::Labels["views"] + "\n" : "");
-	//	text.append(!details["likes"].empty()       ? details["likes"] : "");
-
-	//	text2.append(!details["description"].empty() ? details["description"] : "");
-	//}
 	else if (SHOUTCAST_IS_SELECTED)
 	{
 		StringMap details = VM_FileSystem::GetShoutCastDetails(row[1]->getText(), mediaID);
@@ -583,33 +488,6 @@ int Graphics::VM_Modal::UpdateLabelsDetails()
 		text.append(!details["listener_count"].empty() ? VM_Text::ToViewCount(std::atoll(details["listener_count"].c_str())) + " " + VM_Window::Labels["listeners"] : "");
 
 		text2.append(!details["now_playing"].empty() ? details["now_playing"] : "");
-	}
-	else if (TMDB_MOVIE_IS_SELECTED || TMDB_TV_IS_SELECTED)
-	{
-		StringMap details = VM_FileSystem::GetTmdbDetails(mediaID, VM_Top::Selected);
-
-		// TOP TEXT
-		text.append(!details["rating"].empty()   ? details["rating"] + "\n" : "");
-		text.append(!details["date"].empty()     ? details["date"] : "");
-		text.append(!details["date"].empty()     && !details["duration"].empty() ? " | " : "");
-		text.append(!details["duration"].empty() ? VM_Text::ToDuration(std::atoll(details["duration"].c_str())) + "\n" : "");
-		text.append(!details["seasons"].empty()  ? details["seasons"]  + " " + (details["seasons"]  != "1" ? VM_Window::Labels["seasons"]  : VM_Window::Labels["season"]) : "");
-		text.append(!details["seasons"].empty() && !details["episodes"].empty() ? " | " : "");
-		text.append(!details["episodes"].empty() ? details["episodes"] + " " + (details["episodes"] != "1" ? VM_Window::Labels["episodes"] : VM_Window::Labels["episode"]) : "");
-		text.append(!text.empty()                ? "\n" : "");
-		text.append(!details["language"].empty() ? VM_Text::GetLanguage(details["language"]) + "\n" : "");
-		text.append(!details["genres"].empty()   ? details["genres"] : "");
-
-		// BOTTOM TEXT
-		text2.append(!details["overview"].empty() ? details["overview"] : "");
-
-		// BACKDROP IMAGE
-		VM_Button* backgroundImage = new VM_Button("modal_background_image");
-
-		backgroundImage->backgroundArea = { 0, VM_Window::StatusBarHeight, VM_Window::Dimensions.w, (VM_Window::Dimensions.h - VM_Window::StatusBarHeight) };
-		backgroundImage->setImage(details["backdrop_url"], false);
-
-		VM_Modal::Components["modal_background_image"] = backgroundImage;
 	}
 
 	#if defined _ios
@@ -626,7 +504,6 @@ int Graphics::VM_Modal::UpdateLabelsDetails()
 	if (!row.empty())
 	{
 		thumbButton->mediaID  = row[0]->mediaID;
-		//thumbButton->mediaID2 = row[0]->mediaID2;
 		thumbButton->mediaURL = row[0]->mediaURL;
 
 		thumbButton->setThumb(VM_GUI::ListTable->id);
@@ -726,14 +603,12 @@ int Graphics::VM_Modal::updateLabelsDetailsPicture(int mediaID, const String &fi
 		String   camera     = VM_Graphics::GetImageCamera(snapshot->imageData->image->image);
 		int64_t  dateI      = std::atoll(VM_Graphics::GetImageDateTaken(snapshot->imageData->image->image).c_str());
 		String   dateS      = (dateI > 0 ? VM_Text::GetTimeFormatted((time_t)dateI, false, false) : "");
-		String   address    = VM_Graphics::GetImageGPS(snapshot->imageData->image->image);
 		String   resolution = VM_Graphics::GetImageResolutionString(snapshot->imageData->width, snapshot->imageData->height);
 		uint32_t bpp        = FreeImage_GetBPP(snapshot->imageData->image->image);
 		String   extension  = VM_FileSystem::GetFileExtension(title, true);
 
 		text.append(!camera.empty()  ? camera  + "\n" : "");
-		text.append(!dateS.empty()   ? dateS   + "\n" : "");
-		text.append(!address.empty() ? address : "");
+		text.append(!dateS.empty()   ? dateS : "");
 
 		text2.append(!extension.empty()  ? extension  + " " : "");
 		text2.append(!resolution.empty() ? resolution + " " : "");
@@ -893,21 +768,4 @@ void Graphics::VM_Modal::updateLabelsRightClick()
 
 	if ((desc != NULL) && (row.size() > 1))
 		desc->setText(row[1]->getText());
-
-	VM_Modal::Components["modal_right_click_tmbd_movie"]->visible = VIDEO_IS_SELECTED;
-	VM_Modal::Components["modal_right_click_tmbd_tv"]->visible    = VIDEO_IS_SELECTED;
-}
-
-void Graphics::VM_Modal::updateLabelsUPNP()
-{
-	VM_Button* share = dynamic_cast<VM_Button*>(VM_Modal::Components["modal_upnp_share"]);
-
-	if (share != NULL)
-	{
-		#if !defined _ios
-			share->setText(VM_ThreadManager::Threads[THREAD_UPNP_SERVER]->completed ? VM_Window::Labels["upnp.share.files"] : VM_Window::Labels["upnp.share.none"]);
-		#else
-			share->visible = false;
-		#endif
-	}
 }

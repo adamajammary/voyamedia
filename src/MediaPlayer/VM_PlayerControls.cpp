@@ -111,7 +111,6 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 		{
 			String imageFile = "";
 
-			//if (YOUTUBE_IS_SELECTED || SHOUTCAST_IS_SELECTED) {
 			if (SHOUTCAST_IS_SELECTED)
 			{
 				button->visible = false;
@@ -165,8 +164,8 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 	{
 		button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_stretch"]);
 
-		if (button != NULL) {
-			//button->visible = (VIDEO_IS_SELECTED || YOUTUBE_IS_SELECTED);
+		if (button != NULL)
+		{
 			button->visible = VIDEO_IS_SELECTED;
 
 			if (button->visible)

@@ -106,12 +106,6 @@ modal_right_click_remove_file.border-color=#FFFFFFFF
 modal_right_click_remove_path.background-color=#101010FF
 modal_right_click_remove_path.border-color=#FFFFFFFF
 
-modal_right_click_tmbd_movie.background-color=#101010FF
-modal_right_click_tmbd_movie.border-color=#FFFFFFFF
-
-modal_right_click_tmbd_tv.background-color=#101010FF
-modal_right_click_tmbd_tv.border-color=#FFFFFFFF
-
 # MODAL - SETTINGS
 
 modal_settings_clean_db.background-color=#101010FF
@@ -142,34 +136,3 @@ modal_player_settings_subs_list_table.header-color=#101010FF
 modal_player_settings_subs_list_table.row1-color=#303030FF
 modal_player_settings_subs_list_table.row2-color=#303030FF
 modal_player_settings_subs_list_table.text-color=#FFFFFFFF
-
-# MODAL - DROPBOX
-
-modal_dropbox_input.background-color=#FFFFFFFF
-modal_dropbox_input.active-color=#0000FFFF
-modal_dropbox_input.text-color=#000000FF
-
-modal_dropbox_paste.background-color=#101010FF
-
-# MODAL - UPNP
-
-modal_upnp_nic.text-color=#FFFFFFFF
-
-modal_upnp_list_table.background-color=#303030FF
-modal_upnp_list_table.header-color=#101010FF
-modal_upnp_list_table.row1-color=#303030FF
-modal_upnp_list_table.row2-color=#303030FF
-modal_upnp_list_table.text-color=#FFFFFFFF
-
-modal_upnp_add.background-color=#101010FF
-modal_upnp_share.background-color=#101010FF
-
-# MODAL - UPNP - DEVICES
-
-modal_upnp_device.text-color=#FFFFFFFF
-
-modal_upnp_devices_list_table.background-color=#303030FF
-modal_upnp_devices_list_table.header-color=#101010FF
-modal_upnp_devices_list_table.row1-color=#303030FF
-modal_upnp_devices_list_table.row2-color=#303030FF
-modal_upnp_devices_list_table.text-color=#FFFFFFFF

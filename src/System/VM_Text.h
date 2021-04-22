@@ -28,7 +28,6 @@ namespace VoyaMedia
 			static StringMap GetLabels();
 			static String    GetLanguage(const String &isoCode);
 			static char      GetLastCharacter(const String &text);
-			static String    GetLocale();
 			static String    GetMediaAudioLayoutString(const int channelCount);
 			static String    GetMediaBitRateString(const int bitRate);
 			static String    GetMediaFrameRateString(const int frameRate);
@@ -50,7 +49,6 @@ namespace VoyaMedia
 			static String    ReplaceHTML(const String &html);
 			static Strings   Split(const String &text, const String &delimiter, bool returnEmpty = true);
 			static String    ToDuration(const int64_t duration);
-			static String    ToDuration(const String &text);
 			static String    ToLower(const String &text);
 			static String    ToViewCount(int64_t views);
 			static String    ToUpper(const String &text);

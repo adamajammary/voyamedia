@@ -695,9 +695,6 @@ int Graphics::VM_GUI::setTable(VM_Component* parent, VM_Component* component)
 			table->resetScroll(VM_GUI::Components["list_table_scrollbar"]);
 			table->setHeader();
 			table->refreshRows();
-
-			VM_Button* upnp = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_controls_upnp"]);
-			upnp->setImage((VM_ThreadManager::Threads[THREAD_UPNP_SERVER]->start ? "upnp-2-512.png" : "upnp-1-512.png"), false);
 		}
 	}
 	else if (VM_Modal::IsVisible() && (table != NULL) && table->visible)

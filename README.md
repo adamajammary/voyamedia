@@ -30,7 +30,6 @@ Library | Version | License
 [FreeImage](http://freeimage.sourceforge.net/download.html) | [3.18.0](http://downloads.sourceforge.net/freeimage/FreeImage3180.zip) | [FIPL (FreeImage Public License)](http://freeimage.sourceforge.net/license.html)
 [Freetype2](https://www.freetype.org/) | [2.10.2](https://sourceforge.net/projects/freetype/files/freetype2/2.10.2/freetype-2.10.2.tar.gz) | [FTL (FreeType License)](https://www.freetype.org/license.html)
 [libCURL](https://curl.haxx.se/libcurl/) | [7.71.1](https://curl.haxx.se/download/curl-7.71.1.tar.gz) | [MIT/X derivate license](https://curl.haxx.se/docs/copyright.html)
-[libUPNP](http://pupnp.sourceforge.net/) | [1.14.0](https://sourceforge.net/projects/pupnp/files/pupnp/libupnp-1.14.0/libupnp-1.14.0.tar.bz2/download) | [BSD (Berkeley Standard Distribution)](http://pupnp.sourceforge.net/#license)
 [libXML2](http://xmlsoft.org/) | [2.9.10](http://xmlsoft.org/sources/libxml2-2.9.10.tar.gz) | [MIT License](https://opensource.org/licenses/mit-license.html)
 [M's JSON parser](https://sourceforge.net/projects/mjson/) | [1.7.0](https://sourceforge.net/projects/mjson/files/mjson/mjson-1.7.0.tar.gz/download) | [LGPL v.2.1 (GNU Lesser General Public License)](https://sourceforge.net/projects/mjson/)
 [OpenSSL](https://www.openssl.org/) | [1.1.1g](https://www.openssl.org/source/openssl-1.1.1g.tar.gz) | [Dual (OpenSSL / Original SSLeay License)](https://www.openssl.org/source/license.html)
@@ -49,7 +48,4 @@ Font | License
 
 API | License
 --- | -------
-[Dropbox](https://www.dropbox.com/developers) | [Developer branding guide](https://www.dropbox.com/developers/reference/branding-guide)
-[Google Maps](https://developers.google.com/maps/documentation/geocoding/start) | [Terms of Service](https://developers.google.com/maps/terms)
 [SHOUTcast Radio Directory API](http://wiki.shoutcast.com/wiki/SHOUTcast_Radio_Directory_API) | [License Agreement](http://wiki.shoutcast.com/wiki/SHOUTcast_API_License_Agreement)
-[TMDb](https://www.themoviedb.org/documentation/api) | [Terms of Use](https://www.themoviedb.org/terms-of-use)

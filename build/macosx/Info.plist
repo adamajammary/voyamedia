@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+
+	<key>CFBundleDisplayName</key>
+	<string>Voya Media</string>
+
+	<key>CFBundleDocumentTypes</key>
+	<array>
+	<dict>
+		<key>CFBundleTypeIconFiles</key>
+		<array/>
+		<key>CFBundleTypeName</key>
+		<string>Music</string>
+		<key>CFBundleTypeRole</key>
+		<string>Viewer</string>
+		<key>LSHandlerRank</key>
+		<string>Alternate</string>
+		<key>LSItemContentTypes</key>
+		<array>
+			<string>public.audio</string>
+			<string>public.image</string>
+			<string>public.movie</string>
+			<string>public.mpeg4</string>
+		</array>
+	</dict>
+	</array>
+
+	<key>CFBundleExecutable</key>
+	<string>VoyaMedia</string>
+
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+
+	<key>CFBundleIdentifier</key>
+	<string>__APP_IDENTITY__</string>
+
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+
+	<key>CFBundleName</key>
+	<string>VoyaMedia</string>
+
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+
+	<key>CFBundleShortVersionString</key>
+	<string>__APP_VERSION__</string>
+
+	<key>CFBundleVersion</key>
+	<string>__APP_VERSION__</string>
+
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.video</string>
+
+	<key>LSMinimumSystemVersion</key>
+	<string>__OSX_MIN_VERSION__</string>
+
+	<key>NSHighResolutionCapable</key>
+	<true/>
+
+	<key>NSHumanReadableCopyright</key>
+	<string>__APP_COPYRIGHT__</string>
+</dict>
+</plist>

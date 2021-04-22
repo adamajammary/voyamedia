@@ -26,7 +26,6 @@ namespace VoyaMedia
 			static bool                 IsDoneRendering;
 			static StringMap            Labels;
 			static SDL_Window*          MainWindow;
-			static String               OpenURL;
 			static bool                 PauseRendering;
 			static bool                 Quit;
 			static SDL_Renderer*        Renderer;
@@ -40,7 +39,6 @@ namespace VoyaMedia
 			static WString              WorkingDirectoryW;
 
 			#if defined _android
-				//static String               AndroidStoragePath;
 				static Strings              AndroidMediaFiles;
 				static Android::VM_JavaJNI* JNI;
 				static SDL_Thread*          MedaPlayerThread;

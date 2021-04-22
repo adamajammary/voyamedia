@@ -55,7 +55,7 @@ namespace VoyaMedia
 			static void updateLabelsPlaylistSave();
 			static void updateLabelsSettings();
 			static void updateLabelsRightClick();
-			static void updateLabelsUPNP();
+
 		};
 	}
 }

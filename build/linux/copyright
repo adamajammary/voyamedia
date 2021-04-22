@@ -1,0 +1,56 @@
+Format:     http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Name:       voyamedia
+Maintainer: __APP_COMPANY__ <__APP_URL__>
+Copyright:  __APP_COPYRIGHT__ <__APP_URL__>
+License:    GPL-3
+
+Files:     libcurl*
+Copyright: https://curl.haxx.se/docs/copyright.html
+License:   MIT/X
+
+Files:     libav*
+Copyright: https://ffmpeg.org/legal.html
+License:   LGPL-2.1
+
+Files:     libsw*
+Copyright: https://ffmpeg.org/legal.html
+License:   LGPL-2.1
+
+Files:     libfreeimage*
+Copyright: http://freeimage.sourceforge.net/license.html
+License:   FIPL
+
+Files:     libfreetype*
+Copyright: https://www.freetype.org/license.html
+License:   FTL
+
+Files:     libmjson*
+Copyright: https://sourceforge.net/projects/mjson/
+License:   LGPL-2.1
+
+Files:     libSDL2*
+Copyright: https://www.libsdl.org/license.php
+License:   zlib
+
+Files:     libsqlite*
+Copyright: https://www.sqlite.org/copyright.html
+License:   public-domain
+
+Files:     libssl*
+Copyright: https://www.openssl.org/source/license.html
+License:   OpenSSL or Original SSLeay License
+
+Files:     libcrypto*
+Copyright: https://www.openssl.org/source/license.html
+License:   OpenSSL or Original SSLeay License
+
+Files:     libxml2*
+Copyright: https://opensource.org/licenses/mit-license.html
+License:   MIT
+
+Files:     libz*
+Copyright: http://www.zlib.net/zlib_license.html
+License:   zlib
+
+License: GPL-3
+ On Debian systems, the full text of the GNU General Public License version 3 can be found in the file '/usr/share/common-licenses/GPL-3'.

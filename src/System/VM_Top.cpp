@@ -31,14 +31,8 @@ String System::VM_Top::MediaTypeToId(VM_MediaType mediaType)
 		return "top_picture";
 	else if (mediaType == MEDIA_TYPE_VIDEO)
 		return "top_video";
-	//else if (mediaType == MEDIA_TYPE_YOUTUBE)
-	//	return "top_youtube";
 	else if (mediaType == MEDIA_TYPE_SHOUTCAST)
 		return "top_shoutcast";
-	else if (mediaType == MEDIA_TYPE_TMDB_MOVIE)
-		return "top_tmdb_movie";
-	else if (mediaType == MEDIA_TYPE_TMDB_TV)
-		return "top_tmdb_tv";
 
 	return "";
 }
@@ -51,14 +45,8 @@ VM_MediaType System::VM_Top::IdToMediaType(const String &mediaType)
 		return MEDIA_TYPE_PICTURE;
 	else if (mediaType == "top_video")
 		return MEDIA_TYPE_VIDEO;
-	//else if (mediaType == "top_youtube")
-	//	return MEDIA_TYPE_YOUTUBE;
 	else if (mediaType == "top_shoutcast")
 		return MEDIA_TYPE_SHOUTCAST;
-	else if (mediaType == "top_tmdb_movie")
-		return MEDIA_TYPE_TMDB_MOVIE;
-	else if (mediaType == "top_tmdb_tv")
-		return MEDIA_TYPE_TMDB_TV;
 
 	return MEDIA_TYPE_UNKNOWN;
 }
@@ -69,12 +57,7 @@ int System::VM_Top::Refresh()
 		return ERROR_INVALID_ARGUMENTS;
 
 	for (auto button : VM_GUI::Components["top"]->buttons)
-	{
-		if ((button->id == "top_tmdb_movie") || (button->id == "top_tmdb_tv"))
-			dynamic_cast<VM_Button*>(button)->setImage((VM_GUI::ColorThemeFile == "dark" ? "tmdb-208x226-stacked-green.png" : "tmdb-208x226-stacked-blue.png"), false);
-
 		button->selected = (button->id == VM_Top::MediaTypeToId(VM_Top::Selected));
-	}
 
 	return RESULT_OK;
 }
@@ -84,7 +67,6 @@ int System::VM_Top::SelectType(VM_MediaType mediaType)
 	// CHECK INTERNET CONNECTION
 	VM_Window::StatusString = "";
 
-	//if ((mediaType >= MEDIA_TYPE_YOUTUBE) && !VM_FileSystem::HasInternetConnection())
 	if ((mediaType >= MEDIA_TYPE_SHOUTCAST) && !VM_FileSystem::HasInternetConnection())
 	{
 		VM_Window::StatusString = VM_Window::Labels["error.no_nics"];

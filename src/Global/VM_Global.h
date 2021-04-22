@@ -35,7 +35,8 @@ extern "C"
 	// CURL
 	#include <curl/curl.h>
 
-	// FREETYPE2
+	// FREETYPE
+	#include <ft2build.h>
 	#include <freetype/ttnameid.h>
 }
 
@@ -119,16 +120,6 @@ namespace LIB_SQLITE
 	extern "C"
 	{
 		#include <sqlite3.h>
-	}
-}
-
-namespace LIB_UPNP
-{
-	extern "C"
-	{
-		#undef EVENT_H
-		#include <upnp/upnptools.h>
-		#include <upnp/upnp.h>
 	}
 }
 
@@ -224,10 +215,7 @@ namespace VoyaMedia
 	#define AUDIO_IS_SELECTED      (VM_Top::Selected == MEDIA_TYPE_AUDIO)
 	#define PICTURE_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_PICTURE)
 	#define VIDEO_IS_SELECTED      (VM_Top::Selected == MEDIA_TYPE_VIDEO)
-	//#define YOUTUBE_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_YOUTUBE)
 	#define SHOUTCAST_IS_SELECTED  (VM_Top::Selected == MEDIA_TYPE_SHOUTCAST)
-	#define TMDB_MOVIE_IS_SELECTED (VM_Top::Selected == MEDIA_TYPE_TMDB_MOVIE)
-	#define TMDB_TV_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_TMDB_TV)
 
 	#if defined _windows
 		#define OPEN_FONT(f, s) TTF_OpenFontRW(VM_FileSystem::FileOpenSDLRWops(_wfopen(f, L"rb")), 1, s)
@@ -239,7 +227,7 @@ namespace VoyaMedia
 	
 	enum VM_DatabaseType
 	{
-		DATABASE_MEDIALIBRARYv3, DATABASE_PLAYLISTSv3, DATABASE_SETTINGSv3, DATABASE_TMDBv3
+		DATABASE_MEDIALIBRARYv3, DATABASE_PLAYLISTSv3, DATABASE_SETTINGSv3
 	};
 
 	enum VM_ErrorType
@@ -267,10 +255,7 @@ namespace VoyaMedia
 		MEDIA_TYPE_ATTACHMENT,
 		MEDIA_TYPE_NB,
 		MEDIA_TYPE_PICTURE,
-		//MEDIA_TYPE_YOUTUBE,
 		MEDIA_TYPE_SHOUTCAST,
-		MEDIA_TYPE_TMDB_MOVIE,
-		MEDIA_TYPE_TMDB_TV,
 		NR_OF_MEDIA_TYPES
 	};
 
@@ -362,14 +347,7 @@ namespace VoyaMedia
 
 	enum VM_TouchEventType
 	{
-		TOUCH_EVENT_UNKNOWN = -1, TOUCH_EVENT_TAP, TOUCH_EVENT_LONG_PRESS, TOUCH_EVENT_DOUBLE_TAP,
-		//TOUCH_EVENT_SWIPE_DOWN, TOUCH_EVENT_SWIPE_LEFT, TOUCH_EVENT_SWIPE_RIGHT, TOUCH_EVENT_SWIPE_UP
-	};
-
-	enum VM_UrlType
-	{
-		URL_DROPBOX_AUTH_CODE, URL_DROPBOX_OAUTH2_TOKEN, URL_DROPBOX_OAUTH2_DATA,
-		URL_DROPBOX_TOKEN_EXPIRED, URL_DROPBOX_FILES
+		TOUCH_EVENT_UNKNOWN = -1, TOUCH_EVENT_TAP, TOUCH_EVENT_LONG_PRESS, TOUCH_EVENT_DOUBLE_TAP
 	};
 
 	enum VM_Version
@@ -404,22 +382,13 @@ namespace VoyaMedia
 	const String APP_DESCRIPTION      = "__APP_DESCRIPTION__";
 	const String APP_NAME             = "__APP_NAME__";
 	const String APP_PRIVACY          = (APP_COMPANY + " does not collect any information stored on the local system.");
-	//const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libcurl (MIT), libXML2 (MIT), libupnp (BSD), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Dropbox, Google Maps API, Google Noto Fonts (OFL), SHOUTcast Radio Directory API, TMDb API, YouTube Data API";
-	const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libcurl (MIT), libXML2 (MIT), libupnp (BSD), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Dropbox, Google Maps API, Google Noto Fonts (OFL), SHOUTcast Radio Directory API, TMDb API";
+	const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libcurl (MIT), libXML2 (MIT), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Google Noto Fonts (OFL), SHOUTcast Radio Directory API";
 	const String APP_UPDATE_V3_MSG    = ("Welcome to " + APP_NAME + " 3\n\nWhat's new:\n- Completely refactored the UI-rendering engine\n- UI is now DPI-aware and independent of screen sizes and resolutions\n- Completely restructured the database (*)\n\n(*) Settings have been reset\n(*) Media library is empty (files must to be re-added)!");
 	const String APP_URL              = "__APP_URL__";
 	const String APP_VERSION          = "__APP_VERSION__";
 	const String APP_ABOUT_TEXT       = (APP_DESCRIPTION + "\n\n" + APP_PRIVACY + "\n\n" + APP_THIRD_PARTY_LIBS + "\n\n" + APP_COPYRIGHT);
-	const String DROPBOX_API_KEY      = "__DROPBOX_API_KEY__";
-	const String DROPBOX_API_SECRET   = "__DROPBOX_API_SECRET__";
-	const String GOOGLE_MAPS_API_KEY  = "__GOOGLE_MAPS_API_KEY__";
-	const String GOOGLE_MAPS_API_URL  = "https://maps.googleapis.com/maps/api/geocode/json?latlng=";
 	const String SHOUTCAST_API_KEY    = "__SHOUTCAST_API_KEY__";
 	const String SHOUTCAST_API_URL    = "https://api.shoutcast.com/legacy/";
-	const String TMDB_API_KEY         = "__TMDB_API_KEY__";
-	const String TMDB_API_URL         = "https://api.themoviedb.org/3/";
-	//const String YOUTUBE_API_KEY      = "__YOUTUBE_API_KEY__";
-	//const String YOUTUBE_API_URL      = "https://www.googleapis.com/youtube/v3/";
 
 	const int    AUDIO_BUFFER_SIZE      = 768000;
 	const int    CURSOR_HIDE_DELAY      = 2000;
@@ -547,18 +516,8 @@ namespace VoyaMedia
 	const char THREAD_CREATE_IMAGES[] = "create_images";
 	const char THREAD_GET_DATA[]      = "get_data";
 	const char THREAD_SCAN_ANDROID[]  = "scan_android";
-	const char THREAD_SCAN_DROPBOX[]  = "scan_dropbox";
 	const char THREAD_SCAN_FILES[]    = "scan_files";
 	const char THREAD_SCAN_ITUNES[]   = "scan_itunes";
-	const char THREAD_UPNP_CLIENT[]   = "upnp_client";
-	const char THREAD_UPNP_SERVER[]   = "upnp_server";
-
-	const int  UPNP_ALIVE_TIME       = 1800; // seconds (30 min)
-	const int  UPNP_DELAY_TIME       = 5000; // ms (5s)
-	const int  UPNP_SEARCH_TIMEOUT   = 5;    // s  (5s)
-	const int  UPNP_SEARCH_MAX_COUNT = 4;
-	const char UPNP_SERVICE_ID[]     = "uurn:upnp-org:serviceId:ContentDirectory";
-	const char UPNP_SERVICE_TYPE[]   = "urn:schemas-upnp-org:service:ContentDirectory:1";
 
 	namespace Database
 	{
@@ -616,13 +575,6 @@ namespace VoyaMedia
 		class VM_Thread;
 
 		typedef umap<String, VM_Thread*> VM_ThreadMap;
-	}
-
-	namespace UPNP
-	{
-		class VM_UpnpFile;
-
-		typedef std::vector<VM_UpnpFile*> VM_UpnpFiles;
 	}
 
 	namespace XML
@@ -740,12 +692,6 @@ using namespace VoyaMedia;
 #endif
 #ifndef VM_TOP_H
 	#include "../System/VM_Top.h"
-#endif
-#ifndef VM_UPNPFILE_H
-	#include "../UPNP/VM_UpnpFile.h"
-#endif
-#ifndef VM_UPNP_H
-	#include "../UPNP/VM_UPNP.h"
 #endif
 
 #endif

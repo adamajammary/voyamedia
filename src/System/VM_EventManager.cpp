@@ -5,8 +5,6 @@ using namespace VoyaMedia::MediaPlayer;
 using namespace VoyaMedia::XML;
 
 #if defined _android || defined _ios
-//float             System::VM_EventManager::swipeDistanceX     = 0.0f;
-//float             System::VM_EventManager::swipeDistanceY     = 0.0f;
 uint32_t          System::VM_EventManager::touchDownTimestamp = 0;
 uint32_t          System::VM_EventManager::touchUpTimestamp   = 0;
 VM_TouchEventType System::VM_EventManager::TouchEvent         = TOUCH_EVENT_UNKNOWN;
@@ -88,102 +86,28 @@ int System::VM_EventManager::HandleEvents()
 	{
 		switch (event.type) {
 		#if defined _android || defined _ios
-		//case SDL_FINGERMOTION:
-		//	VM_Player::CursorLastVisible = SDL_GetTicks();
-		//	VM_PlayerControls::Show();
-
-		//	if (!VM_Player::State.isStopped)
-		//		break;
-
-		//	VM_EventManager::swipeDistanceX += event.tfinger.dx;
-		//	VM_EventManager::swipeDistanceY += event.tfinger.dy;
-
-		//	break;
 		case SDL_FINGERDOWN:
-			//VM_Player::CursorLastVisible = SDL_GetTicks();
-			//VM_PlayerControls::Show();
-
 			VM_EventManager::touchDownTimestamp = event.tfinger.timestamp;
-
-			//if (!VM_Player::State.isStopped)
-			//	break;
-
 			break;
 		case SDL_FINGERUP:
 			VM_Player::CursorShow();
-			//VM_Player::CursorLastVisible = SDL_GetTicks();
-
-			//if (VM_Window::Inactive)
-			//	VM_Window::Refresh();
-
-			//if (!VM_Player::State.isStopped && !VM_PlayerControls::IsVisible())
-			//	VM_PlayerControls::Show();
 
 			VM_EventManager::TouchEvent = TOUCH_EVENT_UNKNOWN;
 
-			//if (VM_Player::State.isStopped)
-			//{
-			//	// SWIPE_RIGHT
-			//	if (VM_EventManager::swipeDistanceX > 0.3f) {
-			//		VM_EventManager::TouchEvent     = TOUCH_EVENT_SWIPE_RIGHT;
-			//		VM_EventManager::swipeDistanceX = 0.0f;
-			//	// SWIPE_LEFT
-			//	} else if (VM_EventManager::swipeDistanceX < -0.3f) {
-			//		VM_EventManager::TouchEvent     = TOUCH_EVENT_SWIPE_LEFT;
-			//		VM_EventManager::swipeDistanceX = 0.0f;
-			//	// SWIPE_DOWN
-			//	} else if (VM_EventManager::swipeDistanceY > 0.3f) {
-			//		VM_EventManager::TouchEvent     = TOUCH_EVENT_SWIPE_DOWN;
-			//		VM_EventManager::swipeDistanceY = 0.0f;
-			//	// SWIPE_UP
-			//	} else if (VM_EventManager::swipeDistanceY < -0.3f) {
-			//		VM_EventManager::TouchEvent     = TOUCH_EVENT_SWIPE_UP;
-			//		VM_EventManager::swipeDistanceY = 0.0f;
-			//	}
-			//}
-
-			//if (VM_EventManager::TouchEvent == TOUCH_EVENT_UNKNOWN)
-			//{
 			// RIGHT-CLICK / LONG PRESS
-			if ((event.tfinger.timestamp - VM_EventManager::touchDownTimestamp) > 500) {
+			if ((event.tfinger.timestamp - VM_EventManager::touchDownTimestamp) > 500)
 				VM_EventManager::TouchEvent = TOUCH_EVENT_LONG_PRESS;
 			// DOUBLE-CLICK
-			} else if ((event.tfinger.timestamp - VM_EventManager::touchUpTimestamp) < 300) {
+			else if ((event.tfinger.timestamp - VM_EventManager::touchUpTimestamp) < 300)
 				VM_EventManager::TouchEvent = TOUCH_EVENT_DOUBLE_TAP;
 			// NORMAL
-			} else {
+			else
 				VM_EventManager::TouchEvent = TOUCH_EVENT_TAP;
-			}
-			//}
 
 			VM_EventManager::touchDownTimestamp = 0;
 			VM_EventManager::touchUpTimestamp   = event.tfinger.timestamp;
 
-			//switch (VM_EventManager::TouchEvent) {
-			//	case TOUCH_EVENT_SWIPE_UP:
-			//		listTable->selectRow(listTable->getSelectedRowIndex() + 1);
-
-			//		if (!listTable->isRowVisible())
-			//			listTable->scroll(1);
-
-			//		break;
-			//	case TOUCH_EVENT_SWIPE_DOWN:
-			//		listTable->selectRow(listTable->getSelectedRowIndex() - 1);
-
-			//		if (!listTable->isRowVisible())
-			//			listTable->scroll(-1);
-
-			//		break;
-			//	case TOUCH_EVENT_SWIPE_LEFT:
-			//		listTable->offsetNext();
-			//		break;
-			//	case TOUCH_EVENT_SWIPE_RIGHT:
-			//		listTable->offsetPrev();
-			//		break;
-			//	default:
 			VM_EventManager::handleMouseClick(&event);
-			//		break;
-			//}
 
 			break;
 		#else
@@ -201,7 +125,6 @@ int System::VM_EventManager::HandleEvents()
 			}
 
 			break;
-		//case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEMOTION:
 			VM_Player::CursorShow();
 			break;
@@ -485,9 +408,6 @@ int System::VM_EventManager::HandleMediaPlayer()
 
 			VM_Window::StatusString = VM_Text::Format("%s '%s'", VM_Window::Labels["error.open"].c_str(), file.c_str());
 			VM_Modal::ShowMessage(VM_Window::StatusString);
-
-			//if (YOUTUBE_IS_SELECTED && !mediaID.empty())
-			//	VM_FileSystem::OpenWebBrowser(String("https://www.youtube.com/embed/" + mediaID + "?autoplay=true"));
 		}
 		// UPDATE SELECTED ROW ON SUCCESS
 		else if ((VM_Player::State.filePath != REFRESH_PENDING) && (row.size() > 1))
@@ -596,29 +516,6 @@ bool System::VM_EventManager::isClickedBottomControls(SDL_Event* mouseEvent)
 		{
 			VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));
 		}
-		else if (button->id == "bottom_controls_upnp")
-		{
-			// INVALID MEDIA TYPE
-			//if (VM_Top::Selected >= MEDIA_TYPE_YOUTUBE) {
-			if (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST) {
-				VM_Window::StatusString = VM_Window::Labels["error.share_invalid"];
-				VM_Modal::ShowMessage(VM_Window::StatusString);
-			// VALID
-			} else {
-				VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));
-			}
-		}
-		else if (button->id == "bottom_controls_dropbox")
-		{
-			// NO INTERNET
-			if (!VM_FileSystem::HasInternetConnection()) {
-				VM_Window::StatusString = VM_Window::Labels["error.no_nics"];
-				VM_Modal::ShowMessage(VM_Window::StatusString);
-			// VALID
-			} else {
-				VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));
-			}
-		}
 		else if (button->id == "bottom_controls_settings")
 		{
 			VM_Modal::Open(VM_XML::GetAttribute(button->xmlNode, "modal"));
@@ -659,8 +556,6 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 				// FULLSCREEN
 				#if defined _linux || defined _macosx || defined _windows
 				} else if (button->id == "bottom_player_controls_fullscreen") {
-					//	VM_PlayerControls::Hide();
-					//#else
 					VM_Player::FullScreenToggle(false);
 				#endif
 				// STRETCH
@@ -766,13 +661,6 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 		#if defined _linux || defined _macosx || defined _windows
 		if (VIDEO_IS_SELECTED && VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea, false, true)) //{
 			VM_Player::FullScreenToggle(false);
-
-			//if (VM_Player::State.isPaused && (VM_Player::State.fullscreenEnter || VM_Player::State.fullscreenExit))
-			//	VM_Player::Play();
-
-			//return true;
-		//}
-		//else
 		#endif
 
 		// VIDEO SINGLE-CLICK -> PLAY/PAUSE TOGGLE
@@ -829,9 +717,7 @@ bool System::VM_EventManager::isClickedModal(SDL_Event* mouseEvent)
 			else if ((button->id == "modal_settings_color") ||
 				(button->id == "modal_settings_lang") ||
 				(button->id == "modal_right_click_remove_file") ||
-				(button->id == "modal_right_click_remove_path") ||
-				(button->id == "modal_right_click_tmbd_movie") ||
-				(button->id == "modal_right_click_tmbd_tv"))
+				(button->id == "modal_right_click_remove_path"))
 			{
 				VM_Modal::Apply(button->id);
 				hide = true;
@@ -858,12 +744,8 @@ bool System::VM_EventManager::isClickedModal(SDL_Event* mouseEvent)
 
 			int result = RESULT_OK;
 
-			if ((button->id == "modal_ok")       || (button->id == "modal_playlists_remove") ||
-				(button->id == "modal_app_url")  || (button->id == "modal_paypal_url")       ||
-				(button->id == "modal_upnp_add") || (button->id == "modal_upnp_share"))
-			{
+			if ((button->id == "modal_ok") || (button->id == "modal_playlists_remove"))
 				result = VM_Modal::Apply(button->id);
-			}
 
 			if (result == RESULT_OK)
 			{
@@ -923,7 +805,6 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 		{
 			if (!table->buttons[i]->visible ||
 				!VM_Graphics::ButtonPressed(mouseEvent, table->buttons[i]->backgroundArea) ||
-				//(VM_Top::Selected >= MEDIA_TYPE_YOUTUBE))
 				(VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST))
 			{
 				continue;
@@ -1161,14 +1042,7 @@ bool System::VM_EventManager::isKeyPressedTable(SDL_Keycode key, VM_Table* table
 	case SDLK_RETURN2:
 	case SDLK_KP_ENTER:
 	case SDLK_AUDIOPLAY:
-		if (TMDB_MOVIE_IS_SELECTED || TMDB_TV_IS_SELECTED)
-		{
-			auto row = table->getSelectedRow();
-
-			if (!row.empty())
-				VM_Modal::Open(VM_XML::GetAttribute(row[row.size() - 1]->xmlNode, "modal"));
-		}
-		else if (table->id == "list_table")
+		if (table->id == "list_table")
 		{
 			#if defined _windows
 				VM_Player::OpenFilePath(VM_Text::ToUTF16(table->getSelectedMediaURL().c_str()));
