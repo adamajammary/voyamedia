@@ -125,6 +125,7 @@ elseif (UNIX)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f ${OUT_DIR}/docs/*        ${DEB_DIR}/${DIST_DIR}/usr/share/doc/voyamedia/)
 
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND dpkg-deb --build ${DEB_DIR}/${DIST_DIR}/)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND mv -f ${DEB_DIR}/*.deb .)
 
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND mkdir -p ${RPM_DIR}/BUILD/${DIST_DIR}/opt)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND mkdir -p ${RPM_DIR}/BUILD/${DIST_DIR}/usr/bin)
@@ -142,7 +143,7 @@ elseif (UNIX)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f ../build/linux/*.spec    ${RPM_DIR}/SPECS/)
 
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND rpmlint ${RPM_DIR}/SPECS/voyamedia.spec)
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND QA_RPATHS=0x0006 rpmbuild -bb --define "_topdir ${PWD}/${RPM_DIR}" --target=x86_64 --verbose ${RPM_DIR}/SPECS/voyamedia.spec)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND QA_RPATHS=0x0006 rpmbuild -bb --define "_topdir ${WORKSPACE}/voyamedia/dist/${RPM_DIR}" --target=x86_64 --verbose ${RPM_DIR}/SPECS/voyamedia.spec)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND mv -f ${RPM_DIR}/RPMS/x86_64/*.rpm .)
 elseif (WIN32)
     set_target_properties(VoyaMedia PROPERTIES LINK_FLAGS_DEBUG   "-SUBSYSTEM:CONSOLE,5.02")
