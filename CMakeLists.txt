@@ -110,7 +110,7 @@ elseif (UNIX)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -rf ../build/lang           ${OUT_DIR}/)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f ../build/linux/img/*     ${OUT_DIR}/)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -df ${LIB_DIR}/*.so*        ${OUT_DIR}/)
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND mv -f VoyaMedia                ${OUT_DIR}/)
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND mv -f VoyaMedia                ${OUT_DIR}/voyamedia)
 
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND mkdir -p ${DEB_DIR}/${DIST_DIR}/DEBIAN)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND mkdir -p ${DEB_DIR}/${DIST_DIR}/opt)
