@@ -60,6 +60,7 @@ Section Uninstall
    Delete "$PROGRAMFILES64\VoyaMedia\gui\*"
    Delete "$PROGRAMFILES64\VoyaMedia\img\*"
    Delete "$PROGRAMFILES64\VoyaMedia\lang\*"
+   Delete "$PROGRAMFILES64\VoyaMedia\web\*"
    Delete "$PROGRAMFILES64\VoyaMedia\*"
    
    RMDir "$PROGRAMFILES64\VoyaMedia\docs"
@@ -67,6 +68,7 @@ Section Uninstall
    RMDir "$PROGRAMFILES64\VoyaMedia\gui"
    RMDir "$PROGRAMFILES64\VoyaMedia\img"
    RMDir "$PROGRAMFILES64\VoyaMedia\lang"
+   RMDir "$PROGRAMFILES64\VoyaMedia\web"
    RMDir "$PROGRAMFILES64\VoyaMedia"
    
    Delete "$DESKTOP\__APP_NAME__.lnk"
