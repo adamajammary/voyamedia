@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=__APP_VERSION__
+Name=__APP_NAME__
+Comment=__APP_DESCRIPTION__
+Exec=/usr/bin/voyamedia
+Icon=/opt/voyamedia/logo-512.png
+Terminal=false
+Type=Application
+Categories=Utility;Application;
