@@ -1,2 +1,2 @@
 #!/bin/bash
-cd /opt/voyamedia;./voyamedia $$@
+cd /opt/voyamedia;./voyamedia $@
