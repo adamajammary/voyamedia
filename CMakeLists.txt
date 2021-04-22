@@ -167,9 +167,9 @@ elseif (WIN32)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND xcopy /e /i /y ..\\build\\lang    $(OutputPath)lang)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND copy /y ${LIB_DIR_WIN}\\*.dll     $(OutputPath))
 
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND copy /y "$(VC_CppRuntimeFilesPath_x64)\\Microsoft.VC$(PlatformToolsetVersion).CRT\\*.dll"    $(OutputPath))
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND copy /y "$(VC_CppRuntimeFilesPath_x64)\\Microsoft.VC$(PlatformToolsetVersion).CXXAMP\\*.dll" $(OutputPath))
-    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND copy /y "$(VC_CppRuntimeFilesPath_x64)\\Microsoft.VC$(PlatformToolsetVersion).OpenMP\\*.dll" $(OutputPath))
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND copy /y \"$(VC_CppRuntimeFilesPath_x64)\\Microsoft.VC$(PlatformToolsetVersion).CRT\\\"*.dll    $(OutputPath))
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND copy /y \"$(VC_CppRuntimeFilesPath_x64)\\Microsoft.VC$(PlatformToolsetVersion).CXXAMP\\\"*.dll $(OutputPath))
+    add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND copy /y \"$(VC_CppRuntimeFilesPath_x64)\\Microsoft.VC$(PlatformToolsetVersion).OpenMP\\\"*.dll $(OutputPath))
 
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND makensis.exe VoyaMedia.nsi)
 endif()
