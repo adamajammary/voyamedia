@@ -4,10 +4,6 @@ Maintainer: __APP_COMPANY__ <__APP_URL__>
 Copyright:  __APP_COPYRIGHT__ <__APP_URL__>
 License:    GPL-3
 
-Files:     libcurl*
-Copyright: https://curl.haxx.se/docs/copyright.html
-License:   MIT/X
-
 Files:     libav*
 Copyright: https://ffmpeg.org/legal.html
 License:   LGPL-2.1

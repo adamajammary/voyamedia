@@ -31,8 +31,6 @@ String System::VM_Top::MediaTypeToId(VM_MediaType mediaType)
 		return "top_picture";
 	else if (mediaType == MEDIA_TYPE_VIDEO)
 		return "top_video";
-	else if (mediaType == MEDIA_TYPE_SHOUTCAST)
-		return "top_shoutcast";
 
 	return "";
 }
@@ -45,8 +43,6 @@ VM_MediaType System::VM_Top::IdToMediaType(const String &mediaType)
 		return MEDIA_TYPE_PICTURE;
 	else if (mediaType == "top_video")
 		return MEDIA_TYPE_VIDEO;
-	else if (mediaType == "top_shoutcast")
-		return MEDIA_TYPE_SHOUTCAST;
 
 	return MEDIA_TYPE_UNKNOWN;
 }
@@ -64,18 +60,8 @@ int System::VM_Top::Refresh()
 
 int System::VM_Top::SelectType(VM_MediaType mediaType)
 {
-	// CHECK INTERNET CONNECTION
 	VM_Window::StatusString = "";
-
-	if ((mediaType >= MEDIA_TYPE_SHOUTCAST) && !VM_FileSystem::HasInternetConnection())
-	{
-		VM_Window::StatusString = VM_Window::Labels["error.no_nics"];
-		VM_Modal::ShowMessage(VM_Window::StatusString);
-
-		return ERROR_UNKNOWN;
-	}
-
-	VM_Top::Selected = mediaType;
+	VM_Top::Selected        = mediaType;
 
 	int  dbResult;
 	auto db = new VM_Database(dbResult, DATABASE_SETTINGSv3);

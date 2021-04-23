@@ -157,7 +157,7 @@ int System::VM_EventManager::HandleEvents()
 			case SDL_WINDOWEVENT_MINIMIZED:
 				VM_Window::PauseRendering = true;
 
-				if (!AUDIO_IS_SELECTED && !SHOUTCAST_IS_SELECTED && VM_Player::State.isPlaying)
+				if (!AUDIO_IS_SELECTED && VM_Player::State.isPlaying)
 					VM_Player::Pause();
 
 				VM_Window::Refresh();
@@ -268,7 +268,7 @@ int System::VM_EventManager::HandleEventsMobile(void* userdata, SDL_Event* event
 	case SDL_APP_WILLENTERBACKGROUND:
 		VM_Window::PauseRendering = true;
 
-		if (!AUDIO_IS_SELECTED && !SHOUTCAST_IS_SELECTED && VM_Player::State.isPlaying)
+		if (!AUDIO_IS_SELECTED && VM_Player::State.isPlaying)
 			VM_Player::PlayPauseToggle();
 
 		#if defined _android
@@ -629,7 +629,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 				continue;
 
 			// PROGRESS: TIME PASSED VS. TIME LEFT
-			if ((button->id == "bottom_player_controls_progress") && !VM_Player::State.isStopped && !SHOUTCAST_IS_SELECTED) {
+			if ((button->id == "bottom_player_controls_progress") && !VM_Player::State.isStopped) {
 				VM_PlayerControls::ToggleProgressTimeLeft();
 				VM_PlayerControls::Refresh(REFRESH_PROGRESS);
 			}
@@ -646,7 +646,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 				continue;
 
 			// SEEK BAR
-			if ((button->id == "bottom_player_controls_middle_bar") && !VM_Player::State.isStopped && !SHOUTCAST_IS_SELECTED)
+			if ((button->id == "bottom_player_controls_middle_bar") && !VM_Player::State.isStopped)
 				VM_PlayerControls::Seek(mouseEvent);
 
 			return true;
@@ -659,7 +659,7 @@ bool System::VM_EventManager::isClickedBottomPlayerControls(SDL_Event* mouseEven
 	{
 		// VIDEO DOUBLE-CLICK -> FULLSCREEN
 		#if defined _linux || defined _macosx || defined _windows
-		if (VIDEO_IS_SELECTED && VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea, false, true)) //{
+		if (VIDEO_IS_SELECTED && VM_Graphics::ButtonPressed(mouseEvent, snapshot->backgroundArea, false, true))
 			VM_Player::FullScreenToggle(false);
 		#endif
 
@@ -803,12 +803,8 @@ bool System::VM_EventManager::isClickedTable(SDL_Event* mouseEvent, VM_Table* ta
 	{
 		for (int i = 1; i < (int)table->buttons.size() - 1; i++)
 		{
-			if (!table->buttons[i]->visible ||
-				!VM_Graphics::ButtonPressed(mouseEvent, table->buttons[i]->backgroundArea) ||
-				(VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST))
-			{
+			if (!table->buttons[i]->visible || !VM_Graphics::ButtonPressed(mouseEvent, table->buttons[i]->backgroundArea))
 				continue;
-			}
 
 			table->sort(table->buttons[i]->id);
 

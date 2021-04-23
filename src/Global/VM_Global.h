@@ -32,9 +32,6 @@ extern "C"
 	#include <SDL2/SDL_syswm.h>
 	#include <SDL2/SDL_ttf.h>
 
-	// CURL
-	#include <curl/curl.h>
-
 	// FREETYPE
 	#include <ft2build.h>
 	#include <freetype/ttnameid.h>
@@ -78,6 +75,7 @@ extern "C"
 	#include <iphlpapi.h>                          // GetAdaptersAddresses
 	#include <Shellapi.h>                          // ShellExecuteA(x)
 	#include <Shlobj.h>                            // SHBrowseForFolder(), SHGetPathFromIDListA
+	#include <ws2tcpip.h>                          // getaddrinfo()
 #endif
 
 #if defined _ios || defined _macosx
@@ -174,7 +172,6 @@ namespace VoyaMedia
 	#define AVFRAME_VALID(f)       ((f != NULL) && (f->data[0] != NULL) && (f->linesize[0] > 0) && (f->width > 0) && (f->height > 0))
 	#define BIT_AT_POS(i, p)       (((i) >> p) & 1)
 	#define CAP(x, l, h)           (min(max((x), (l)), (h)))
-	#define CLOSE_CURL(c)          if (c != NULL) { curl_easy_reset(c); curl_easy_cleanup(c); c = NULL; }
 	#define CLOSE_FILE(f)          if (f != NULL) { fclose(f); f = NULL; }
 	#define CLOSE_FILE_RW(f)       if (f != NULL) { SDL_RWclose(f); f = NULL; }
 	#define CLOSE_FONT(f)          if (f != NULL) { TTF_CloseFont(f); f = NULL; }
@@ -215,7 +212,6 @@ namespace VoyaMedia
 	#define AUDIO_IS_SELECTED      (VM_Top::Selected == MEDIA_TYPE_AUDIO)
 	#define PICTURE_IS_SELECTED    (VM_Top::Selected == MEDIA_TYPE_PICTURE)
 	#define VIDEO_IS_SELECTED      (VM_Top::Selected == MEDIA_TYPE_VIDEO)
-	#define SHOUTCAST_IS_SELECTED  (VM_Top::Selected == MEDIA_TYPE_SHOUTCAST)
 
 	#if defined _windows
 		#define OPEN_FONT(f, s) TTF_OpenFontRW(VM_FileSystem::FileOpenSDLRWops(_wfopen(f, L"rb")), 1, s)
@@ -255,7 +251,6 @@ namespace VoyaMedia
 		MEDIA_TYPE_ATTACHMENT,
 		MEDIA_TYPE_NB,
 		MEDIA_TYPE_PICTURE,
-		MEDIA_TYPE_SHOUTCAST,
 		NR_OF_MEDIA_TYPES
 	};
 
@@ -382,18 +377,14 @@ namespace VoyaMedia
 	const String APP_DESCRIPTION      = "__APP_DESCRIPTION__";
 	const String APP_NAME             = "__APP_NAME__";
 	const String APP_PRIVACY          = (APP_COMPANY + " does not collect any information stored on the local system.");
-	const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libcurl (MIT), libXML2 (MIT), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Google Noto Fonts (OFL), SHOUTcast Radio Directory API";
+	const String APP_THIRD_PARTY_LIBS = "FFmpeg (LGPL v.2.1), FreeImage (FIPL), Freetype2 (FTL), libXML2 (MIT), mJSON (LGPL), OpenSSL, SDL2 (zlib), SQLite, zLib, Google Noto Fonts (OFL)";
 	const String APP_UPDATE_V3_MSG    = ("Welcome to " + APP_NAME + " 3\n\nWhat's new:\n- Completely refactored the UI-rendering engine\n- UI is now DPI-aware and independent of screen sizes and resolutions\n- Completely restructured the database (*)\n\n(*) Settings have been reset\n(*) Media library is empty (files must to be re-added)!");
 	const String APP_URL              = "__APP_URL__";
 	const String APP_VERSION          = "__APP_VERSION__";
 	const String APP_ABOUT_TEXT       = (APP_DESCRIPTION + "\n\n" + APP_PRIVACY + "\n\n" + APP_THIRD_PARTY_LIBS + "\n\n" + APP_COPYRIGHT);
-	const String SHOUTCAST_API_KEY    = "__SHOUTCAST_API_KEY__";
-	const String SHOUTCAST_API_URL    = "https://api.shoutcast.com/legacy/";
 
 	const int    AUDIO_BUFFER_SIZE      = 768000;
 	const int    CURSOR_HIDE_DELAY      = 2000;
-	const char   GOOGLE_IP[]            = "216.58.211.132";
-	const int    HTTP_RESPONSE_OK       = 200;
 	const double INVALID_COORDINATE     = 1000.0;
 	const double PICTURE_SLIDESHOW_TIME = 10.0;
 	const char   REFRESH_PENDING[]      = "REFRESH_PENDING";
@@ -477,8 +468,6 @@ namespace VoyaMedia
 
 	const float MAX_ASPECT_RATIO      = 1.6f; // 16:10
 	const int   MAX_AUDIO_FRAMES      = 10;
-	const long  MAX_CURL_REDIRS       = 10L;
-	const long  MAX_CURL_TIMEOUT      = 20000L;
 	const int   MAX_DB_RESULT         = 100000;
 	const int   MAX_DECODE_THREADS    = 16;
 	const int   MAX_ERRORS            = 100;

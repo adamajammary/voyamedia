@@ -89,7 +89,6 @@ namespace VoyaMedia
 			int           getSelectedMediaID();
 			String        getSelectedMediaURL();
 			String        getSelectedFile();
-			String        getSelectedShoutCast();
 			VM_Buttons    getSelectedRow();
 			int           getSelectedRowIndex();
 			String        getSort();
@@ -126,12 +125,10 @@ namespace VoyaMedia
 
 		private:
 			void                  init(const String &id);
-			Database::VM_DBResult getNICs();
 			Database::VM_DBResult getResult();
 			Database::VM_DBResult getResultLimited(const Database::VM_DBResult &result);
 			int                   getRowHeight();
 			int                   getRowsPerPage();
-			Database::VM_DBResult getShoutCast();
 			Database::VM_DBResult getTracks(VM_MediaType mediaType);
 			void                  resetRows();
 			void                  resetScrollPane();

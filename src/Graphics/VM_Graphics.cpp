@@ -208,17 +208,7 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotAudioJFIF(const St
 	if (audioFile.empty())
 		return NULL;
 
-	FILE*  fileIn;
-	String tempFile2 = "";
-	String tempFile  = VM_Text::Format("%s_TEMP_IMAGE_.JPG", VM_FileSystem::GetPathImages().c_str());
-
-	if (VM_FileSystem::IsHttp(audioFile)) {
-		tempFile2 = VM_Text::Format("%s_TEMP_AUDIO_.%s", VM_FileSystem::GetPathImages().c_str(), VM_FileSystem::GetFileExtension(audioFile, true).c_str());
-		fileIn    = VM_FileSystem::DownloadToFile(audioFile, tempFile2);
-	} else {
-		fileIn = fopen(audioFile.c_str(), "rb");
-	}
-
+	FILE* fileIn    = fopen(audioFile.c_str(), "rb");
 	FILE* fileOut   = NULL;
 	bool  foundJFIF = false;
 
@@ -232,7 +222,7 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotAudioJFIF(const St
 				(std::fgetc(fileIn) == 0xFF) && (std::fgetc(fileIn) == 0xD8) && 
 				(std::fgetc(fileIn) == 0xFF) && (std::fgetc(fileIn) == 0xE0)) 
 			{
-				fileOut = fopen(tempFile.c_str(), "wb");
+				fileOut = tmpfile();
 
 				if (fileOut == NULL)
 					break;
@@ -259,40 +249,30 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::CreateSnapshotAudioJFIF(const St
 			}
 		} while (!std::feof(fileIn));
 
-		if (fileOut != NULL)
-			CLOSE_FILE(fileOut);
-
 		CLOSE_FILE(fileIn);
 	}
 
-	if (!foundJFIF)
-		return NULL;
-	
-	LIB_FREEIMAGE::FIBITMAP* image = NULL;
-
-	fileOut = fopen(tempFile.c_str(), "rb");
-
-	if (fileOut != NULL)
-	{
-		LIB_FREEIMAGE::FreeImageIO imageIO;
-
-		imageIO.read_proc  = [](auto b, auto s, auto c, auto h) { return (uint32_t)std::fread(b, s, c, static_cast<FILE*>(h)); };
-		imageIO.seek_proc  = [](auto h, auto off, auto org)     { return fseek(static_cast<FILE*>(h), off, org); };
-		imageIO.tell_proc  = [](auto h)                         { return std::ftell(static_cast<FILE*>(h)); };
-		imageIO.write_proc = [](auto b, auto s, auto c, auto h) { return (uint32_t)std::fwrite(b, s, c, static_cast<FILE*>(h)); };
-
-		LIB_FREEIMAGE::FREE_IMAGE_FORMAT imageFormat = LIB_FREEIMAGE::FreeImage_GetFileTypeFromHandle(&imageIO, (LIB_FREEIMAGE::fi_handle)fileOut, 0);
-
-		if ((imageFormat != LIB_FREEIMAGE::FIF_UNKNOWN) && (imageFormat != LIB_FREEIMAGE::FIF_RAW))
-			image = LIB_FREEIMAGE::FreeImage_LoadFromHandle(imageFormat, &imageIO, (LIB_FREEIMAGE::fi_handle)fileOut, 0);
-
+	if (!foundJFIF) {
 		CLOSE_FILE(fileOut);
+		return NULL;
 	}
-
-	std::remove(tempFile.c_str());
 	
-	if (VM_FileSystem::IsHttp(audioFile))
-		std::remove(tempFile2.c_str());
+	LIB_FREEIMAGE::FreeImageIO imageIO;
+	LIB_FREEIMAGE::FIBITMAP*   image = NULL;
+
+	imageIO.read_proc  = [](auto b, auto s, auto c, auto h) { return (uint32_t)std::fread(b, s, c, static_cast<FILE*>(h)); };
+	imageIO.seek_proc  = [](auto h, auto off, auto org)     { return fseek(static_cast<FILE*>(h), off, org); };
+	imageIO.tell_proc  = [](auto h)                         { return std::ftell(static_cast<FILE*>(h)); };
+	imageIO.write_proc = [](auto b, auto s, auto c, auto h) { return (uint32_t)std::fwrite(b, s, c, static_cast<FILE*>(h)); };
+
+	rewind(fileOut);
+
+	LIB_FREEIMAGE::FREE_IMAGE_FORMAT imageFormat = LIB_FREEIMAGE::FreeImage_GetFileTypeFromHandle(&imageIO, (LIB_FREEIMAGE::fi_handle)fileOut, 0);
+
+	if ((imageFormat != LIB_FREEIMAGE::FIF_UNKNOWN) && (imageFormat != LIB_FREEIMAGE::FIF_RAW))
+		image = LIB_FREEIMAGE::FreeImage_LoadFromHandle(imageFormat, &imageIO, (LIB_FREEIMAGE::fi_handle)fileOut, 0);
+
+	CLOSE_FILE(fileOut);
 
 	return image;
 }
@@ -696,35 +676,24 @@ int Graphics::VM_Graphics::CreateThumbThread(void* userData)
 		String thumbPath = threadData->data["thumb_path"];
 	#endif
 
-	// INTERNET MEDIA
-	if (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST)
-	{
-		LIB_FREEIMAGE::FIBITMAP* thumbImage = VM_Graphics::OpenImageHTTP(threadData->data["full_path"]);
-		result = VM_Graphics::SaveImage(thumbImage, thumbPath);
-		FREE_IMAGE(thumbImage);
-	}
-	// LOCAL MEDIA
-	else
-	{
-		#if defined _ios
-		if (VM_FileSystem::IsITunes(threadData->data["full_path"]))
-			result = VM_Graphics::CreateThumbITunes(threadData->data["name"], threadData->data["full_path"], thumbPath);
+	#if defined _ios
+	if (VM_FileSystem::IsITunes(threadData->data["full_path"]))
+		result = VM_Graphics::CreateThumbITunes(threadData->data["name"], threadData->data["full_path"], thumbPath);
+
+	if (result != RESULT_OK) {
+	#endif
+		result = VM_Graphics::CreateThumbnail(std::atoi(threadData->data["id"].c_str()), VM_Top::Selected);
 
 		if (result != RESULT_OK) {
+		#if defined _windows
+			VM_Graphics::CreateThumbFromCoverArtFile(VM_Text::ToUTF16(threadData->data["full_path"].c_str()), thumbPath);
+		#else
+			VM_Graphics::CreateThumbFromCoverArtFile(threadData->data["full_path"], thumbPath);
 		#endif
-			result = VM_Graphics::CreateThumbnail(std::atoi(threadData->data["id"].c_str()), VM_Top::Selected);
-
-			if (result != RESULT_OK) {
-			#if defined _windows
-				VM_Graphics::CreateThumbFromCoverArtFile(VM_Text::ToUTF16(threadData->data["full_path"].c_str()), thumbPath);
-			#else
-				VM_Graphics::CreateThumbFromCoverArtFile(threadData->data["full_path"], thumbPath);
-			#endif
-			}
-		#if defined _ios
 		}
-		#endif
+	#if defined _ios
 	}
+	#endif
 
 	DELETE_POINTER(threadData);
 
@@ -1057,21 +1026,14 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::OpenImage(const WString &filePat
 	if (filePath.empty())
 		return NULL;
 
-	LIB_FREEIMAGE::FIBITMAP* image = NULL;
+	LIB_FREEIMAGE::FIBITMAP*         image       = NULL;
+	LIB_FREEIMAGE::FREE_IMAGE_FORMAT imageFormat = LIB_FREEIMAGE::FreeImage_GetFileTypeU(filePath.c_str());
 
-	if (VM_FileSystem::IsHttp(filePath)) {
-		image = VM_Graphics::OpenImageHTTP(VM_Text::ToUTF8(filePath.c_str()));
-	}
-	else
-	{
-		LIB_FREEIMAGE::FREE_IMAGE_FORMAT imageFormat = LIB_FREEIMAGE::FreeImage_GetFileTypeU(filePath.c_str());
+	if (imageFormat == LIB_FREEIMAGE::FIF_UNKNOWN)
+		imageFormat = LIB_FREEIMAGE::FreeImage_GetFIFFromFilenameU(filePath.c_str());
 
-		if (imageFormat == LIB_FREEIMAGE::FIF_UNKNOWN)
-			imageFormat = LIB_FREEIMAGE::FreeImage_GetFIFFromFilenameU(filePath.c_str());
-
-		if ((imageFormat != LIB_FREEIMAGE::FIF_UNKNOWN) && (imageFormat != LIB_FREEIMAGE::FIF_RAW))
-			image = LIB_FREEIMAGE::FreeImage_LoadU(imageFormat, filePath.c_str());
-	}
+	if ((imageFormat != LIB_FREEIMAGE::FIF_UNKNOWN) && (imageFormat != LIB_FREEIMAGE::FIF_RAW))
+		image = LIB_FREEIMAGE::FreeImage_LoadU(imageFormat, filePath.c_str());
 
 	if ((image == NULL) || (LIB_FREEIMAGE::FreeImage_GetWidth(image) == 0) || (LIB_FREEIMAGE::FreeImage_GetHeight(image) == 0)) {
 		FREE_IMAGE(image);
@@ -1086,35 +1048,25 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::OpenImage(const String &filePath
 	if (filePath.empty())
 		return NULL;
 
-	LIB_FREEIMAGE::FIBITMAP* image = NULL;
+	// LOAD FILE URL FORM BOOKMARK FILE
+	#if defined _macosx
+		int          dbResult;
+		VM_Database* db = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
 
-	// HTTP
-	if (VM_FileSystem::IsHttp(filePath))
-	{
-		image = VM_Graphics::OpenImageHTTP(filePath);
-	}
-	// FILES
-	else
-	{
-		// LOAD FILE URL FORM BOOKMARK FILE
-		#if defined _macosx
-			int          dbResult;
-			VM_Database* db = new VM_Database(dbResult, DATABASE_MEDIALIBRARYv3);
+		if (DB_RESULT_OK(dbResult))
+			VM_FileSystem::FileBookmarkLoad(db->getID(filePath), true);
 
-			if (DB_RESULT_OK(dbResult))
-				VM_FileSystem::FileBookmarkLoad(db->getID(filePath), true);
+		DELETE_POINTER(db);
+	#endif
 
-			DELETE_POINTER(db);
-		#endif
+	LIB_FREEIMAGE::FIBITMAP*         image       = NULL;
+	LIB_FREEIMAGE::FREE_IMAGE_FORMAT imageFormat = LIB_FREEIMAGE::FreeImage_GetFileType(filePath.c_str());
 
-		LIB_FREEIMAGE::FREE_IMAGE_FORMAT imageFormat = LIB_FREEIMAGE::FreeImage_GetFileType(filePath.c_str());
+	if (imageFormat == LIB_FREEIMAGE::FIF_UNKNOWN)
+		imageFormat = LIB_FREEIMAGE::FreeImage_GetFIFFromFilename(filePath.c_str());
 
-		if (imageFormat == LIB_FREEIMAGE::FIF_UNKNOWN)
-			imageFormat = LIB_FREEIMAGE::FreeImage_GetFIFFromFilename(filePath.c_str());
-
-		if ((imageFormat != LIB_FREEIMAGE::FIF_UNKNOWN) && (imageFormat != LIB_FREEIMAGE::FIF_RAW))
-			image = LIB_FREEIMAGE::FreeImage_Load(imageFormat, filePath.c_str());
-	}
+	if ((imageFormat != LIB_FREEIMAGE::FIF_UNKNOWN) && (imageFormat != LIB_FREEIMAGE::FIF_RAW))
+		image = LIB_FREEIMAGE::FreeImage_Load(imageFormat, filePath.c_str());
 
 	if ((image == NULL) || (LIB_FREEIMAGE::FreeImage_GetWidth(image) == 0) || (LIB_FREEIMAGE::FreeImage_GetHeight(image) == 0)) {
 		FREE_IMAGE(image);
@@ -1124,22 +1076,6 @@ LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::OpenImage(const String &filePath
 	return image;
 }
 #endif
-
-LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::OpenImageHTTP(const String &mediaURL)
-{
-	if (mediaURL.empty())
-		return NULL;
-
-	VM_Bytes*                bytes = VM_FileSystem::DownloadToBytes(mediaURL);
-	LIB_FREEIMAGE::FIBITMAP* image = NULL;
-
-	if (bytes != NULL)
-		image = VM_Graphics::OpenImageMemory(bytes);
-
-	DELETE_POINTER(bytes);
-
-	return image;
-}
 
 LIB_FREEIMAGE::FIBITMAP* Graphics::VM_Graphics::OpenImageMemory(VM_Bytes* bytes)
 {

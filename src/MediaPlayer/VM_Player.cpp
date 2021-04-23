@@ -1140,11 +1140,6 @@ int MediaPlayer::VM_Player::PlayPauseToggle()
 
 int MediaPlayer::VM_Player::PlaylistLoopTypeToggle()
 {
-	if (SHOUTCAST_IS_SELECTED) {
-		VM_Player::State.loopType = LOOP_TYPE_NORMAL;
-		return RESULT_OK;
-	}
-
 	switch (VM_Player::State.loopType) {
 		case LOOP_TYPE_NORMAL:  VM_Player::State.loopType = LOOP_TYPE_LOOP;    break;
 		case LOOP_TYPE_LOOP:    VM_Player::State.loopType = LOOP_TYPE_SHUFFLE; break;

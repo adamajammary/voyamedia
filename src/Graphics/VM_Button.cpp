@@ -151,9 +151,6 @@ int Graphics::VM_Button::render()
 	if (!this->visible)
 		return ERROR_INVALID_ARGUMENTS;
 
-	if ((this->id == "list_offset_end") && SHOUTCAST_IS_SELECTED)
-		return RESULT_OK;
-
 	SDL_Rect area = SDL_Rect(this->backgroundArea);
 
 	area.x += this->borderWidth.left;
@@ -451,24 +448,5 @@ int Graphics::VM_Button::setText(const String &text)
 
 void Graphics::VM_Button::setThumb(const String &tableID)
 {
-	if ((tableID == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST))
-	{
-		String filename = "";
-
-		if (SHOUTCAST_IS_SELECTED && (this->mediaID > 0))
-			filename = ("shoutcast_" + std::to_string(this->mediaID));
-
-		if (!filename.empty())
-		{
-			#if defined _windows
-				WString fullPath = VM_FileSystem::GetPathThumbnailsW(VM_Text::ToUTF16(filename.c_str()));
-				this->setImage(VM_Text::ToUTF8(fullPath.c_str(), false), true);
-			#else
-				String fullPath = VM_FileSystem::GetPathThumbnails(filename);
-				this->setImage(fullPath, true);
-			#endif
-		}
-	} else {
-		this->setImage(std::to_string(this->mediaID), true);
-	}
+	this->setImage(std::to_string(this->mediaID), true);
 }
