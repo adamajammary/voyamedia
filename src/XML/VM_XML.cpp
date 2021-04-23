@@ -230,19 +230,7 @@ String XML::VM_XML::GetValue(LIB_XML::xmlNode* node, LIB_XML::xmlDoc* document)
 
 LIB_XML::xmlDoc* XML::VM_XML::Load(const char* file)
 {
-	LIB_XML::xmlDoc* document = NULL;
-
-	if (file == NULL)
-		return document;
-
-	if (VM_FileSystem::IsHttp(file)) {
-		String response = VM_FileSystem::DownloadToString(file);
-		document        = VM_XML::Load(response.c_str(), (int)response.size());
-	} else {
-		document = LIB_XML::xmlParseFile(file);
-	}
-
-	return document;
+	return (file != NULL ? LIB_XML::xmlParseFile(file) : NULL);
 }
 
 LIB_XML::xmlDoc* XML::VM_XML::Load(const char* memory, int size)

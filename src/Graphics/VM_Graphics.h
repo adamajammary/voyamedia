@@ -37,7 +37,6 @@ namespace VoyaMedia
 			static SDL_Rect                 GetScaledSize(int width, int height);
 			static SDL_Surface*             GetSurface(VM_Image* image);
 			static int                      GetTopBarHeight();
-			static LIB_FREEIMAGE::FIBITMAP* OpenImageHTTP(const String &mediaURL);
 			static LIB_FREEIMAGE::FIBITMAP* OpenImageMemory(System::VM_Bytes* bytes);
 			static int                      OpenImagesThread(void* userData);
 			static LIB_FREEIMAGE::FIBITMAP* ResizeImage(LIB_FREEIMAGE::FIBITMAP** image, unsigned int width, unsigned int height, const bool freeImage = true);

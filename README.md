@@ -18,10 +18,6 @@ __Video__
 
 Supports most popular video codecs like H.26x, DivX, MPEG, Theora, WMV and XviD.
 
-__Radio__
-
-Listen to more than 80 000 streaming radio stations provided by [SHOUTcast](https://directory.shoutcast.com/).
-
 ## 3rd Party Libraries
 
 Library | Version | License
@@ -29,7 +25,6 @@ Library | Version | License
 [FFmpeg](https://ffmpeg.org/) | [4.3.1](https://www.ffmpeg.org/releases/ffmpeg-4.3.1.tar.bz2) | [LGPL v.2.1 (GNU Lesser General Public License)](https://ffmpeg.org/legal.html)
 [FreeImage](http://freeimage.sourceforge.net/download.html) | [3.18.0](http://downloads.sourceforge.net/freeimage/FreeImage3180.zip) | [FIPL (FreeImage Public License)](http://freeimage.sourceforge.net/license.html)
 [Freetype2](https://www.freetype.org/) | [2.10.2](https://sourceforge.net/projects/freetype/files/freetype2/2.10.2/freetype-2.10.2.tar.gz) | [FTL (FreeType License)](https://www.freetype.org/license.html)
-[libCURL](https://curl.haxx.se/libcurl/) | [7.71.1](https://curl.haxx.se/download/curl-7.71.1.tar.gz) | [MIT/X derivate license](https://curl.haxx.se/docs/copyright.html)
 [libXML2](http://xmlsoft.org/) | [2.9.10](http://xmlsoft.org/sources/libxml2-2.9.10.tar.gz) | [MIT License](https://opensource.org/licenses/mit-license.html)
 [M's JSON parser](https://sourceforge.net/projects/mjson/) | [1.7.0](https://sourceforge.net/projects/mjson/files/mjson/mjson-1.7.0.tar.gz/download) | [LGPL v.2.1 (GNU Lesser General Public License)](https://sourceforge.net/projects/mjson/)
 [OpenSSL](https://www.openssl.org/) | [1.1.1g](https://www.openssl.org/source/openssl-1.1.1g.tar.gz) | [Dual (OpenSSL / Original SSLeay License)](https://www.openssl.org/source/license.html)
@@ -43,9 +38,3 @@ Library | Version | License
 Font | License
 ---- | -------
 [Google Noto](https://www.google.com/get/noto/) | [OFL](http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL)
-
-## APIs
-
-API | License
---- | -------
-[SHOUTcast Radio Directory API](http://wiki.shoutcast.com/wiki/SHOUTcast_Radio_Directory_API) | [License Agreement](http://wiki.shoutcast.com/wiki/SHOUTcast_API_License_Agreement)

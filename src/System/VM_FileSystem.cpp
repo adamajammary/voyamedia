@@ -242,7 +242,7 @@ int System::VM_FileSystem::CleanDB(void* userData)
 		String fullPath   = rows[i]["full_path"];
 		bool   deleteFile = false;
 
-		if (VM_FileSystem::IsHttp(fullPath) || VM_FileSystem::IsConcat(fullPath))
+		if (VM_FileSystem::IsConcat(fullPath))
 		{
 			if (!VM_FileSystem::FileExists(fullPath, L""))
 				deleteFile = true;
@@ -551,95 +551,6 @@ String System::VM_FileSystem::DownloadFileFromITunes(const String url, bool down
 }
 #endif
 
-System::VM_Bytes* System::VM_FileSystem::DownloadToBytes(const String &mediaURL)
-{
-	if (mediaURL.empty())
-		return NULL;
-
-	VM_Bytes* bytes = new VM_Bytes();
-	CURL*     curl  = VM_FileSystem::openCURL(mediaURL);
-
-	if (curl == NULL)
-		return NULL;
-
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, VM_FileSystem::downloadToBytesT);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA,     bytes);
-
-	curl_easy_perform(curl);
-	CLOSE_CURL(curl);
-
-	return bytes;
-}
-
-size_t System::VM_FileSystem::downloadToBytesT(void* data, size_t size, size_t bytes, VM_Bytes* outData)
-{
-	size_t newSize = (size * bytes);
-
-	outData->write(data, newSize);
-
-	return newSize;
-}
-
-FILE* System::VM_FileSystem::DownloadToFile(const String &mediaURL, const String &filePath)
-{
-	if (mediaURL.empty() || filePath.empty())
-		return NULL;
-
-	FILE* fileHandle;
-	CURL* curl = VM_FileSystem::openCURL(mediaURL);
-
-	if (curl == NULL)
-		return NULL;
-	
-	fileHandle = fopen(filePath.c_str(), "wb");
-
-	if (fileHandle == NULL) {
-		curl_easy_cleanup(curl);
-		return NULL;
-	}
-
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, VM_FileSystem::downloadToFileT);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA,     fileHandle);
-
-	curl_easy_perform(curl);
-
-	CLOSE_FILE(fileHandle);
-	
-	fileHandle = fopen(filePath.c_str(), "rb");
-
-	CLOSE_CURL(curl);
-
-	return fileHandle;
-}
-
-size_t System::VM_FileSystem::downloadToFileT(void* data, size_t size, size_t bytes, FILE* file)
-{
-	return std::fwrite(data, size, bytes, file);
-}
-
-String System::VM_FileSystem::DownloadToString(const String &mediaURL)
-{
-	CURL*  curl    = VM_FileSystem::openCURL(mediaURL);
-	String content = "";
-
-	if (curl == NULL)
-		return "";
-
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, VM_FileSystem::downloadToStringT);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA,     &content);
-
-	curl_easy_perform(curl);
-	CLOSE_CURL(curl);
-
-	return content;
-}
-
-size_t System::VM_FileSystem::downloadToStringT(void* userData, size_t size, size_t bytes, void* userPointer)
-{
-	static_cast<String*>(userPointer)->append(static_cast<char*>(userData), (size * bytes));
-	return (size * bytes);
-}
-
 #if defined _macosx
 int System::VM_FileSystem::FileBookmarkLoad(int id, bool startAccess)
 {
@@ -764,32 +675,8 @@ bool System::VM_FileSystem::FileExists(const String &filePath, const WString &fi
 	}
 	else
 	#endif
-	// HTTP
-	if (!filePath.empty() && VM_FileSystem::IsHttp(filePath))
-	{
-		CURL* curl = VM_FileSystem::openCURL(filePath);
-
-		if (curl != NULL)
-		{
-			curl_easy_setopt(curl, CURLOPT_FAILONERROR,       1L);
-			curl_easy_setopt(curl, CURLOPT_NOBODY,            1L);
-			curl_easy_setopt(curl, CURLOPT_ACCEPTTIMEOUT_MS,  MAX_CURL_TIMEOUT);
-			curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, MAX_CURL_TIMEOUT);
-			curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS,        MAX_CURL_TIMEOUT);
-
-			curl_easy_perform(curl);
-
-			long responseCode;
-			curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &responseCode);
-
-			CLOSE_CURL(curl);
-
-			if (responseCode == HTTP_RESPONSE_OK)
-				return true;
-		}
-	}
 	// BLURAY / DVD: "concat:streamPath|stream1|stream2|streamN|duration|title|audioTrackCount|subTrackCount|"
-	else if (!filePath.empty() && VM_FileSystem::IsConcat(filePath))
+	if (!filePath.empty() && VM_FileSystem::IsConcat(filePath))
 	{
 		Strings fileDetails = VM_Text::Split(filePath.substr(7), "|");
 
@@ -1755,75 +1642,6 @@ VM_MediaType System::VM_FileSystem::GetMediaType(LIB_FFMPEG::AVFormatContext* fo
 	return MEDIA_TYPE_UNKNOWN;
 }
 
-Strings System::VM_FileSystem::GetNetworkInterfaces()
-{
-	Strings interfaces;
-
-	#if defined _windows
-		WSADATA winSockData;
-
-		if (WSAStartup(MAKEWORD(2, 2), &winSockData) != 0)
-			return interfaces;
-
-		const ULONG MAX_ITERATIONS = 3;
-		const ULONG FLAGS          = (GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_MULTICAST | GAA_FLAG_SKIP_UNICAST);
-
-		ULONG bufferSize = 15 * KILO_BYTE;
-		ULONG iteration  = 0;
-
-		PIP_ADAPTER_ADDRESSES addresses;
-		DWORD                 result;
-
-		do {
-			addresses = (IP_ADAPTER_ADDRESSES*)malloc(bufferSize);
-			result    = GetAdaptersAddresses(AF_INET, FLAGS, NULL, addresses, &bufferSize);
-
-			iteration++;
-
-			if (result == ERROR_BUFFER_OVERFLOW) {
-				FREE_POINTER(addresses);
-				continue;
-			}
-
-			for (PIP_ADAPTER_ADDRESSES address = addresses; address != NULL; address = address->Next) {
-				if ((address->OperStatus == IfOperStatusUp) && (address->IfType != IF_TYPE_SOFTWARE_LOOPBACK))
-					interfaces.push_back(VM_Text::ToUTF8(address->FriendlyName));
-			}
-
-			break;
-		} while ((result == ERROR_BUFFER_OVERFLOW) && (iteration < MAX_ITERATIONS));
-
-		FREE_POINTER(addresses);
-
-		WSACleanup();
-	#else
-		String   ifName;
-		ifaddrs* addresses = NULL, *address;
-
-		if (getifaddrs(&addresses) == 0)
-		{
-			for (address = addresses; address != NULL; address = address->ifa_next)
-			{
-				if ((address->ifa_name == NULL) || (address->ifa_addr == NULL) || (address->ifa_addr->sa_family != AF_INET))
-					continue;
-
-				#if defined _ios || defined _macosx
-					ifName = String([[NSString stringWithUTF8String:address->ifa_name] UTF8String]);
-				#else
-					ifName = String(address->ifa_name);
-				#endif
-
-				if (ifName.substr(0, 2) != "lo")
-					interfaces.push_back(ifName);
-			}
-		}
-
-		freeifaddrs(addresses);
-	#endif
-
-	return interfaces;
-}
-
 Strings System::VM_FileSystem::getOpticalFileBluray(const String &path)
 {
 	String  bdmvPath;
@@ -2423,138 +2241,9 @@ WString System::VM_FileSystem::GetPathFromArgumentList(wchar_t* argv[], int argc
 }
 #endif
 
-StringMap System::VM_FileSystem::GetShoutCastDetails(const String &stationName, int stationID)
-{
-	// http://wiki.shoutcast.com/wiki/SHOUTcast_Developer
-
-	StringMap        details;
-	String           apiKey   = VM_Text::Decrypt(SHOUTCAST_API_KEY);
-	String           mediaURL = (SHOUTCAST_API_URL + "stationsearch?search=" + VM_Text::EscapeURL(stationName) + "&k=" + apiKey);
-	LIB_XML::xmlDoc* document = VM_XML::Load(mediaURL.c_str());
-
-	// FAILED TO LOAD XML FILE
-	if (document == NULL)
-		return details;
-
-	LIB_XML::xmlNode* stationList = VM_XML::GetNode("/stationlist", document);
-
-	if (stationList == NULL)
-	{
-		FREE_XML_DOC(document);
-		LIB_XML::xmlCleanupParser();
-
-		return details;
-	}
-
-	VM_XmlNodes stations = VM_XML::GetChildNodes(stationList, document);
-
-	for (auto station : stations)
-	{
-		if ((station == NULL) || (strcmp(reinterpret_cast<const char*>(station->name), "station") != 0))
-			continue;
-
-		if (VM_XML::GetAttribute(station, "id") == std::to_string(stationID))
-		{
-			details["genre"]          = VM_XML::GetAttribute(station, "genre");
-			details["bit_rate"]       = VM_XML::GetAttribute(station, "br");
-			details["media_type"]     = VM_XML::GetAttribute(station, "mt");
-			details["listener_count"] = VM_XML::GetAttribute(station, "lc");
-
-			details["now_playing"] = VM_XML::GetAttribute(station, "ct");
-			details["now_playing"] = VM_Text::Replace(details["now_playing"], "\\\"",   "\"");
-			details["now_playing"] = VM_Text::Replace(details["now_playing"], "\\n\\n", "\n");
-			details["now_playing"] = VM_Text::Replace(details["now_playing"], "\\n",    "\n");
-
-			break;
-		}
-	}
-
-	FREE_XML_DOC(document);
-	LIB_XML::xmlCleanupParser();
-
-	return details;
-}
-
-String System::VM_FileSystem::GetShoutCastStation(int stationID)
-{
-	if (stationID < 1)
-		return "";
-
-	// URL = https://yp.shoutcast.com<base>?id=[Station_id]
-
-	const String API_URL           = "http://yp.shoutcast.com/sbin/tunein-station.";
-	const int    NR_BASES          = 3;
-	String       bases[NR_BASES]   = { "m3u", "pls", "xspf" };
-	String       delims[NR_BASES]  = { "\n", "\n", ">" };
-	int          offsets[NR_BASES] = { 0, 0, 6 };
-	String       stationLink       = "";
-
-	for (int i = 0; i < NR_BASES; i++)
-	{
-		String mediaURL = (API_URL + bases[i] + "?id=" + std::to_string(stationID));
-		String response = VM_FileSystem::DownloadToString(mediaURL);
-
-		if (response.empty())
-			continue;
-
-		Strings textSplit = VM_Text::Split(response, delims[i]);
-
-		for (const auto &line : textSplit)
-		{
-			if (line.substr(offsets[i], 4) == "http") {
-				stationLink = line.substr(offsets[i]);
-				stationLink = stationLink.substr(0, stationLink.rfind("<"));
-				break;
-			}
-		}
-
-		if (!stationLink.empty())
-			break;
-	}
-
-	return stationLink;
-}
-
 bool System::VM_FileSystem::hasFileExtension(const String &filePath)
 {
 	return (!VM_FileSystem::GetFileExtension(filePath, false).empty());
-}
-
-bool System::VM_FileSystem::HasInternetConnection()
-{
-	#if defined _android
-		jclass    jniClass                 = VM_Window::JNI->getClass();
-		JNIEnv*   jniEnvironment           = VM_Window::JNI->getEnvironment();
-		jmethodID jniHasInternetConnection = jniEnvironment->GetStaticMethodID(jniClass, "HasInternetConnection", "()Z");
-
-		if (jniHasInternetConnection == NULL)
-			return false;
-
-		return jniEnvironment->CallStaticBooleanMethod(jniClass, jniHasInternetConnection);
-	#elif defined _ios || defined _macosx
-		SCNetworkReachabilityFlags flags;
-		SCNetworkReachabilityRef   address = SCNetworkReachabilityCreateWithName(NULL, "www.google.com");
-
-		if (!address)
-			return false;
-
-		Boolean success   = SCNetworkReachabilityGetFlags(address, &flags);
-		Boolean needsConn = (flags & kSCNetworkReachabilityFlagsConnectionRequired);
-		Boolean reachable = (flags & kSCNetworkReachabilityFlagsReachable);
-
-		CFRelease(address);
-
-		return (success && reachable && !needsConn);
-	#else
-		Strings nics = VM_FileSystem::GetNetworkInterfaces();
-
-		for (const auto &nic : nics) {
-			if (VM_FileSystem::IsServerAccessible(GOOGLE_IP, nic))
-				return true;
-		}
-	#endif
-
-	return false;
 }
 
 void System::VM_FileSystem::InitFFMPEG()
@@ -2603,14 +2292,6 @@ int System::VM_FileSystem::InitLibraries()
 	// SDL_TTF
 	if (TTF_Init() < 0) {
 		VM_Modal::ShowMessage(VM_Window::Labels["error.sdl_ttf"]);
-		return ERROR_UNKNOWN;
-	}
-
-	// CURL
-	CURLcode curlResult = curl_global_init(CURL_GLOBAL_ALL);
-
-	if (curlResult != CURLE_OK) {
-		VM_Modal::ShowMessage(VM_Window::Labels["error.curl"]);
 		return ERROR_UNKNOWN;
 	}
 
@@ -2719,18 +2400,6 @@ bool System::VM_FileSystem::isFile(uint16_t statMode)
 	return (S_ISREG(statMode) && !(S_ISLNK(statMode)));		// DT_REG / S_ISREG = A regular file
 }
 
-bool System::VM_FileSystem::IsHttp(const String &filePath)
-{
-	return ((filePath.size() > 4) && (filePath.substr(0, 4) == "http"));
-}
-
-#if defined _windows
-bool System::VM_FileSystem::IsHttp(const WString &filePath)
-{
-	return ((filePath.size() > 4) && (filePath.substr(0, 4) == L"http"));
-}
-#endif
-
 bool System::VM_FileSystem::IsITunes(const String &filePath)
 {
 	return ((filePath.size() > 15) && ((filePath.substr(0, 13) == "ipod-library:") || (filePath.substr(0, 15) == "iphoto-library:")));
@@ -2778,10 +2447,8 @@ bool System::VM_FileSystem::IsPicture(const WString &filePath)
 
 bool System::VM_FileSystem::isRootDrive(const String &filePath)
 {
-	// https://server/sub
-	if (VM_FileSystem::IsHttp(filePath) && (filePath.rfind("/") < 8)) { return true; }
 	// \\server\sub, //server/sub
-	else if (VM_FileSystem::IsSambaServer(filePath) && ((filePath.rfind("\\") < 2) || (filePath.rfind("/") < 2))) { return true; }
+	if (VM_FileSystem::IsSambaServer(filePath) && ((filePath.rfind("\\") < 2) || (filePath.rfind("/") < 2))) { return true; }
 	// C:\sub
 	else if (filePath.rfind(PATH_SEPERATOR) < 3) { return true; }
 
@@ -2815,12 +2482,8 @@ bool System::VM_FileSystem::IsServerAccessible(const String &serverAddress, cons
 	if (serverName.empty())
 		return false;
 
-	// HTTP
-	if (VM_FileSystem::IsHttp(serverName)) {
-		serverName = serverName.substr(serverName.find("//") + 2);
-	}
 	// SMB/CIFS
-	else if (VM_FileSystem::IsSambaServer(serverName))
+	if (VM_FileSystem::IsSambaServer(serverName))
 	{
 		serverPort = "445";
 
@@ -2918,34 +2581,6 @@ bool System::VM_FileSystem::isSystemFile(const String &fileName)
 	// HIDDEN SYSTEM FILES/DIRECTORIES
 	String file = VM_Text::ToUpper(fileName);
 	return ((file[0] == '.') || (file[0] == '$') || (file == "RECYCLER") || (file == "WINSXS"));
-}
-
-CURL* System::VM_FileSystem::openCURL(const String &mediaURL)
-{
-	if (mediaURL.empty())
-		return NULL;
-
-	CURL* curl = curl_easy_init();
-
-	if (curl == NULL)
-		return NULL;
-
-	curl_easy_setopt(curl, CURLOPT_URL,            mediaURL.c_str());
-	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
-	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
-
-	char hostName[DEFAULT_CHAR_BUFFER_SIZE];
-	gethostname(hostName, DEFAULT_CHAR_BUFFER_SIZE);
-
-	curl_easy_setopt(curl, CURLOPT_USERAGENT, String(APP_NAME + " (").append(hostName).append(") / " + APP_VERSION).c_str());
-
-	curl_easy_setopt(curl, CURLOPT_MAXREDIRS,         MAX_CURL_REDIRS);
-	curl_easy_setopt(curl, CURLOPT_ACCEPTTIMEOUT_MS,  MAX_CURL_TIMEOUT);
-	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, MAX_CURL_TIMEOUT);
-	curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS,        MAX_CURL_TIMEOUT);
-
-	return curl;
 }
 
 #if defined _windows
@@ -3107,33 +2742,6 @@ String System::VM_FileSystem::OpenFileBrowser(bool selectDirectory)
 	#endif
 
 	return directoryPath;
-}
-
-String System::VM_FileSystem::PostData(const String &mediaURL, const String &data, const Strings &headers)
-{
-	String      content     = "";
-	CURL*       curl        = VM_FileSystem::openCURL(mediaURL);
-	curl_slist* curlHeaders = NULL;
-
-	if (curl == NULL)
-		return "";
-
-	for (const auto &header : headers)
-		curlHeaders = curl_slist_append(curlHeaders, header.c_str());
-
-	if (curlHeaders != NULL)
-		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, curlHeaders);
-
-	if (!data.empty())
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
-
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, VM_FileSystem::downloadToStringT);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA,     &content);
-
-	curl_easy_perform(curl);
-	CLOSE_CURL(curl);
-
-	return content;
 }
 
 void System::VM_FileSystem::RefreshMetaData()

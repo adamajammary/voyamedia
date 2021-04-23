@@ -478,17 +478,6 @@ int Graphics::VM_Modal::UpdateLabelsDetails()
 	{
 		VM_Modal::updateLabelsDetailsVideo(mediaID, filePath2, filePath);
 	}
-	else if (SHOUTCAST_IS_SELECTED)
-	{
-		StringMap details = VM_FileSystem::GetShoutCastDetails(row[1]->getText(), mediaID);
-
-		text.append(!details["genre"].empty()          ? details["genre"] + "\n"         : "");
-		text.append(!details["bit_rate"].empty()       ? details["bit_rate"] + " kbps\n" : "");
-		text.append(!details["media_type"].empty()     ? details["media_type"] + "\n"    : "");
-		text.append(!details["listener_count"].empty() ? VM_Text::ToViewCount(std::atoll(details["listener_count"].c_str())) + " " + VM_Window::Labels["listeners"] : "");
-
-		text2.append(!details["now_playing"].empty() ? details["now_playing"] : "");
-	}
 
 	#if defined _ios
 	if (VM_FileSystem::IsITunes(filePath2))

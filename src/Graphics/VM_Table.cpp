@@ -92,19 +92,6 @@ Graphics::VM_Button* Graphics::VM_Table::getButton(const String &buttonID)
 	return NULL;
 }
 
-VM_DBResult Graphics::VM_Table::getNICs()
-{
-	VM_DBResult result;
-	Strings     nics = VM_FileSystem::GetNetworkInterfaces();
-
-	for (const auto &nic : nics) {
-		VM_DBRow row = { { "name", nic }, { "id", "0" }, { "full_path", nic } };
-		result.push_back(row);
-	}
-
-	return this->getResultLimited(result);
-}
-
 VM_DBResult Graphics::VM_Table::getResult()
 {
 	VM_DBResult result;
@@ -112,8 +99,7 @@ VM_DBResult Graphics::VM_Table::getResult()
 	for (int i = 0; i < this->limit; i++)
 	{
 		VM_DBRow row = {
-			{"name", "" }, { "id", "" },
-			{ (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST ? "thumb_url" : "full_path"), "" }
+			{"name", "" }, { "id", "" }, { "full_path", "" }
 		};
 
 		result.push_back(row);
@@ -176,23 +162,7 @@ String Graphics::VM_Table::getSelectedMediaURL()
 
 String Graphics::VM_Table::getSelectedFile()
 {
-	if (SHOUTCAST_IS_SELECTED)
-		return VM_GUI::ListTable->getSelectedShoutCast();
-
 	return VM_GUI::ListTable->getSelectedMediaURL();
-}
-
-String Graphics::VM_Table::getSelectedShoutCast()
-{
-	if (this->shouldRefreshRows || this->shouldRefreshSelected || this->states[VM_Top::Selected].dataRequested || this->states[VM_Top::Selected].dataIsReady)
-		return REFRESH_PENDING;
-
-	String mediaID = "";
-
-	if (this->states[VM_Top::Selected].isValidSelectedRow(this->rows))
-		mediaID = VM_FileSystem::GetShoutCastStation(this->rows[this->states[VM_Top::Selected].selectedRow][0]->mediaID);
-
-	return mediaID;
 }
 
 Graphics::VM_Buttons Graphics::VM_Table::getSelectedRow()
@@ -268,79 +238,6 @@ String Graphics::VM_Table::getSQL()
 Graphics::VM_TableState Graphics::VM_Table::getState()
 {
 	return this->states[VM_Top::Selected];
-}
-
-VM_DBResult Graphics::VM_Table::getShoutCast()
-{
-	// http://wiki.shoutcast.com/wiki/SHOUTcast_Developer
-
-	VM_DBResult result;
-	String      apiKey   = VM_Text::Decrypt(SHOUTCAST_API_KEY);
-	String      search   = VM_Text::EscapeSQL(VM_GUI::ListTable->getSearch(), true);
-	String      mediaURL = String(SHOUTCAST_API_URL);
-
-	// SEARCH
-	if (!search.empty())
-		mediaURL.append("stationsearch?search=" + VM_Text::EscapeURL(search) + "&");
-	// POPULAR
-	else
-		mediaURL.append("Top500?");
-
-	mediaURL.append("limit=" + std::to_string(this->states[VM_Top::Selected].offset) + "," + std::to_string(this->limit) + "&k=" + apiKey);
-
-	this->maxRows = 500;
-
-	if (this->response[VM_Top::Selected][mediaURL].empty())
-		this->response[VM_Top::Selected][mediaURL] = VM_FileSystem::DownloadToString(mediaURL);
-
-	LIB_XML::xmlDoc* document = VM_XML::Load(
-		this->response[VM_Top::Selected][mediaURL].c_str(), (int)this->response[VM_Top::Selected][mediaURL].size()
-	);
-
-	// FAILED TO LOAD XML FILE
-	if (document == NULL)
-		return result;
-
-	LIB_XML::xmlNode* stationList = VM_XML::GetNode("/stationlist", document);
-
-	if (stationList == NULL)
-	{
-		FREE_XML_DOC(document);
-		LIB_XML::xmlCleanupParser();
-
-		return result;
-	}
-
-	VM_XmlNodes stations = VM_XML::GetChildNodes(stationList, document);
-
-	for (auto station : stations)
-	{
-		if ((station == NULL) || (strcmp(reinterpret_cast<const char*>(station->name), "station") != 0))
-			continue;
-
-		String genre      = VM_XML::GetAttribute(station, "genre");
-		String bitRate    = VM_XML::GetAttribute(station, "br");
-		String listeners  = VM_Text::ToViewCount(std::atoll(VM_XML::GetAttribute(station, "lc").c_str()));
-		String nowPlaying = VM_Text::Replace(VM_XML::GetAttribute(station, "ct"), "\\\"", "\"");
-		String details    = VM_Text::Format("%s | %s kbps | %s", genre.c_str(), bitRate.c_str(), listeners.c_str());
-
-		if (!nowPlaying.empty())
-			details.append(VM_Text::Format(" | %s", nowPlaying.c_str()));
-
-		VM_DBRow row = {
-			{ "name",      VM_Text::Replace(VM_XML::GetAttribute(station, "name"), "\\\"", "\"") },
-			{ "id",        VM_XML::GetAttribute(station, "id") },
-			{ "full_path", VM_XML::GetAttribute(station, "logo") },
-			{ "path",      details }
-		};
-
-		result.push_back(row);
-	}
-
-	FREE_XML_DOC(document);
-	LIB_XML::xmlCleanupParser();
-
-	return result;
 }
 
 VM_DBResult Graphics::VM_Table::getTracks(VM_MediaType mediaType)
@@ -479,9 +376,6 @@ bool Graphics::VM_Table::isRowVisible()
 
 bool Graphics::VM_Table::offsetEnd()
 {
-	if (SHOUTCAST_IS_SELECTED)
-		return false;
-
 	int remainder = (this->maxRows % this->limit);
 	int end       = (this->maxRows - (remainder > 0 ? remainder : this->limit));
 
@@ -936,18 +830,12 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 	// SINGLE-CLICKED INFO/DETAILS ICON
 	if (info->selected && VM_Graphics::ButtonPressed(mouseEvent, areaInfo))
 	{
-		if (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST)
-			VM_Modal::Open("modal_details");
-		else
-			VM_Modal::Open(VM_XML::GetAttribute(info->xmlNode, "modal"));
+		VM_Modal::Open(VM_XML::GetAttribute(info->xmlNode, "modal"));
 	}
 	// SINGLE-CLICKED PLAY/THUMB ICON
 	else if (thumb->selected && VM_Graphics::ButtonPressed(mouseEvent, areaThumb))
 	{
-		if (SHOUTCAST_IS_SELECTED)
-			VM_Player::OpenFilePath(VM_FileSystem::GetShoutCastStation(thumb->mediaID));
-		else if (VM_Top::Selected < MEDIA_TYPE_SHOUTCAST)
-			VM_Player::OpenFilePath(thumb->mediaURL);
+		VM_Player::OpenFilePath(thumb->mediaURL);
 	}
 	else
 	{
@@ -957,23 +845,12 @@ bool Graphics::VM_Table::selectRow(SDL_Event* mouseEvent)
 			area.y       -= offsetY;
 
 			// DOUBLE-CLICKED ROW
-			if (VM_Graphics::ButtonPressed(mouseEvent, area, false, true))
-			{
-				if (VM_Top::Selected > MEDIA_TYPE_SHOUTCAST)
-					VM_Modal::Open("modal_details");
-				else if (SHOUTCAST_IS_SELECTED)
-					VM_Player::OpenFilePath(VM_FileSystem::GetShoutCastStation(thumb->mediaID));
-				else if (VM_Top::Selected < MEDIA_TYPE_SHOUTCAST)
-					VM_Player::OpenFilePath(thumb->mediaURL);
-
+			if (VM_Graphics::ButtonPressed(mouseEvent, area, false, true)) {
+				VM_Player::OpenFilePath(thumb->mediaURL);
 				break;
-			}
 			// RIGHT-CLICKED ROW
-			else if (VM_Graphics::ButtonPressed(mouseEvent, area, true, false))
-			{
-				if (VM_Top::Selected < MEDIA_TYPE_SHOUTCAST)
-					VM_Modal::Open("modal_right_click");
-
+			} else if (VM_Graphics::ButtonPressed(mouseEvent, area, true, false)) {
+				VM_Modal::Open("modal_right_click");
 				break;
 			}
 		}
@@ -991,8 +868,6 @@ void Graphics::VM_Table::setData()
 		this->result = this->getTracks(MEDIA_TYPE_AUDIO);
 	else if (this->id == "modal_player_settings_subs_list_table")
 		this->result = this->getTracks(MEDIA_TYPE_SUBTITLE);
-	else if ((this->id == "list_table") && SHOUTCAST_IS_SELECTED)
-		this->result = this->getShoutCast();
 	else if ((this->id == "list_table") || (this->id == "modal_playlists_list_table"))
 	{
 		int          dbResult = SQLITE_ERROR;
@@ -1024,9 +899,7 @@ void Graphics::VM_Table::setData()
 	{
 		String thumbFile = "";
 
-		if ((this->id == "list_table") && SHOUTCAST_IS_SELECTED)
-			thumbFile = ("shoutcast_" + row["id"]);
-		else if ((this->id == "list_table") || (this->id == "modal_playlists_list_table"))
+		if ((this->id == "list_table") || (this->id == "modal_playlists_list_table"))
 			thumbFile = row["id"];
 
 		if (thumbFile.empty())
@@ -1102,14 +975,7 @@ int Graphics::VM_Table::setRows(bool temp)
 
 		headerColumn->setText("");
 
-		if ((this->id == "list_table") && (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST))
-		{
-			if (col == 1)
-				headerColumn->setText(VM_Window::Labels["title"]);
-			else if (col == 2)
-				headerColumn->setText(VM_Window::Labels["details"]);
-		}
-		else if (!temp &&
+		if (!temp &&
 			!this->result.empty() &&
 			(headerColumn->id == this->states[VM_Top::Selected].sortColumn) &&
 			((this->id == "list_table") || (this->id == "modal_playlists_list_table")))
@@ -1159,10 +1025,7 @@ int Graphics::VM_Table::setRows(bool temp)
 			// LAST COLUMN - ABOUT/INFO
 			else if ((col == this->buttons.size() - 1) && !temp)
 			{
-				if (VM_Top::Selected >= MEDIA_TYPE_SHOUTCAST)
-					rowColumn->setImage((VM_GUI::ColorThemeFile == "dark" ? "about-1-512.png" : "about-2-512.png"), false);
-				else
-					rowColumn->setImage((VM_GUI::ColorThemeFile == "dark" ? "ellipsis-vertical-1-512.png" : "ellipsis-vertical-2-512.png"), false);
+				rowColumn->setImage((VM_GUI::ColorThemeFile == "dark" ? "ellipsis-vertical-1-512.png" : "ellipsis-vertical-2-512.png"), false);
 			}
 			// REMAINING COLUMNS
 			else if ((col == 1) && !temp)

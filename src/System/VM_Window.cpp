@@ -58,7 +58,6 @@ void System::VM_Window::Close()
 		DELETE_POINTER(VM_Window::JNI);
 	#endif
 
-	curl_global_cleanup();
 	LIB_FREEIMAGE::FreeImage_DeInitialise();
 	TTF_Quit();
 
@@ -237,7 +236,7 @@ int System::VM_Window::Render()
 						VM_ThreadManager::Mutex.unlock();
 					}
 					#endif
-					else if (PICTURE_IS_SELECTED || SHOUTCAST_IS_SELECTED)
+					else if (PICTURE_IS_SELECTED)
 					{
 						VM_ThreadManager::Mutex.lock();
 						snapshot->setImage((VM_Player::State.isStopped ? VM_GUI::ListTable->getSelectedMediaURL() : VM_Player::SelectedRow.mediaURL), true);

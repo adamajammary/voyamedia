@@ -31,7 +31,6 @@ votes=votes
 
 error.add=Failed to add
 error.add_dir=Failed to add one or more files from
-error.curl=Failed to initialize the CURL library.
 error.db_settings=Failed to create the settings database.
 error.ffmpeg=Failed to initialize the FFMPEG library.
 error.freeimage=Failed to initialize the FreeImage library.

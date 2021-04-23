@@ -31,7 +31,6 @@ votes=stemmer
 
 error.add=Klarte ikke å legge til
 error.add_dir=Klarte ikke å legge til en eller flere filer fra
-error.curl=Klarte ikke å initialisere CURL biblioteket.
 error.db_settings=Klarte ikke å lage databasen for instillinger.
 error.ffmpeg=Klarte ikke å initialisere FFMPEG biblioteket.
 error.freeimage=Klarte ikke å initialisere FreeImage biblioteket.

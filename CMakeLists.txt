@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 project (VoyaMedia)
 
 # Voya Media depends on the following libraries:
-# - curl, ffmpeg, FreeImage, freetype, libxml2, mjson, openssl, sdl2, sdl2_ttf, sqlite, zlib
+# - ffmpeg, FreeImage, freetype, libxml2, mjson, openssl, sdl2, sdl2_ttf, sqlite, zlib
 # You can find the library sources in SOURCEFORGE_URL below:
 
 set(SOURCEFORGE_URL "https://sourceforge.net/projects/voyamedia/files/VoyaMedia/3.x")

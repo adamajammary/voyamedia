@@ -111,21 +111,12 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 		{
 			String imageFile = "";
 
-			if (SHOUTCAST_IS_SELECTED)
-			{
-				button->visible = false;
+			button->visible = true;
 
-				VM_Player::State.loopType = LOOP_TYPE_NORMAL;
-			}
-			else
-			{
-				button->visible = true;
-
-				switch (VM_Player::State.loopType) {
-					case LOOP_TYPE_NORMAL:  imageFile = "loop-1-512.png"; break;
-					case LOOP_TYPE_LOOP:    imageFile = "loop-5-512.png"; break;
-					case LOOP_TYPE_SHUFFLE: imageFile = "loop-3-512.png"; break;
-				}
+			switch (VM_Player::State.loopType) {
+				case LOOP_TYPE_NORMAL:  imageFile = "loop-1-512.png"; break;
+				case LOOP_TYPE_LOOP:    imageFile = "loop-5-512.png"; break;
+				case LOOP_TYPE_SHUFFLE: imageFile = "loop-3-512.png"; break;
 			}
 
 			if (button->visible && !imageFile.empty())
@@ -256,7 +247,7 @@ int MediaPlayer::VM_PlayerControls::RefreshProgressBar()
 		button->setText(VM_Text::Format("%02d:%02d:%02d", VM_PlayerControls::durationTime.hours, VM_PlayerControls::durationTime.minutes, VM_PlayerControls::durationTime.seconds));
 
 	// PROGRESS
-	if (VM_PlayerControls::progressTimeLeft && !SHOUTCAST_IS_SELECTED)
+	if (VM_PlayerControls::progressTimeLeft)
 		VM_PlayerControls::progressTime = VM_MediaTime((double)durationTime.totalSeconds - VM_Player::ProgressTime);
 	else
 		VM_PlayerControls::progressTime = VM_MediaTime(VM_Player::ProgressTime);
@@ -295,26 +286,8 @@ int MediaPlayer::VM_PlayerControls::RefreshTime(time_t time)
 	// FILE NAME/TITLE
 	button = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_controls_file"]);
 
-	if (button != NULL)
-	{
-		// SHOUTCAST - NOW PLAYING
-		if (SHOUTCAST_IS_SELECTED && !VM_Player::SelectedRow.title.empty())
-		{
-			StringMap details = VM_FileSystem::GetShoutCastDetails(VM_Player::SelectedRow.title, VM_Player::SelectedRow.mediaID);
-			String    title   = VM_Player::SelectedRow.title;
-
-			if (!details["now_playing"].empty())
-				title.append(" | " + details["now_playing"]);
-
-			if (!title.empty() && (button->getText() != title))
-				button->setText(title);
-		}
-		// FILE
-		else if (!VM_Player::SelectedRow.title.empty() && (button->getText() != VM_Player::SelectedRow.title))
-		{
-			button->setText(VM_Player::SelectedRow.title);
-		}
-	}
+	if ((button != NULL) && !VM_Player::SelectedRow.title.empty() && (button->getText() != VM_Player::SelectedRow.title))
+		button->setText(VM_Player::SelectedRow.title);
 
 	return RESULT_OK;
 }

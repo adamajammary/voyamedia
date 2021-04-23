@@ -37,9 +37,6 @@ namespace VoyaMedia
 			static int                          CleanThumbs(void* userData);
 			static void                         CloseMediaFormatContext(LIB_FFMPEG::AVFormatContext* formatContext, int mediaID);
 			static int                          CreateDefaultDirectoryStructure();
-			static VM_Bytes*                    DownloadToBytes(const String &mediaURL);
-			static FILE*                        DownloadToFile(const String &mediaURL, const String &filePath);
-			static String                       DownloadToString(const String &mediaURL);
 			static bool                         FileExists(const String &filePath, const WString &filePathW);
 			static SDL_RWops*                   FileOpenSDLRWops(FILE* file);
 			static Strings                      GetDirectoryFiles(const String &directoryPath, bool checkSystemFiles = true);
@@ -63,7 +60,6 @@ namespace VoyaMedia
 			static StringMap                    GetMediaStreamMeta(LIB_FFMPEG::AVFormatContext* formatContext);
 			static Strings                      GetMediaSubFiles(const String &videoFilePath);
 			static VM_MediaType                 GetMediaType(LIB_FFMPEG::AVFormatContext* formatContext);
-			static Strings                      GetNetworkInterfaces();
 			static String                       GetPathDatabase();
 			static String                       GetPathFont();
 			static String                       GetPathFontArial();
@@ -74,23 +70,18 @@ namespace VoyaMedia
 			static String                       GetPathThumbnailsDir();
 			static String                       GetPathThumbnails(int mediaID);
 			static String                       GetPathThumbnails(const String &fileName);
-			static StringMap                    GetShoutCastDetails(const String &stationName, int stationID);
-			static String                       GetShoutCastStation(int stationID);
-			static bool                         HasInternetConnection();
 			static void                         InitFFMPEG();
 			static int                          InitLibraries();
 			static bool                         IsBlurayAACS(const String &filePath, size_t fileSize);
 			static bool                         IsConcat(const String &filePath);
 			static bool                         IsDRM(LIB_FFMPEG::AVDictionary* metaData);
 			static bool                         IsDVDCSS(const String &filePath, size_t fileSize);
-			static bool                         IsHttp(const String &filePath);
 			static bool                         IsITunes(const String &filePath);
 			static bool                         IsM4A(LIB_FFMPEG::AVFormatContext* formatContext);
 			static bool                         IsMediaFile(const String &filePath);
 			static bool                         IsPicture(const String &filePath);
 			static bool                         IsSambaServer(const String &filePath);
 			static bool                         IsServerAccessible(const String &serverAddress, const String &localAddress);
-			static String                       PostData(const String &mediaURL, const String &data, const Strings &headers);
 			static void                         RefreshMetaData();
 			static int                          ScanMediaFiles(void* userData);
 			static int                          SetWorkingDirectory();
@@ -119,7 +110,6 @@ namespace VoyaMedia
 				static WString   GetPathThumbnailsDirW();
 				static WString   GetPathThumbnailsW(int mediaID);
 				static WString   GetPathThumbnailsW(const WString &fileName);
-				static bool      IsHttp(const WString &filePath);
 				static bool      IsITunes(const WString &filePath);
 				static bool      IsMediaFile(const WString &filePath);
 				static bool      IsPicture(const WString &filePath);
@@ -155,7 +145,6 @@ namespace VoyaMedia
 			static bool    isRootDrive(const String &filePath);
 			static bool    isSubtitle(const String &filePath);
 			static bool    isSystemFile(const String &fileName);
-			static CURL*   openCURL(const String &mediaURL);
 
 			#if defined _android
 				static Strings        getAndroidAssets(const String &assetDirectory);
