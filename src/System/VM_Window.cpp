@@ -10,7 +10,6 @@ SDL_Rect         System::VM_Window::DimensionsBeforeFS  = { 0, 0, 0, 0 };
 VM_Display       System::VM_Window::Display;
 bool             System::VM_Window::FullScreenEnabled   = false;
 bool             System::VM_Window::FullScreenMaximized = false;
-bool             System::VM_Window::Inactive            = false;
 bool             System::VM_Window::IsDoneRendering     = false;
 StringMap        System::VM_Window::Labels;
 SDL_Window*      System::VM_Window::MainWindow          = NULL;
@@ -156,7 +155,6 @@ void System::VM_Window::Refresh()
 int System::VM_Window::Render()
 {
 	VM_Window::IsDoneRendering = false;
-	VM_Window::Inactive        = false;
 
 	#if defined _android
 	if (VM_Window::MinimizeWindow)
@@ -169,83 +167,74 @@ int System::VM_Window::Render()
 		VM_Window::refreshPending = false;
 	}
 
-	// SCREENSAVER
-	int idleTime = (VM_Player::CursorLastVisible > 0 ? SDL_GetTicks() - VM_Player::CursorLastVisible : 0);
-	
-	if (!VM_Player::State.isPlaying && (idleTime > SCREENSAVER_TIMEOUT))
-		VM_Window::Inactive = true;
-
 	SDL_SetRenderDrawColor(VM_Window::Renderer, 0, 0, 0, 0xFF);
 	SDL_RenderClear(VM_Window::Renderer);
 
-	if (!VM_Window::Inactive)
+	// LIST TABLE
+	if (VM_GUI::ListTable != NULL)
+		VM_GUI::ListTable->refresh();
+
+	// MODAL MODE
+	VM_Modal::Update();
+
+	if (VM_Modal::IsVisible())
 	{
-		// LIST TABLE
-		if (VM_GUI::ListTable != NULL)
-			VM_GUI::ListTable->refresh();
+		VM_Modal::Render();
+		VM_TextInput::Update();
+	}
+	// MAIN/NORMAL MODE
+	else
+	{
+		VM_Button* snapshot = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_snapshot"]);
+		time_t     cTime    = time(NULL);
 
-		// MODAL MODE
-		VM_Modal::Update();
-
-		if (VM_Modal::IsVisible())
+		// PLAYER CONTROLS
+		if (cTime != VM_Window::currentTime)
 		{
-			VM_Modal::Render();
-			VM_TextInput::Update();
+			VM_Window::currentTime = cTime;
+
+			if (VM_PlayerControls::IsVisible())
+				VM_PlayerControls::RefreshProgressBar();
 		}
-		// MAIN/NORMAL MODE
-		else
+
+		VM_PlayerControls::RefreshTime(cTime);
+		VM_PlayerControls::RefreshControls();
+
+		VM_GUI::render();
+		VM_TextInput::Update();
+
+		// SNAPSHOT IMAGE
+		if (!VM_Player::State.isStopped && (snapshot != NULL))
 		{
-			VM_Button* snapshot = dynamic_cast<VM_Button*>(VM_GUI::Components["bottom_player_snapshot"]);
-			time_t     cTime    = time(NULL);
-
-			// PLAYER CONTROLS
-			if (cTime != VM_Window::currentTime)
+			if ((snapshot->imageData == NULL) && (VM_GUI::ListTable != NULL) && !VM_GUI::ListTable->rows.empty())
 			{
-				VM_Window::currentTime = cTime;
+				#if defined _ios
+				String mediaURL = (VM_Player::State.isStopped ? VM_GUI::ListTable->getSelectedMediaURL() : VM_Player::SelectedRow.mediaURL);
+				#endif
 
-				if (VM_PlayerControls::IsVisible())
-					VM_PlayerControls::RefreshProgressBar();
-			}
-
-			VM_PlayerControls::RefreshTime(cTime);
-			VM_PlayerControls::RefreshControls();
-
-			VM_GUI::render();
-			VM_TextInput::Update();
-
-			// SNAPSHOT IMAGE
-			if (!VM_Player::State.isStopped && (snapshot != NULL))
-			{
-				if ((snapshot->imageData == NULL) && (VM_GUI::ListTable != NULL) && !VM_GUI::ListTable->rows.empty())
+				if (AUDIO_IS_SELECTED)
 				{
-					#if defined _ios
-					String mediaURL = (VM_Player::State.isStopped ? VM_GUI::ListTable->getSelectedMediaURL() : VM_Player::SelectedRow.mediaURL);
-					#endif
-
-					if (AUDIO_IS_SELECTED)
-					{
-						VM_ThreadManager::Mutex.lock();
-						snapshot->setImage(std::to_string(VM_Player::State.isStopped ? VM_GUI::ListTable->getSelectedMediaID() : VM_Player::SelectedRow.mediaID), true);
-						VM_ThreadManager::Mutex.unlock();
-					}
-					#if defined _ios
-					else if (PICTURE_IS_SELECTED && VM_FileSystem::IsITunes(mediaURL))
-					{
-						VM_ThreadManager::Mutex.lock();
-						snapshot->setImage(mediaURL, true);
-						VM_ThreadManager::Mutex.unlock();
-					}
-					#endif
-					else if (PICTURE_IS_SELECTED)
-					{
-						VM_ThreadManager::Mutex.lock();
-						snapshot->setImage((VM_Player::State.isStopped ? VM_GUI::ListTable->getSelectedMediaURL() : VM_Player::SelectedRow.mediaURL), true);
-						VM_ThreadManager::Mutex.unlock();
-					}
+					VM_ThreadManager::Mutex.lock();
+					snapshot->setImage(std::to_string(VM_Player::State.isStopped ? VM_GUI::ListTable->getSelectedMediaID() : VM_Player::SelectedRow.mediaID), true);
+					VM_ThreadManager::Mutex.unlock();
 				}
-
-				VM_Player::Render(snapshot->backgroundArea);
+				#if defined _ios
+				else if (PICTURE_IS_SELECTED && VM_FileSystem::IsITunes(mediaURL))
+				{
+					VM_ThreadManager::Mutex.lock();
+					snapshot->setImage(mediaURL, true);
+					VM_ThreadManager::Mutex.unlock();
+				}
+				#endif
+				else if (PICTURE_IS_SELECTED)
+				{
+					VM_ThreadManager::Mutex.lock();
+					snapshot->setImage((VM_Player::State.isStopped ? VM_GUI::ListTable->getSelectedMediaURL() : VM_Player::SelectedRow.mediaURL), true);
+					VM_ThreadManager::Mutex.unlock();
+				}
 			}
+
+			VM_Player::Render(snapshot->backgroundArea);
 		}
 	}
 

@@ -388,7 +388,6 @@ namespace VoyaMedia
 	const double INVALID_COORDINATE     = 1000.0;
 	const double PICTURE_SLIDESHOW_TIME = 10.0;
 	const char   REFRESH_PENDING[]      = "REFRESH_PENDING";
-	const int    SCREENSAVER_TIMEOUT    = 300000; // 5 minutes
 	const double SUB_MAX_DURATION       = 20.0;   // 20 seconds
 	const int    SUB_STREAM_EXTERNAL    = 100;
 

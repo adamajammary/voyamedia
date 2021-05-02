@@ -273,9 +273,6 @@ int MediaPlayer::VM_Player::CursorShow()
 {
 	VM_Player::CursorLastVisible = SDL_GetTicks();
 
-	if (VM_Window::Inactive)
-		VM_Window::Refresh();
-
 	if ((VM_Player::isCursorHidden || !VM_PlayerControls::IsVisible()) && !VM_Player::State.isStopped)
 	{
 		#if defined _linux || defined _macosx || defined _windows
