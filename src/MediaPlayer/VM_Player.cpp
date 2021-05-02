@@ -54,22 +54,22 @@ void MediaPlayer::VM_Player::Init()
 
 		if (!isMuted.empty())
 		{
-			VM_Player::State.isMuted         = (isMuted == "1");
-			VM_Player::State.audioVolume     = (VM_Player::State.isMuted ? 0 : std::atoi(db->getSettings("audio_volume").c_str()));
-			VM_Player::State.loopType        = (VM_LoopType)std::atoi(db->getSettings("playlist_loop_type").c_str());
-			VM_Player::State.keepAspectRatio = (db->getSettings("keep_aspect_ratio") == "1");
+			VM_Player::State.isMuted                    = (isMuted == "1");
+			VM_Player::State.audioVolume                = (VM_Player::State.isMuted ? 0 : std::atoi(db->getSettings("audio_volume").c_str()));
+			VM_Player::State.loopType[VM_Top::Selected] = (VM_LoopType)std::atoi(db->getSettings("playlist_loop_type_" + std::to_string(VM_Top::Selected)).c_str());
+			VM_Player::State.keepAspectRatio            = (db->getSettings("keep_aspect_ratio") == "1");
 		}
 		else
 		{
-			VM_Player::State.isMuted         = false;
-			VM_Player::State.audioVolume     = SDL_MIX_MAXVOLUME;
-			VM_Player::State.loopType        = DEFAULT_LOOP_TYPE;
-			VM_Player::State.keepAspectRatio = true;
+			VM_Player::State.isMuted                    = false;
+			VM_Player::State.audioVolume                = SDL_MIX_MAXVOLUME;
+			VM_Player::State.loopType[VM_Top::Selected] = DEFAULT_LOOP_TYPE;
+			VM_Player::State.keepAspectRatio            = true;
 
-			db->updateSettings("is_muted",           (VM_Player::State.isMuted ? "1" : "0"));
-			db->updateSettings("audio_volume",       std::to_string(VM_Player::State.audioVolume));
-			db->updateSettings("playlist_loop_type", std::to_string(VM_Player::State.loopType));
-			db->updateSettings("keep_aspect_ratio",  (VM_Player::State.keepAspectRatio ? "1" : "0"));
+			db->updateSettings("is_muted",          (VM_Player::State.isMuted ? "1" : "0"));
+			db->updateSettings("audio_volume",      std::to_string(VM_Player::State.audioVolume));
+			db->updateSettings("keep_aspect_ratio", (VM_Player::State.keepAspectRatio ? "1" : "0"));
+			db->updateSettings(("playlist_loop_type_" + std::to_string(VM_Top::Selected)), std::to_string(VM_Player::State.loopType[VM_Top::Selected]));
 		}
 	}
 
@@ -763,13 +763,13 @@ int MediaPlayer::VM_Player::openPlaylist(bool stop, bool next)
 	String previousFile = VM_GUI::ListTable->getSelectedFile();
 
 	if (next) {
-		switch (VM_Player::State.loopType) {
+		switch (VM_Player::State.loopType[VM_Top::Selected]) {
 			case LOOP_TYPE_NORMAL:  VM_GUI::ListTable->selectNext();     break;
 			case LOOP_TYPE_LOOP:    VM_GUI::ListTable->selectNext(true); break;
 			case LOOP_TYPE_SHUFFLE: VM_GUI::ListTable->selectRandom();   break;
 		}
 	} else {
-		switch (VM_Player::State.loopType) {
+		switch (VM_Player::State.loopType[VM_Top::Selected]) {
 			case LOOP_TYPE_NORMAL:  VM_GUI::ListTable->selectPrev();     break;
 			case LOOP_TYPE_LOOP:    VM_GUI::ListTable->selectPrev(true); break;
 			case LOOP_TYPE_SHUFFLE: VM_GUI::ListTable->selectRandom();   break;
@@ -779,7 +779,7 @@ int MediaPlayer::VM_Player::openPlaylist(bool stop, bool next)
 	String nextFile = VM_GUI::ListTable->getSelectedFile();
 
 	if (nextFile.empty() ||
-		((VM_Player::State.loopType != LOOP_TYPE_SHUFFLE) && (nextFile != REFRESH_PENDING) &&
+		((VM_Player::State.loopType[VM_Top::Selected] != LOOP_TYPE_SHUFFLE) && (nextFile != REFRESH_PENDING) &&
 		((nextFile == VM_Player::State.filePath) || (nextFile == previousFile))))
 	{
 		return ERROR_UNKNOWN;
@@ -1137,10 +1137,10 @@ int MediaPlayer::VM_Player::PlayPauseToggle()
 
 int MediaPlayer::VM_Player::PlaylistLoopTypeToggle()
 {
-	switch (VM_Player::State.loopType) {
-		case LOOP_TYPE_NORMAL:  VM_Player::State.loopType = LOOP_TYPE_LOOP;    break;
-		case LOOP_TYPE_LOOP:    VM_Player::State.loopType = LOOP_TYPE_SHUFFLE; break;
-		case LOOP_TYPE_SHUFFLE: VM_Player::State.loopType = LOOP_TYPE_NORMAL;  break;
+	switch (VM_Player::State.loopType[VM_Top::Selected]) {
+		case LOOP_TYPE_NORMAL:  VM_Player::State.loopType[VM_Top::Selected] = LOOP_TYPE_LOOP;    break;
+		case LOOP_TYPE_LOOP:    VM_Player::State.loopType[VM_Top::Selected] = LOOP_TYPE_SHUFFLE; break;
+		case LOOP_TYPE_SHUFFLE: VM_Player::State.loopType[VM_Top::Selected] = LOOP_TYPE_NORMAL;  break;
 		default: return ERROR_UNKNOWN;
 	}
 
@@ -1148,7 +1148,7 @@ int MediaPlayer::VM_Player::PlaylistLoopTypeToggle()
 	auto db = new VM_Database(dbResult, DATABASE_SETTINGSv3);
 
 	if (DB_RESULT_OK(dbResult))
-		db->updateSettings("playlist_loop_type", std::to_string(VM_Player::State.loopType));
+		db->updateSettings(("playlist_loop_type_" + std::to_string(VM_Top::Selected)), std::to_string(VM_Player::State.loopType[VM_Top::Selected]));
 
 	DELETE_POINTER(db);
 

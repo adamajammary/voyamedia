@@ -113,7 +113,7 @@ int MediaPlayer::VM_PlayerControls::RefreshControls()
 
 			button->visible = true;
 
-			switch (VM_Player::State.loopType) {
+			switch (VM_Player::State.loopType[VM_Top::Selected]) {
 				case LOOP_TYPE_NORMAL:  imageFile = "loop-1-512.png"; break;
 				case LOOP_TYPE_LOOP:    imageFile = "loop-5-512.png"; break;
 				case LOOP_TYPE_SHUFFLE: imageFile = "loop-3-512.png"; break;
