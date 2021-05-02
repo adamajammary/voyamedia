@@ -214,9 +214,13 @@ namespace VoyaMedia
 	#define VIDEO_IS_SELECTED      (VM_Top::Selected == MEDIA_TYPE_VIDEO)
 
 	#if defined _windows
+		#define FONT_NAME(f, s) VM_Text::FormatW(L"%s_%d", f, s)
+		#define FONT_PATH(d, f) VM_Text::FormatW(L"%s%s",  d, f)
 		#define OPEN_FONT(f, s) TTF_OpenFontRW(VM_FileSystem::FileOpenSDLRWops(_wfopen(f, L"rb")), 1, s)
 		#define WRITE_FILE(f)   std::wofstream os(f, std::wofstream::out); os.close();
 	#else
+		#define FONT_NAME(f, s) VM_Text::Format("%s_%d", f, s)
+		#define FONT_PATH(d, f) VM_Text::Format("%s%s",  d, f)
 		#define OPEN_FONT(f, s) TTF_OpenFont(f, s)
 		#define WRITE_FILE(f)   std::ofstream os(f, std::ofstream::out); os.close();
 	#endif
@@ -233,7 +237,7 @@ namespace VoyaMedia
 
 	enum VM_FontType
 	{
-		FONT_MERGED, FONT_CJK, NR_OF_FONTS
+		FONT_CJK, FONT_DEFAULT, NR_OF_FONTS
 	};
 
 	enum VM_LoopType
@@ -285,6 +289,11 @@ namespace VoyaMedia
 		SUB_DIALOGUE_EFFECTS,
 		SUB_DIALOGUE_TEXT,
 		NR_OF_SUB_DIALOGUE_PROPERTIES
+	};
+
+	enum VM_SubBorderStyle
+	{
+		SUB_BORDER_STYLE_OUTLINE = 1, SUB_BORDER_STYLE_BOX = 3
 	};
 
 	// Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour,
@@ -362,15 +371,16 @@ namespace VoyaMedia
 		std::size_t operator()(T t) const { return static_cast<std::size_t>(t); }
 	};
 
-	typedef unsigned long         ulong;
-	typedef std::vector<int>      ints;
-	typedef std::string           String;
-	typedef std::wstring          WString;
-	typedef std::vector<String>   Strings;
-	typedef std::vector<WString>  WStrings;
-	typedef umap<String, String>  StringMap;
-	typedef umap<String, WString> WStringMap;
-	typedef umap<int, String>     IntStringMap;
+	typedef unsigned long          ulong;
+	typedef std::vector<int>       ints;
+	typedef std::string            String;
+	typedef std::wstring           WString;
+	typedef std::vector<String>    Strings;
+	typedef std::vector<uint16_t*> Strings16;
+	typedef std::vector<WString>   WStrings;
+	typedef umap<String, String>   StringMap;
+	typedef umap<String, WString>  WStringMap;
+	typedef umap<int, String>      IntStringMap;
 	
 	const String APP_COMPANY          = "__APP_COMPANY__";
 	const String APP_COPYRIGHT        = "__APP_COPYRIGHT__";
@@ -471,6 +481,7 @@ namespace VoyaMedia
 	const int   MAX_DECODE_THREADS    = 16;
 	const int   MAX_ERRORS            = 100;
 	const int   MAX_FILE_PATH         = 260;
+	const int   MAX_FONT_SIZE         = 200;
 	const int   MAX_PACKET_QUEUE_SIZE = 100;
 	const int   MAX_WINDOW_SIZE       = 16384;
 	const int   MAX_THUMB_SIZE        = 512;
@@ -548,6 +559,7 @@ namespace VoyaMedia
 			double start, end;
 			VM_PTS() { this->start = 0; this->end = 0; }
 			VM_PTS(double start, double end) { this->start = start; this->end = end; }
+			VM_PTS(const VM_PTS &pts) { this->start = pts.start; this->end = pts.end; }
 		};
 
 		typedef std::queue<LIB_FFMPEG::AVPacket*> VM_Packets;

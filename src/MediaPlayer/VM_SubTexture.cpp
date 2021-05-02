@@ -3,6 +3,7 @@
 MediaPlayer::VM_SubTexture::VM_SubTexture()
 {
 	this->locationRender = {};
+	this->offsetY        = false;
 	this->outline        = NULL;
 	this->shadow         = NULL;
 	this->subtitle       = NULL;
@@ -13,6 +14,7 @@ MediaPlayer::VM_SubTexture::VM_SubTexture()
 MediaPlayer::VM_SubTexture::VM_SubTexture(const VM_SubTexture &textureR)
 {
 	this->locationRender = textureR.locationRender;
+	this->offsetY        = textureR.offsetY;
 	this->outline        = NULL;
 	this->shadow         = NULL;
 	this->subtitle       = textureR.subtitle;
@@ -24,6 +26,7 @@ MediaPlayer::VM_SubTexture::VM_SubTexture(const VM_SubTexture &textureR)
 MediaPlayer::VM_SubTexture::VM_SubTexture(VM_Subtitle* subtitle)
 {
 	this->locationRender = {};
+	this->offsetY        = false;
 	this->outline        = NULL;
 	this->shadow         = NULL;
 	this->subtitle       = subtitle;

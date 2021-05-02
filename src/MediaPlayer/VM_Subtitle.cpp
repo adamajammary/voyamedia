@@ -13,15 +13,12 @@ MediaPlayer::VM_Subtitle::VM_Subtitle()
 	this->font           = NULL;
 	this->id             = 0;
 	this->layer          = -1;
-	this->offsetX        = false;
-	this->offsetY        = false;
 	this->position       = {};
 	this->pts.end        = 0;
 	this->pts.start      = 0;
 	this->rotation       = 0.0;
 	this->rotationPoint  = {};
 	this->skip           = false;
-	this->splitStyling   = false;
 	this->style          = NULL;
 	this->subRect        = NULL;
 	this->text           = "";
@@ -90,8 +87,10 @@ MediaPlayer::VM_Subtitles MediaPlayer::VM_Subtitle::getDuplicateSubs(const VM_Su
 	{
 		if ((sub == NULL) ||
 			(this->id == sub->id) ||
-			(this->pts.start != sub->pts.start) ||
-			(this->pts.end   != sub->pts.end) ||
+			this->textSplit.empty() ||
+			sub->textSplit.empty() ||
+			(this->textSplit[1] != sub->textSplit[1]) ||
+			(this->textSplit[2] != sub->textSplit[2]) ||
 			((this->text != sub->text) && (text3 != VM_SubFontEngine::RemoveFormatting(sub->text3))) ||
 			(std::atoi(this->textSplit[0].c_str()) == std::atoi(sub->textSplit[0].c_str())))
 		{
@@ -116,15 +115,22 @@ SDL_Rect MediaPlayer::VM_Subtitle::getMargins()
 		SDL_FPoint scale = VM_Player::GetSubScale();
 
 		return {
-			(int)ceilf((float)this->style->marginL * max(1.0f, scale.x)),
-			(int)ceilf((float)this->style->marginR * max(1.0f, scale.x)),
-			(int)ceilf((float)this->style->marginV * max(1.0f, scale.y)),
-			(int)ceilf((float)this->style->marginV * max(1.0f, scale.y)),
+			(int)ceilf((float)this->style->marginL * scale.x),
+			(int)ceilf((float)this->style->marginR * scale.x),
+			(int)ceilf((float)this->style->marginV * scale.y),
+			(int)ceilf((float)this->style->marginV * scale.y)
 		};
 	}
 
 	return { DEFAULT_MARGIN, DEFAULT_MARGIN, DEFAULT_MARGIN, DEFAULT_MARGIN };
 
+}
+
+int MediaPlayer::VM_Subtitle::getMaxWidth()
+{
+	auto margins = this->getMargins();
+
+	return (VM_Player::VideoDimensions.w - (margins.x + margins.y));
 }
 
 int MediaPlayer::VM_Subtitle::getOutline()

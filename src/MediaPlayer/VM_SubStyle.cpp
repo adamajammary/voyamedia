@@ -6,6 +6,7 @@ using namespace VoyaMedia::System;
 MediaPlayer::VM_SubStyle::VM_SubStyle()
 {
 	this->alignment      = SUB_ALIGN_BOTTOM_CENTER;
+	this->borderStyle    = SUB_BORDER_STYLE_OUTLINE;
 	this->blur           = 0;
 	this->colorPrimary   = VM_Color(SDL_COLOR_WHITE);
 	this->colorOutline   = {};
@@ -55,7 +56,6 @@ MediaPlayer::VM_SubStyle::VM_SubStyle(Strings data, VM_SubStyleVersion version)
 	#endif
 
 	// FONT SIZE
-	//this->fontSize = (int)(std::atof(data[SUB_STYLE_V4_FONT_SIZE].c_str()) * DEFAULT_FONT_DPI_RATIO);
 	this->fontSize = std::atoi(data[SUB_STYLE_V4_FONT_SIZE].c_str());
 
 	#if defined _windows
@@ -84,14 +84,16 @@ MediaPlayer::VM_SubStyle::VM_SubStyle(Strings data, VM_SubStyleVersion version)
 			(float)(std::atof(data[SUB_STYLE_V4PLUS_FONT_SCALE_Y].c_str()) * 0.01)
 		};
 
-		if (std::atoi(data[SUB_STYLE_V4_FONT_BOLD].c_str()) == 1)
+		if (std::atoi(data[SUB_STYLE_V4_FONT_BOLD].c_str()) != 0)
 			this->fontStyle |= TTF_STYLE_BOLD;
-		if (std::atoi(data[SUB_STYLE_V4_FONT_ITALIC].c_str()) == 1)
+		if (std::atoi(data[SUB_STYLE_V4_FONT_ITALIC].c_str()) != 0)
 			this->fontStyle |= TTF_STYLE_ITALIC;
-		if (std::atoi(data[SUB_STYLE_V4PLUS_FONT_STRIKEOUT].c_str()) == 1)
+		if (std::atoi(data[SUB_STYLE_V4PLUS_FONT_STRIKEOUT].c_str()) != 0)
 			this->fontStyle |= TTF_STYLE_STRIKETHROUGH;
-		if (std::atoi(data[SUB_STYLE_V4PLUS_FONT_UNDERLINE].c_str()) == 1)
+		if (std::atoi(data[SUB_STYLE_V4PLUS_FONT_UNDERLINE].c_str()) != 0)
 			this->fontStyle |= TTF_STYLE_UNDERLINE;
+
+		this->borderStyle = (VM_SubBorderStyle)std::atoi(data[SUB_STYLE_V4PLUS_FONT_BORDER_STYLE].c_str());
 
 		this->outline = (int)std::round(std::atof(data[SUB_STYLE_V4PLUS_FONT_OUTLINE].c_str()));
 
@@ -102,7 +104,7 @@ MediaPlayer::VM_SubStyle::VM_SubStyle(Strings data, VM_SubStyleVersion version)
 		this->marginR = (int)std::round(std::atof(data[SUB_STYLE_V4PLUS_FONT_MARGINR].c_str()));
 		this->marginV = (int)std::round(std::atof(data[SUB_STYLE_V4PLUS_FONT_MARGINV].c_str()));
 
-		this->rotation  = (std::atof(data[SUB_STYLE_V4PLUS_FONT_ROTATION_ANGLE].c_str()) * -1.0f);
+		this->rotation = (std::atof(data[SUB_STYLE_V4PLUS_FONT_ROTATION_ANGLE].c_str()) * -1.0f);
 
 
 		break;
@@ -112,8 +114,12 @@ MediaPlayer::VM_SubStyle::VM_SubStyle(Strings data, VM_SubStyleVersion version)
 	case SUB_STYLE_VERSION_4_SSA:
 		this->alignment = VM_SubStyle::ToSubAlignment(std::atoi(data[SUB_STYLE_V4_FONT_ALIGNMENT].c_str()));
 
-		this->fontStyle |= std::atoi(data[SUB_STYLE_V4_FONT_BOLD].c_str());
-		this->fontStyle |= std::atoi(data[SUB_STYLE_V4_FONT_ITALIC].c_str());
+		if (std::atoi(data[SUB_STYLE_V4_FONT_BOLD].c_str()) != 0)
+			this->fontStyle |= TTF_STYLE_BOLD;
+		if (std::atoi(data[SUB_STYLE_V4_FONT_ITALIC].c_str()) != 0)
+			this->fontStyle |= TTF_STYLE_ITALIC;
+
+		this->borderStyle = (VM_SubBorderStyle)std::atoi(data[SUB_STYLE_V4_FONT_BORDER_STYLE].c_str());
 
 		this->outline = (int)std::round(std::atof(data[SUB_STYLE_V4_FONT_SHADOW].c_str()));
 
@@ -125,6 +131,8 @@ MediaPlayer::VM_SubStyle::VM_SubStyle(Strings data, VM_SubStyleVersion version)
 		this->marginV = (int)std::round(std::atof(data[SUB_STYLE_V4_FONT_MARGINV].c_str()));
 
 		break;
+	default:
+		break;
 	}
 }
 
@@ -132,6 +140,7 @@ void MediaPlayer::VM_SubStyle::copy(const VM_SubStyle &subStyle)
 {
 	this->alignment      = subStyle.alignment;
 	this->blur           = subStyle.blur;
+	this->borderStyle    = subStyle.borderStyle;
 	this->colorOutline   = subStyle.colorOutline;
 	this->colorPrimary   = subStyle.colorPrimary;
 	this->colorShadow    = subStyle.colorShadow;
@@ -150,10 +159,46 @@ void MediaPlayer::VM_SubStyle::copy(const VM_SubStyle &subStyle)
 	this->shadow         = subStyle.shadow;
 }
 
-MediaPlayer::VM_SubStyle* MediaPlayer::VM_SubStyle::getDefault(const VM_SubStyles &subStyles)
+TTF_Font* MediaPlayer::VM_SubStyle::getFont()
+{
+	return this->font;
+}
+
+int MediaPlayer::VM_SubStyle::GetOffsetX(VM_SubTexture* subTexture)
+{
+	if ((subTexture == NULL) ||
+		(subTexture->subtitle->style == NULL) ||
+		!(subTexture->subtitle->style->fontStyle & TTF_STYLE_ITALIC))
+	{
+		return 0;
+	}
+
+	TTF_Font* font = subTexture->subtitle->getFont();
+
+	if (font == NULL)
+		return 0;
+
+	TTF_SetFontStyle(font, subTexture->subtitle->style->fontStyle);
+
+	for (int i = 0; i < DEFAULT_CHAR_BUFFER_SIZE; i++)
+	{
+		if ((i < DEFAULT_CHAR_BUFFER_SIZE - 1) && (subTexture->textUTF16[i + 1] != 0))
+			continue;
+
+		// Return the x-offset of the last italic character
+		int minx, maxx, miny, maxy, advance;
+		TTF_GlyphMetrics(font, subTexture->textUTF16[i], &minx, &maxx, &miny, &maxy, &advance);
+
+		return (advance - maxx);
+	}
+
+	return 0;
+}
+
+MediaPlayer::VM_SubStyle* MediaPlayer::VM_SubStyle::GetStyle(const String &name, const VM_SubStyles &subStyles)
 {
 	for (auto style : subStyles) {
-		if (VM_Text::ToLower(style->name) == VM_Text::ToLower(this->name))
+		if (VM_Text::ToLower(style->name) == VM_Text::ToLower(name))
 			return style;
 	}
 
@@ -192,6 +237,9 @@ bool MediaPlayer::VM_SubStyle::IsAlignedTop(VM_SubAlignment a)
 
 bool MediaPlayer::VM_SubStyle::isFontValid(TTF_Font* font)
 {
+	if (font == NULL)
+		return false;
+
 	// Get the font family name in ASCII encoding
 	auto fn = TTF_FontFaceFamilyName(font);
 	auto fs = TTF_FontFaceStyleName(font);
@@ -257,154 +305,97 @@ bool MediaPlayer::VM_SubStyle::isFontValid(TTF_Font* font)
 	return false;
 }
 
-TTF_Font* MediaPlayer::VM_SubStyle::getFont()
+void MediaPlayer::VM_SubStyle::openFont(VM_PlayerSubContext &subContext, uint16_t* textUTF16)
 {
-	return this->font;
-}
+	float dpiScale       = (76.0f / 96.0f);
+	this->fontSizeScaled = (int)((float)this->fontSize * subContext.scale.y * dpiScale);
+	auto fontName        = FONT_NAME(this->fontName.c_str(), this->fontSizeScaled);
 
-#if defined _windows
-void MediaPlayer::VM_SubStyle::openFont(umap<WString, TTF_Font*> &styleFonts, const SDL_FPoint &subScale, VM_Subtitle* sub)
-#else
-void MediaPlayer::VM_SubStyle::openFont(umap<String, TTF_Font*> &styleFonts, const SDL_FPoint &subScale, VM_Subtitle* sub)
-#endif
-{
-	this->fontSizeScaled = (int)((float)this->fontSize * subScale.y);
+	if (subContext.styleFonts[fontName] == NULL)
+		subContext.styleFonts[fontName] = this->openFont(VM_Player::FormatContext);
 
-	#if defined _windows
-		WString fontName = (this->fontName + L"_" + std::to_wstring(this->fontSizeScaled));
-	#else
-		String fontName = (this->fontName + "_" + std::to_string(this->fontSizeScaled));
-	#endif
+	this->font = subContext.styleFonts[fontName];
 
-	if (styleFonts[fontName] == NULL)
-		styleFonts[fontName] = this->openFont(VM_Player::FormatContext);
-
-	this->font = styleFonts[fontName];
-
-	if ((sub != NULL) && (sub->textUTF16 != NULL) && 
-		!VM_Text::FontSupportsLanguage(this->font, sub->textUTF16, DEFAULT_CHAR_BUFFER_SIZE))
+	if ((textUTF16 != NULL) && !VM_Text::FontSupportsLanguage(this->font, textUTF16, DEFAULT_CHAR_BUFFER_SIZE))
 	{
-		#if defined _windows
-			WStrings fonts = { FONT_ARIAL, FONT_NOTO_CJK, FONT_NOTO };
-		#else
-			Strings fonts = { FONT_ARIAL, FONT_NOTO_CJK, FONT_NOTO };
-		#endif
+		fontName = FONT_NAME(FONT_ARIAL, this->fontSizeScaled);
 
-		for (auto font : fonts)
+		if (subContext.styleFonts[fontName] == NULL)
+			subContext.styleFonts[fontName] = this->openFontArial();
+
+		this->font = subContext.styleFonts[fontName];
+	}
+
+	if ((textUTF16 != NULL) && !VM_Text::FontSupportsLanguage(this->font, textUTF16, DEFAULT_CHAR_BUFFER_SIZE))
+	{
+		auto defaultFonts = { FONT_NOTO_CJK, FONT_NOTO };
+
+		for (const auto &defaultFont : defaultFonts)
 		{
-			#if defined _windows
-				WString fontName = (font + L"_" + std::to_wstring(this->fontSizeScaled));
-			#else
-				String fontName = (font + "_" + std::to_string(this->fontSizeScaled));
-			#endif
+			fontName = FONT_NAME(defaultFont, this->fontSizeScaled);
 
-			if (styleFonts[fontName] == NULL)
-			{
-				#if defined _windows
-				if (font == FONT_ARIAL)
-					styleFonts[fontName] = OPEN_FONT(VM_FileSystem::GetPathFontArialW().c_str(), this->fontSizeScaled);
-				else
-					styleFonts[fontName] = OPEN_FONT((VM_FileSystem::GetPathFontW() + font).c_str(), this->fontSizeScaled);
-				#else
-				if (font == FONT_ARIAL)
-					styleFonts[fontName] = OPEN_FONT(VM_FileSystem::GetPathFontArial().c_str(), this->fontSizeScaled);
-				else
-					styleFonts[fontName] = OPEN_FONT((VM_FileSystem::GetPathFont() + font).c_str(), this->fontSizeScaled);
-				#endif
-			}
+			if (subContext.styleFonts[fontName] == NULL)
+				subContext.styleFonts[fontName] = OPEN_FONT(FONT_PATH(VM_FileSystem::GetPathFont().c_str(), defaultFont).c_str(), this->fontSizeScaled);
 
-			if (VM_Text::FontSupportsLanguage(styleFonts[fontName], sub->textUTF16, DEFAULT_CHAR_BUFFER_SIZE)) {
-				this->font = styleFonts[fontName];
+			this->font = subContext.styleFonts[fontName];
+
+			if (VM_Text::FontSupportsLanguage(this->font, textUTF16, DEFAULT_CHAR_BUFFER_SIZE))
 				break;
-			}
+
+			CLOSE_FONT(this->font);
 		}
 	}
+
+	if (this->font != NULL)
+		TTF_SetFontStyle(this->font, this->fontStyle);
+}
+
+TTF_Font* MediaPlayer::VM_SubStyle::openFontArial()
+{
+	if (this->fontName.empty())
+		return NULL;
+
+	#if defined _android
+		TTF_Font* font = OPEN_FONT("/system/fonts/Arial.ttf", this->fontSizeScaled);
+	#elif defined _ios
+		TTF_Font*font = OPEN_FONT("/System/Library/Fonts/Cache/Arial.ttf", this->fontSizeScaled);
+	#elif defined _linux
+		TTF_Font* font = OPEN_FONT("/usr/share/fonts/truetype/msttcorefonts/arial.ttf", this->fontSizeScaled);
+	#elif defined  _macosx
+		TTF_Font* font = OPEN_FONT("/Library/Fonts/Arial.ttf", this->fontSizeScaled);
+	#elif defined _windows
+		TTF_Font* font = OPEN_FONT(L"C:\\Windows\\Fonts\\arial.ttf", this->fontSizeScaled);
+	#endif
+
+	if (font != NULL)
+		return font;
+
+	CLOSE_FONT(font);
+
+	// Arial font alternatives on Linux systems
+	#if defined _linux
+		font = OPEN_FONT("/usr/share/fonts/liberation/LiberationSans-Regular.ttf", this->fontSizeScaled);
+
+		if (font != NULL)
+			return font;
+
+		CLOSE_FONT(font);
+
+		font = OPEN_FONT("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", this->fontSizeScaled);
+
+		if (font != NULL)
+			return font;
+
+		CLOSE_FONT(font);
+	#endif
+
+	return NULL;
 }
 
 TTF_Font* MediaPlayer::VM_SubStyle::openFont(LIB_FFMPEG::AVFormatContext* formatContext)
 {
 	if (formatContext == NULL)
 		return NULL;
-
-	TTF_Font* font = this->openFontInternal(formatContext);
-
-	if (font == NULL)
-		font = this->openFontDisk();
-
-	if (font != NULL)
-		TTF_SetFontStyle(font, this->fontStyle);
-
-	return font;
-}
-
-TTF_Font* MediaPlayer::VM_SubStyle::openFontDisk()
-{
-	if (this->fontName.empty())
-		return NULL;
-
-	#if defined _android
-		String arial    = "Arial.ttf";
-		String fontPath = "/system/fonts/";
-	#elif defined _ios
-		String arial    = "Arial.ttf";
-		String fontPath = "/System/Library/Fonts/Cache/";
-	#elif defined _linux
-		String arial    = "arial.ttf";
-		String fontPath = "/usr/share/fonts/truetype/msttcorefonts/";
-	#elif defined _macosx
-		String arial    = "Arial.ttf";
-		String fontPath = "/Library/Fonts/";
-	#elif defined _windows
-		WString arial     = L"arial.ttf";
-		WString fontPath  = L"C:\\Windows\\Fonts\\";
-		String  fontPath2 = "C:\\Windows\\Fonts\\";
-	#endif
-
-	#if defined _windows
-		Strings files = VM_FileSystem::GetDirectoryFiles(fontPath2);
-	#else
-		Strings files = VM_FileSystem::GetDirectoryFiles(fontPath);
-	#endif
-
-	TTF_Font* font = NULL;
-
-	// Try to open the specified custom font
-	for (auto file : files)
-	{
-		#if defined _windows
-			font = OPEN_FONT((fontPath + VM_Text::ToUTF16(file.c_str())).c_str(), this->fontSizeScaled);
-		#else
-			font = OPEN_FONT((fontPath + file.c_str()).c_str(), this->fontSizeScaled);
-		#endif
-
-		if ((font != NULL) && this->isFontValid(font))
-			break;
-
-		CLOSE_FONT(font);
-	}
-
-	// Try to open Arial font by default if custom font was not found
-	if (font == NULL)
-		font = OPEN_FONT((fontPath + arial).c_str(), this->fontSizeScaled);
-
-	// Arial font alternatives on Linux systems
-	#if defined _linux
-	if (font == NULL)
-		font = OPEN_FONT("/usr/share/fonts/liberation/LiberationSans-Regular.ttf", this->fontSizeScaled);
-
-	if (font == NULL)
-		font = OPEN_FONT("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf", this->fontSizeScaled);
-	#endif
-
-	return font;
-}
-
-TTF_Font* MediaPlayer::VM_SubStyle::openFontInternal(LIB_FFMPEG::AVFormatContext* formatContext)
-{
-	if (formatContext == NULL)
-		return NULL;
-
-	TTF_Font* font = NULL;
 
 	// Check if any of the streams has extra font data
 	for (uint32_t i = 0; i < formatContext->nb_streams; i++)
@@ -415,22 +406,20 @@ TTF_Font* MediaPlayer::VM_SubStyle::openFontInternal(LIB_FFMPEG::AVFormatContext
 			continue;
 
 		// Open font data from memory data
+		TTF_Font*  font       = NULL;
 		SDL_RWops* fontMemory = SDL_RWFromConstMem(stream->codec->extradata, stream->codec->extradata_size);
 
 		if (fontMemory != NULL)
 			font = TTF_OpenFontRW(fontMemory, 0, this->fontSizeScaled);
 
-		if (font == NULL)
-			continue;
-
 		// Close the font if the family and/or style doesn't match with the full font name
 		if (this->isFontValid(font))
-			break;
+			return font;
 
 		CLOSE_FONT(font);
 	}
 
-	return font;
+	return NULL;
 }
 
 bool MediaPlayer::VM_SubStyle::streamHasExtraData(LIB_FFMPEG::AVStream* stream)

@@ -56,20 +56,26 @@ void MediaPlayer::VM_Player::Init()
 		{
 			VM_Player::State.isMuted                    = (isMuted == "1");
 			VM_Player::State.audioVolume                = (VM_Player::State.isMuted ? 0 : std::atoi(db->getSettings("audio_volume").c_str()));
-			VM_Player::State.loopType[VM_Top::Selected] = (VM_LoopType)std::atoi(db->getSettings("playlist_loop_type_" + std::to_string(VM_Top::Selected)).c_str());
 			VM_Player::State.keepAspectRatio            = (db->getSettings("keep_aspect_ratio") == "1");
+
+			for (int i = 0; i < NR_OF_MEDIA_TYPES; i++)
+				VM_Player::State.loopType[i] = (VM_LoopType)std::atoi(db->getSettings("playlist_loop_type_" + std::to_string(i)).c_str());
 		}
 		else
 		{
 			VM_Player::State.isMuted                    = false;
 			VM_Player::State.audioVolume                = SDL_MIX_MAXVOLUME;
-			VM_Player::State.loopType[VM_Top::Selected] = DEFAULT_LOOP_TYPE;
 			VM_Player::State.keepAspectRatio            = true;
 
 			db->updateSettings("is_muted",          (VM_Player::State.isMuted ? "1" : "0"));
 			db->updateSettings("audio_volume",      std::to_string(VM_Player::State.audioVolume));
 			db->updateSettings("keep_aspect_ratio", (VM_Player::State.keepAspectRatio ? "1" : "0"));
-			db->updateSettings(("playlist_loop_type_" + std::to_string(VM_Top::Selected)), std::to_string(VM_Player::State.loopType[VM_Top::Selected]));
+
+			for (int i = 0; i < NR_OF_MEDIA_TYPES; i++) {
+				MediaPlayer::VM_Player::State.loopType[i] = DEFAULT_LOOP_TYPE;
+
+				db->updateSettings(("playlist_loop_type_" + std::to_string(i)), std::to_string(DEFAULT_LOOP_TYPE));
+			}
 		}
 	}
 
@@ -180,6 +186,8 @@ int MediaPlayer::VM_Player::closeStream(VM_MediaType streamType)
 			FREE_STREAM(VM_Player::videoContext.stream);
 			VM_Player::videoContext.index = -1;
 			break;
+	default:
+		break;
 	}
 
 	return RESULT_OK;
@@ -395,6 +403,7 @@ LIB_FFMPEG::AVSampleFormat MediaPlayer::VM_Player::GetAudioSampleFormat(SDL_Audi
 		case AUDIO_S16SYS: return LIB_FFMPEG::AV_SAMPLE_FMT_S16;
 		case AUDIO_S32SYS: return LIB_FFMPEG::AV_SAMPLE_FMT_S32;
 		case AUDIO_F32SYS: return LIB_FFMPEG::AV_SAMPLE_FMT_FLT;
+		default: break;
 	}
 
 	return LIB_FFMPEG::AV_SAMPLE_FMT_NONE;
@@ -403,14 +412,20 @@ LIB_FFMPEG::AVSampleFormat MediaPlayer::VM_Player::GetAudioSampleFormat(SDL_Audi
 SDL_AudioFormat MediaPlayer::VM_Player::GetAudioSampleFormat(LIB_FFMPEG::AVSampleFormat sampleFormat)
 {
 	switch (sampleFormat) {
-		case LIB_FFMPEG::AV_SAMPLE_FMT_U8:
-		case LIB_FFMPEG::AV_SAMPLE_FMT_U8P:  return AUDIO_U8;
-		case LIB_FFMPEG::AV_SAMPLE_FMT_S16:
-		case LIB_FFMPEG::AV_SAMPLE_FMT_S16P: return AUDIO_S16SYS;
-		case LIB_FFMPEG::AV_SAMPLE_FMT_S32:
-		case LIB_FFMPEG::AV_SAMPLE_FMT_S32P: return AUDIO_S32SYS;
-		case LIB_FFMPEG::AV_SAMPLE_FMT_FLT:
-		case LIB_FFMPEG::AV_SAMPLE_FMT_FLTP: return AUDIO_F32SYS;
+	case LIB_FFMPEG::AV_SAMPLE_FMT_U8:
+	case LIB_FFMPEG::AV_SAMPLE_FMT_U8P:
+		return AUDIO_U8;
+	case LIB_FFMPEG::AV_SAMPLE_FMT_S16:
+	case LIB_FFMPEG::AV_SAMPLE_FMT_S16P:
+		return AUDIO_S16SYS;
+	case LIB_FFMPEG::AV_SAMPLE_FMT_S32:
+	case LIB_FFMPEG::AV_SAMPLE_FMT_S32P:
+		return AUDIO_S32SYS;
+	case LIB_FFMPEG::AV_SAMPLE_FMT_FLT:
+	case LIB_FFMPEG::AV_SAMPLE_FMT_FLTP:
+		return AUDIO_F32SYS;
+	default:
+		break;
 	}
 
 	return LIB_FFMPEG::AV_SAMPLE_FMT_NONE;
@@ -420,13 +435,21 @@ uint32_t MediaPlayer::VM_Player::GetVideoPixelFormat(LIB_FFMPEG::AVPixelFormat p
 {
 	// https://wiki.videolan.org/YUV/
 	switch (pixelFormat) {
-		case LIB_FFMPEG::AV_PIX_FMT_YUV420P:
-		case LIB_FFMPEG::AV_PIX_FMT_YUVJ420P: return SDL_PIXELFORMAT_YV12;
-		case LIB_FFMPEG::AV_PIX_FMT_YUYV422:  return SDL_PIXELFORMAT_YUY2;
-		case LIB_FFMPEG::AV_PIX_FMT_UYVY422:  return SDL_PIXELFORMAT_UYVY;
-		case LIB_FFMPEG::AV_PIX_FMT_YVYU422:  return SDL_PIXELFORMAT_YVYU;
-		case LIB_FFMPEG::AV_PIX_FMT_NV12:     return SDL_PIXELFORMAT_NV12;
-		case LIB_FFMPEG::AV_PIX_FMT_NV21:     return SDL_PIXELFORMAT_NV21;
+	case LIB_FFMPEG::AV_PIX_FMT_YUV420P:
+	case LIB_FFMPEG::AV_PIX_FMT_YUVJ420P:
+		return SDL_PIXELFORMAT_YV12;
+	case LIB_FFMPEG::AV_PIX_FMT_YUYV422:
+		return SDL_PIXELFORMAT_YUY2;
+	case LIB_FFMPEG::AV_PIX_FMT_UYVY422:
+		return SDL_PIXELFORMAT_UYVY;
+	case LIB_FFMPEG::AV_PIX_FMT_YVYU422:
+		return SDL_PIXELFORMAT_YVYU;
+	case LIB_FFMPEG::AV_PIX_FMT_NV12:
+		return SDL_PIXELFORMAT_NV12;
+	case LIB_FFMPEG::AV_PIX_FMT_NV21:
+		return SDL_PIXELFORMAT_NV21;
+	default:
+		break;
 	}
 
 	return SDL_PIXELFORMAT_YV12;
@@ -441,6 +464,7 @@ LIB_FFMPEG::AVPixelFormat MediaPlayer::VM_Player::GetVideoPixelFormat(uint32_t p
 		case SDL_PIXELFORMAT_YVYU: return LIB_FFMPEG::AV_PIX_FMT_YVYU422;
 		case SDL_PIXELFORMAT_NV12: return LIB_FFMPEG::AV_PIX_FMT_NV12;
 		case SDL_PIXELFORMAT_NV21: return LIB_FFMPEG::AV_PIX_FMT_NV21;
+		default: break;
 	}
 
 	return LIB_FFMPEG::AV_PIX_FMT_YUV420P;
@@ -451,6 +475,7 @@ int MediaPlayer::VM_Player::GetStreamIndex(VM_MediaType mediaType)
 	switch (mediaType) {
 		case MEDIA_TYPE_AUDIO:    return VM_Player::audioContext.index;
 		case MEDIA_TYPE_SUBTITLE: return VM_Player::subContext.index;
+		default: break;
 	}
 
 	return -1;
@@ -489,6 +514,8 @@ bool MediaPlayer::VM_Player::IsYUV(LIB_FFMPEG::AVPixelFormat pixelFormat)
 		case LIB_FFMPEG::AV_PIX_FMT_NV12:
 		case LIB_FFMPEG::AV_PIX_FMT_NV21:
 			return true;
+		default:
+			break;
 	}
 
 	return false;
@@ -830,7 +857,7 @@ int MediaPlayer::VM_Player::openSub()
 	// SUB - EXTERNAL
 	if (VM_Player::subContext.stream == NULL)
 	{
-		VM_Player::subContext.stream = VM_Player::openSubExternal(SUB_STREAM_EXTERNAL);
+		VM_Player::subContext.stream = MediaPlayer::VM_Player::openSubExternal(SUB_STREAM_EXTERNAL);
 
 		if (VM_Player::subContext.stream != NULL)
 			VM_Player::subContext.index = (SUB_STREAM_EXTERNAL + VM_Player::subContext.stream->index);
@@ -842,16 +869,16 @@ int MediaPlayer::VM_Player::openSub()
 	if ((VM_Player::subContext.stream == NULL) || (VM_Player::subContext.stream->codec == NULL))
 		return ERROR_UNKNOWN;
 
-	if (VM_Player::subContext.mutex  == NULL) {
-		VM_Player::subContext.mutex     = SDL_CreateMutex();
+	if (VM_Player::subContext.mutex == NULL) {
+		VM_Player::subContext.mutex = SDL_CreateMutex();
 		VM_Player::subContext.condition = SDL_CreateCond();
 	}
 
 	if ((VM_Player::subContext.mutex == NULL) || (VM_Player::subContext.condition == NULL))
 		return ERROR_UNKNOWN;
 
-	if (VM_Player::subContext.subsMutex  == NULL) {
-		VM_Player::subContext.subsMutex     = SDL_CreateMutex();
+	if (VM_Player::subContext.subsMutex == NULL) {
+		VM_Player::subContext.subsMutex = SDL_CreateMutex();
 		VM_Player::subContext.subsCondition = SDL_CreateCond();
 	}
 
@@ -864,35 +891,41 @@ int MediaPlayer::VM_Player::openSub()
 		String subHeader = String(reinterpret_cast<char*>(VM_Player::subContext.stream->codec->subtitle_header));
 
 		#if defined _DEBUG
-			LOG("VM_Player::openSub:\n%s\n", subHeader.c_str());
+			LOG("MediaPlayer::VM_Player::openSub\n\n%s\n", subHeader.c_str());
 		#endif
 
-		// STREAM SIZES
-		int subWidth    = (VM_Player::subContext.stream   != NULL ? VM_Player::subContext.stream->codec->width    : 0);
-		int subHeight   = (VM_Player::subContext.stream   != NULL ? VM_Player::subContext.stream->codec->height   : 0);
-		int videoWidth  = (VM_Player::videoContext.stream != NULL ? VM_Player::videoContext.stream->codec->width  : 0);
-		int videoHeight = (VM_Player::videoContext.stream != NULL ? VM_Player::videoContext.stream->codec->height : 0);
+		String defaultStyle1 = "Style: Default,Arial,54,";
+		String defaultStyle2 = "Style: Default,Arial,18,";
+		bool   invalidRes    = (subHeader.find("Script generated by FFmpeg") != String::npos);
+		size_t posResX       = subHeader.find("PlayResX:");
+		size_t posResY       = subHeader.find("PlayResY:");
+		int    scriptWidth   = (posResX != String::npos ? std::atoi(subHeader.substr(posResX + 9).c_str()) : 0);
+		int    scriptHeight  = (posResY != String::npos ? std::atoi(subHeader.substr(posResY + 9).c_str()) : 0);
+		int    subWidth      = (VM_Player::subContext.stream != NULL ? VM_Player::subContext.stream->codec->width  : 0);
+		int    subHeight     = (VM_Player::subContext.stream != NULL ? VM_Player::subContext.stream->codec->height : 0);
+		int    videoWidth    = (VM_Player::videoContext.stream != NULL ? VM_Player::videoContext.stream->codec->width  : 0);
+		int    videoHeight   = (VM_Player::videoContext.stream != NULL ? VM_Player::videoContext.stream->codec->height : 0);
 
-		// WIDTH
-		size_t findPos = subHeader.find("PlayResX:");
-
-		if (findPos != String::npos)
-			subWidth = std::atoi(subHeader.substr(findPos + 9).c_str());
-
-		// HEIGHT
-		findPos = subHeader.find("PlayResY:");
-
-		if (findPos != String::npos)
-			subHeight = std::atoi(subHeader.substr(findPos + 9).c_str());
+		if (invalidRes && (subHeader.find(defaultStyle1) != String::npos))
+			subHeader = VM_Text::Replace(subHeader, defaultStyle1, defaultStyle2);
 
 		// SUB SCREEN SPACE SIZE
-		if ((subWidth > 0) && (subHeight > 0)) {
+		if ((scriptWidth > 0) && (scriptHeight > 0))
+		{
+			VM_Player::subContext.size = { scriptWidth, scriptHeight };
+		}
+		else if ((scriptHeight > 0) && (videoWidth > 0) && (videoHeight > 0))
+		{
+			float scriptVideoScale     = ((float)scriptHeight / (float)videoHeight);
+			VM_Player::subContext.size = { (int)((float)videoWidth * scriptVideoScale), scriptHeight };
+		}
+		else if ((subWidth > 0) && (subHeight > 0))
+		{
 			VM_Player::subContext.size = { subWidth, subHeight };
-		} else if ((subHeight > 0) && (videoWidth > 0) && (videoHeight > 0)) {
-			float subVideoScale        = ((float)subHeight / (float)videoHeight);
-			VM_Player::subContext.size = { (int)((float)videoWidth * subVideoScale), subHeight };
-		} else {
-			VM_Player::subContext.size = DEFAULT_SUB_SCREEN_SIZE;
+		}
+		else
+		{
+			VM_Player::subContext.size = { videoWidth, videoHeight };
 		}
 
 		// STYLE VERSION
@@ -932,19 +965,18 @@ int MediaPlayer::VM_Player::openSub()
 	}
 
 	#if defined _windows
-		WString fontPath    = VM_FileSystem::GetPathFontW();
-		WString fontCJK     = WString(fontPath + L"NotoSansCJK-Bold.ttc");
-		WString fontDefault = WString(fontPath + L"NotoSans-Merged.ttf");
+		auto fontPathCJK     = FONT_PATH(VM_FileSystem::GetPathFontW().c_str(), FONT_NOTO_CJK);
+		auto fontPathDefault = FONT_PATH(VM_FileSystem::GetPathFontW().c_str(), FONT_NOTO);
 	#else
-		String fontPath    = VM_FileSystem::GetPathFont();
-		String fontCJK     = String(fontPath + "NotoSansCJK-Bold.ttc");
-		String fontDefault = String(fontPath + "NotoSans-Merged.ttf");
+		auto fontPathCJK     = FONT_PATH(VM_FileSystem::GetPathFont().c_str(), FONT_NOTO_CJK);
+		auto fontPathDefault = FONT_PATH(VM_FileSystem::GetPathFont().c_str(), FONT_NOTO);
 	#endif
 
-	if (VM_Player::subContext.fonts[FONT_MERGED] == NULL) {
-		VM_Player::subContext.fonts[FONT_MERGED] = OPEN_FONT(fontDefault.c_str(), DEFAULT_FONT_SIZE_SUB);
-		VM_Player::subContext.fonts[FONT_CJK]    = OPEN_FONT(fontCJK.c_str(),     DEFAULT_FONT_SIZE_SUB);
-	}
+	if (VM_Player::subContext.fonts[FONT_CJK] == NULL)
+		VM_Player::subContext.fonts[FONT_CJK] = OPEN_FONT(fontPathCJK.c_str(), DEFAULT_FONT_SIZE_SUB);
+
+	if (VM_Player::subContext.fonts[FONT_DEFAULT] == NULL)
+		VM_Player::subContext.fonts[FONT_DEFAULT] = OPEN_FONT(fontPathDefault.c_str(), DEFAULT_FONT_SIZE_SUB);
 
 	if (VM_Player::subContext.thread == NULL)
 		VM_Player::subContext.thread = SDL_CreateThread(VM_Player::threadSub, "subContext.thread", NULL);
@@ -1168,7 +1200,7 @@ void MediaPlayer::VM_Player::Refresh()
 			sub->skip = false;
 
 			if ((sub->style != NULL) && !sub->style->fontName.empty())
-				sub->style->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale, sub);
+				sub->style->openFont(VM_Player::subContext, sub->textUTF16);
 		}
 
 		VM_SubFontEngine::RemoveSubs();
@@ -1251,8 +1283,10 @@ int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
 	// REMOVE EXPIRED SUBS
 	for (auto sub = VM_Player::subContext.subs.begin(); sub != VM_Player::subContext.subs.end();)
 	{
-		if ((VM_Player::ProgressTime > ((*sub)->pts.end - DELAY_TIME_SUB_RENDER))) //|| // Expired
-			//((*sub)->pts.start > VM_Player::ProgressTime))   // Should not be displayed yet
+		auto start = ((*sub)->pts.start - DELAY_TIME_ONE_MS);
+		auto end   = ((*sub)->pts.end   - DELAY_TIME_SUB_RENDER);
+
+		if ((MediaPlayer::VM_Player::ProgressTime > end) || (MediaPlayer::VM_Player::ProgressTime < start))
 		{
 			#if defined _DEBUG
 				auto delay = (VM_Player::ProgressTime - (*sub)->pts.end);
@@ -1287,6 +1321,8 @@ int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
 			break;
 		case LIB_FFMPEG::SUBTITLE_BITMAP:
 			VM_Player::renderSubBitmap(location);
+			break;
+		default:
 			break;
 	}
 
@@ -1433,9 +1469,7 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 			SDL_RenderClear(VM_Window::Renderer);
 			SDL_SetTextureBlendMode(VM_Player::subContext.texture->data, SDL_BLENDMODE_BLEND);
 
-			VM_SubFontEngine::RenderSubText(
-				VM_Player::subContext.subs, VM_Player::subContext.fonts[FONT_MERGED], VM_Player::subContext.fonts[FONT_CJK]
-			);
+			VM_SubFontEngine::RenderSubText(VM_Player::subContext);
 
 			SDL_SetRenderTarget(VM_Window::Renderer, NULL);
 		}
@@ -1443,7 +1477,7 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 		#if defined _DEBUG
 		for (auto sub : VM_Player::subContext.subs) {
 			auto delay = (VM_Player::ProgressTime - sub->pts.start);
-			if (delay > 0)
+			if (delay > DELAY_TIME_SUB_RENDER)
 				LOG("VM_Player::renderSubText: DELAY: %.3fs (%.3f - %.3f)\n", delay, VM_Player::ProgressTime, sub->pts.start);
 		}
 		#endif
@@ -1479,7 +1513,7 @@ void MediaPlayer::VM_Player::renderVideo(const SDL_Rect &location)
 		if (!SDL_RectEmpty(&VM_Player::VideoDimensions) && !VM_Player::State.quit)
 		{
 			VM_Color backgroundColor = VM_Color(SDL_COLOR_BLACK);
-			VM_Graphics::FillArea(&backgroundColor, &location);
+			VM_Graphics::FillArea(backgroundColor, location);
 
 			SDL_RenderCopy(VM_Window::Renderer, VM_Player::videoContext.texture->data, NULL, &VM_Player::VideoDimensions);
 		}
@@ -2279,8 +2313,14 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		// - The first one with data but without duration or end PTS
 		// - The second one has no data, but contains the end PTS
 		if ((strcmp(codecName, "pgssub") == 0) && (packet->size < MIN_SUB_PACKET_SIZE) && !VM_Player::subContext.subs.empty())
-			VM_Player::subContext.subs.back()->pts = VM_SubFontEngine::GetSubPTS(packet, subFrame, VM_Player::subContext.stream);
+		{
+			double ptsEnd = VM_SubFontEngine::GetSubEndPTS(packet, subFrame, VM_Player::subContext.stream);
 
+			for (auto sub : VM_Player::subContext.subs) {
+				if (sub->pts.end == UINT32_MAX)
+					sub->pts.end = ptsEnd;
+			}
+		}
 		VM_Player::subContext.available = true;
 		SDL_CondSignal(VM_Player::subContext.subsCondition);
 		SDL_UnlockMutex(VM_Player::subContext.subsMutex);
@@ -2326,7 +2366,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 				break;
 			case LIB_FFMPEG::SUBTITLE_BITMAP:
 				bitmapSub          = new VM_Subtitle();
-				bitmapSub->pts     = VM_PTS(pts.start, pts.end);
+				bitmapSub->pts     = VM_PTS(pts);
 				bitmapSub->subRect = new VM_SubRect(*subFrame.rects[i]);
 				break;
 			}
@@ -2338,11 +2378,20 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		switch (VM_Player::subContext.type) {
 		case LIB_FFMPEG::SUBTITLE_ASS:
 		case LIB_FFMPEG::SUBTITLE_TEXT:
-			textSubs = VM_SubFontEngine::SplitAndFormatSub(subTexts, VM_Player::subContext.styles, VM_Player::subContext.subs);
+			SDL_LockMutex(VM_Player::subContext.subsMutex);
+
+			if (!VM_Player::subContext.available)
+				SDL_CondWait(VM_Player::subContext.subsCondition, VM_Player::subContext.subsMutex);
+
+			textSubs = VM_SubFontEngine::SplitAndFormatSub(subTexts, VM_Player::subContext);
+
+			SDL_UnlockMutex(VM_Player::subContext.subsMutex);
 
 			for (auto textSub : textSubs)
-				textSub->pts = VM_PTS(pts.start, pts.end);
+				textSub->pts = VM_PTS(pts);
 
+			break;
+		default:
 			break;
 		}
 
@@ -2382,7 +2431,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		{
 			// OPEN THE SUB STYLE FONTS
 			if ((textSub->style != NULL) && !textSub->style->fontName.empty())
-				textSub->style->openFont(VM_Player::subContext.styleFonts, VM_Player::subContext.scale, textSub);
+				textSub->style->openFont(VM_Player::subContext, textSub->textUTF16);
 
 			VM_Player::subContext.subs.push_back(textSub);
 		}
@@ -2406,6 +2455,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 		VM_SubFontEngine::RemoveSubs(sub->id);
 		DELETE_POINTER(sub);
 	}
+
 	VM_Player::subContext.subs.clear();
 
 	VM_Player::subContext.available = true;
