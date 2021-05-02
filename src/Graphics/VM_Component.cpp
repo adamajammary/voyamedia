@@ -65,8 +65,8 @@ int Graphics::VM_Component::render()
 	area.w -= (this->borderWidth.left + this->borderWidth.right);
 	area.h -= (this->borderWidth.top  + this->borderWidth.bottom);
 
-	VM_Graphics::FillArea(&this->backgroundColor, &area);
-	VM_Graphics::FillBorder(&this->borderColor, &this->backgroundArea, this->borderWidth);
+	VM_Graphics::FillArea(this->backgroundColor, area);
+	VM_Graphics::FillBorder(this->borderColor, this->backgroundArea, this->borderWidth);
 
 	for (auto button : this->buttons)
 		button->render();

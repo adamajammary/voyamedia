@@ -22,6 +22,10 @@ String System::VM_Text::Encrypt(const String &message)
 	return encrypted;
 }
 
+bool System::VM_Text::EndsWith(const String &text, char character) {
+	return (!text.empty() && (text[text.size() - 1] == character));
+}
+
 String System::VM_Text::EscapeSQL(const String &unescapedString, const bool removeQuotes)
 {
 	char*  escapedStringBuffer = LIB_SQLITE::sqlite3_mprintf("%Q", unescapedString.c_str());
@@ -53,6 +57,32 @@ String System::VM_Text::EscapeURL(const String &unescapedString)
 	}
 
 	return escapedString;
+}
+
+bool System::VM_Text::FontSupportsLanguage(const TTF_Font* font, const uint16_t* utf16, size_t size)
+{
+	if ((font == NULL) || (utf16 == NULL) || (size == 0))
+		return false;
+
+	for (size_t i = 0; ((i < size) && (utf16[i] != 0)); i++) {
+		if (!TTF_GlyphIsProvided(font, utf16[i]))
+			return false;
+	}
+
+	return true;
+}
+
+bool System::VM_Text::FontSupportsLanguage(const TTF_Font* font, const String &text)
+{
+	if ((font == NULL) || text.empty())
+		return false;
+
+	for (auto c : text) {
+		if (!TTF_GlyphIsProvided(font, c))
+			return false;
+	}
+
+	return true;
 }
 
 #if defined _windows
@@ -133,32 +163,6 @@ UINT System::VM_Text::getCodePage(const FT_SfntName2 &ftName)
 	return 0;
 }
 #endif
-
-bool System::VM_Text::FontSupportsLanguage(const TTF_Font* font, const uint16_t* utf16, size_t size)
-{
-	if ((font == NULL) || (utf16 == NULL) || (size == 0))
-		return false;
-
-	for (size_t i = 0; ((i < size) && (utf16[i] != 0)); i++) {
-		if (!TTF_GlyphIsProvided(font, utf16[i]))
-			return false;
-	}
-
-	return true;
-}
-
-bool System::VM_Text::FontSupportsLanguage(const TTF_Font* font, const String &text)
-{
-	if ((font == NULL) || text.empty())
-		return false;
-
-	for (auto c : text) {
-		if (!TTF_GlyphIsProvided(font, c))
-			return false;
-	}
-
-	return true;
-}
 
 String System::VM_Text::GetFileSizeString(const size_t fileSize)
 {
@@ -393,6 +397,15 @@ String System::VM_Text::GetSpaceHolder(const String &text)
 	return text;
 }
 
+int System::VM_Text::GetSpaceWidth(TTF_Font* font)
+{
+	int minx, maxx, miny, maxy, advance;
+
+	TTF_GlyphMetrics(font, ' ', &minx, &maxx, &miny, &maxy, &advance);
+
+	return (advance * 2);
+}
+
 Strings System::VM_Text::GetTags(const String &fullPath)
 {
 	String  directoryPath, file = String(fullPath), pathSeperator, title;
@@ -595,6 +608,23 @@ String System::VM_Text::GetUrlRoot(const String &mediaURL)
 	String root;
 	root = VM_Text::Replace(mediaURL, "//", "_?_?_"); root = root.substr(0, root.find("/")); root = VM_Text::Replace(root, "_?_?_", "//");
 	return root;
+}
+
+int System::VM_Text::GetWidth(const String &text, TTF_Font* font)
+{
+	if (!text.empty())
+	{
+		int       textWidth, h;
+		uint16_t* text16 = new uint16_t[DEFAULT_WCHAR_BUFFER_SIZE];
+
+		VM_Text::ToUTF16(text, text16, DEFAULT_WCHAR_BUFFER_SIZE);
+		TTF_SizeUNICODE(font, text16, &textWidth, &h);
+		DELETE_POINTER_ARR(text16);
+
+		return textWidth;
+	}
+
+	return 0;
 }
 
 String System::VM_Text::GetXmlValue(const String &xmlContent, const String &openString, const int openTagLength, const String &closeString)

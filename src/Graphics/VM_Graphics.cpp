@@ -703,55 +703,43 @@ int Graphics::VM_Graphics::CreateThumbThread(void* userData)
 	return RESULT_OK;
 }
 
-int Graphics::VM_Graphics::FillArea(VM_Color* fillColor, const SDL_Rect* areaToFill)
+int Graphics::VM_Graphics::FillArea(const VM_Color &fillColor, const SDL_Rect &areaToFill)
 {
-	if ((fillColor == NULL) || (areaToFill == NULL))
-		return ERROR_INVALID_ARGUMENTS;
-
-	SDL_SetRenderDrawBlendMode(VM_Window::Renderer, (fillColor->a < 0xFF ? SDL_BLENDMODE_BLEND : SDL_BLENDMODE_NONE));
-	SDL_SetRenderDrawColor(VM_Window::Renderer,     fillColor->r, fillColor->g, fillColor->b, fillColor->a);
+	SDL_SetRenderDrawBlendMode(VM_Window::Renderer, (fillColor.a < 0xFF ? SDL_BLENDMODE_BLEND : SDL_BLENDMODE_NONE));
+	SDL_SetRenderDrawColor(VM_Window::Renderer,     fillColor.r, fillColor.g, fillColor.b, fillColor.a);
 	
-	return SDL_RenderFillRect(VM_Window::Renderer, areaToFill);
+	return SDL_RenderFillRect(VM_Window::Renderer, &areaToFill);
 }
 
-int Graphics::VM_Graphics::FillBorder(VM_Color* color, const SDL_Rect* button, const int borderThickness)
+int Graphics::VM_Graphics::FillBorder(const VM_Color &color, const SDL_Rect &button, const int borderThickness)
 {
-	if ((color == NULL) || (button == NULL))
-		return ERROR_INVALID_ARGUMENTS;
-
 	return VM_Graphics::FillBorder(color, button, VM_Border(borderThickness));
 }
 
-int Graphics::VM_Graphics::FillBorder(VM_Color* color, const SDL_Rect* button, const VM_Border &borderThickness)
+int Graphics::VM_Graphics::FillBorder(const VM_Color &color, const SDL_Rect &button, const VM_Border &borderThickness)
 {
-	SDL_Rect borderLine;
-	int  result;
-
-	if ((color == NULL) || (button == NULL))
-		return ERROR_INVALID_ARGUMENTS;
-
-	borderLine = SDL_Rect(*button);
+	auto borderLine = SDL_Rect(button);
 
 	// TOP
 	borderLine.h = borderThickness.top;
-	result       = VM_Graphics::FillArea(color, &borderLine);
+	auto result       = VM_Graphics::FillArea(color, borderLine);
 
 	// BOTTOM
-	borderLine.y = (button->y + button->h - borderThickness.bottom);
+	borderLine.y = (button.y + button.h - borderThickness.bottom);
 	borderLine.h = borderThickness.bottom;
-	result       = VM_Graphics::FillArea(color, &borderLine);
+	result       = VM_Graphics::FillArea(color, borderLine);
 
 	// LEFT
-	borderLine.y = button->y;
+	borderLine.y = button.y;
 	borderLine.w = borderThickness.left;
-	borderLine.h = button->h;
-	result       = VM_Graphics::FillArea(color, &borderLine);
+	borderLine.h = button.h;
+	result       = VM_Graphics::FillArea(color, borderLine);
 
 	// RIGHT
-	borderLine.x = (button->x + button->w - borderThickness.right);
+	borderLine.x = (button.x + button.w - borderThickness.right);
 	borderLine.w = borderThickness.right;
-	borderLine.h = button->h;
-	result       = VM_Graphics::FillArea(color, &borderLine);
+	borderLine.h = button.h;
+	result       = VM_Graphics::FillArea(color, borderLine);
 
 	return result;
 }
@@ -783,7 +771,7 @@ void Graphics::VM_Graphics::FillGradient(const VM_Color &colorStart, const VM_Co
 	}
 }
 
-Graphics::VM_Texture* Graphics::VM_Graphics::GetButtonLabel(const String &label, VM_Color color, const uint32_t wrapLength, const int fontSize)
+Graphics::VM_Texture* Graphics::VM_Graphics::GetButtonLabel(const String &label, const SDL_Color &color, const uint32_t wrapLength, const int fontSize)
 {
 	if (label.empty())
 		return NULL;
