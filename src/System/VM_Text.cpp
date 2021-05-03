@@ -870,6 +870,9 @@ uint16_t System::VM_Text::toUTF8(int char1, int char2)
 // http://www.utf8-chartable.de/unicode-utf8-table.pl?start=9728&utf8=dec
 String System::VM_Text::ToUTF8(const String &stringUNICODE)
 {
+	if (stringUNICODE.empty())
+		return "";
+
 	String    hexString   = VM_Text::Replace(stringUNICODE, "\\u", "0x");
 	uint16_t* bufferUTF16 = (uint16_t*)malloc((stringUNICODE.size() + 1) * sizeof(uint16_t));
 
@@ -1029,8 +1032,10 @@ int System::VM_Text::ToUTF16(const String &srcASCII, uint16_t* destUTF16, const 
 	uint32_t incrementASCII;
 	uint32_t charIndexUTF16 = 0;
 
-	if (srcASCII.empty())
+	if (srcASCII.empty()) {
+		destUTF16[0] = 0;
 		return 0;
+	}
 
 	// Convert ASCII characters to UTF8: { 196, 128 } => 0x0100 => 'Ā'
 	for (size_t charIndexASCII = 0; charIndexASCII < srcASCII.size(); charIndexASCII++)
