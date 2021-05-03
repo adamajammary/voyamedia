@@ -1281,28 +1281,17 @@ int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
 	}
 
 	// REMOVE EXPIRED SUBS
-	for (auto sub = VM_Player::subContext.subs.begin(); sub != VM_Player::subContext.subs.end();)
+	for (auto subIter = VM_Player::subContext.subs.begin(); subIter != VM_Player::subContext.subs.end();)
 	{
-		auto start = ((*sub)->pts.start - DELAY_TIME_ONE_MS);
-		auto end   = ((*sub)->pts.end   - DELAY_TIME_SUB_RENDER);
+		VM_Subtitle* sub = *subIter;
 
-		if ((MediaPlayer::VM_Player::ProgressTime > end) || (MediaPlayer::VM_Player::ProgressTime < start))
+		if (sub->isExpired())
 		{
-			#if defined _DEBUG
-				auto delay = (VM_Player::ProgressTime - (*sub)->pts.end);
+			bool bottom = sub->isAlignedBottom();
 
-				if (delay > 0) {
-					LOG("VM_Player::renderSub:\n");
-					LOG("\tREMOVE_SUB: %s\n", (*sub)->text.c_str());
-					LOG("\tREMOVE_DELAY: %.3fs (%.3f - %.3f)\n", delay, VM_Player::ProgressTime, (*sub)->pts.end);
-				}
-			#endif
-
-			bool bottom = (*sub)->isAlignedBottom();
-
-			VM_SubFontEngine::RemoveSubs((*sub)->id);
-			DELETE_POINTER(*sub);
-			sub = VM_Player::subContext.subs.erase(sub);
+			VM_SubFontEngine::RemoveSubs(sub->id);
+			DELETE_POINTER(sub);
+			subIter = VM_Player::subContext.subs.erase(subIter);
 
 			if (bottom)
 				VM_SubFontEngine::RemoveSubsBottom();
@@ -1311,7 +1300,7 @@ int MediaPlayer::VM_Player::renderSub(const SDL_Rect &location)
 			continue;
 		}
 
-		sub++;
+		subIter++;
 	}
 
 	switch (VM_Player::subContext.type) {
@@ -1365,7 +1354,7 @@ void MediaPlayer::VM_Player::renderSubBitmap(const SDL_Rect &location)
 			{
 				VM_Subtitle* sub = *subIter;
 
-				if ((sub == NULL) || (sub->subRect->w <= 0) || (sub->subRect->h <= 0))
+				if ((sub == NULL) || (sub->subRect->w <= 0) || (sub->subRect->h <= 0) || sub->isExpired())
 					continue;
 
 				// SKIP IF THERE ARE COLLISIONS/OVERLAP
@@ -1473,14 +1462,6 @@ void MediaPlayer::VM_Player::renderSubText(const SDL_Rect &location)
 
 			SDL_SetRenderTarget(VM_Window::Renderer, NULL);
 		}
-
-		#if defined _DEBUG
-		for (auto sub : VM_Player::subContext.subs) {
-			auto delay = (VM_Player::ProgressTime - sub->pts.start);
-			if (delay > DELAY_TIME_SUB_RENDER)
-				LOG("VM_Player::renderSubText: DELAY: %.3fs (%.3f - %.3f)\n", delay, VM_Player::ProgressTime, sub->pts.start);
-		}
-		#endif
 	}
 
 	SDL_SetRenderDrawBlendMode(VM_Window::Renderer, SDL_BLENDMODE_BLEND);
@@ -2321,6 +2302,7 @@ int MediaPlayer::VM_Player::threadSub(void* userData)
 					sub->pts.end = ptsEnd;
 			}
 		}
+
 		VM_Player::subContext.available = true;
 		SDL_CondSignal(VM_Player::subContext.subsCondition);
 		SDL_UnlockMutex(VM_Player::subContext.subsMutex);

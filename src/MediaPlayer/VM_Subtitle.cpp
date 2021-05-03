@@ -191,3 +191,11 @@ bool MediaPlayer::VM_Subtitle::isAlignedTop()
 	VM_SubAlignment a = this->getAlignment();
 	return ((a == SUB_ALIGN_TOP_LEFT) || (a == SUB_ALIGN_TOP_RIGHT) || (a == SUB_ALIGN_TOP_CENTER));
 }
+
+bool MediaPlayer::VM_Subtitle::isExpired()
+{
+	auto start = (this->pts.start - DELAY_TIME_ONE_MS);
+	auto end   = (this->pts.end   - DELAY_TIME_SUB_RENDER);
+
+	return ((VM_Player::ProgressTime > end) || (VM_Player::ProgressTime < start));
+}

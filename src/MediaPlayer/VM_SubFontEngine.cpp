@@ -1155,7 +1155,7 @@ void MediaPlayer::VM_SubFontEngine::RemoveSubsBottom()
 
 int MediaPlayer::VM_SubFontEngine::renderSub(VM_SubTexture* subTexture)
 {
-	if ((subTexture == NULL) || (subTexture->textureData == NULL))
+	if ((subTexture == NULL) || (subTexture->textureData == NULL) || VM_Text::Trim(subTexture->subtitle->text).empty())
 		return ERROR_INVALID_ARGUMENTS;
 
 	SDL_Rect* clip = NULL;
@@ -1273,7 +1273,8 @@ int MediaPlayer::VM_SubFontEngine::RenderSubText(const VM_PlayerSubContext &subC
 
 	for (auto sub : subContext.subs)
 	{
-		if ((VM_SubFontEngine::subsPosition.find(sub->id) != VM_SubFontEngine::subsPosition.end()) ||
+		if (sub->isExpired() ||
+			(VM_SubFontEngine::subsPosition.find(sub->id) != VM_SubFontEngine::subsPosition.end()) ||
 			(VM_SubFontEngine::subsTop.find(sub->id)      != VM_SubFontEngine::subsTop.end()) ||
 			(VM_SubFontEngine::subsMiddle.find(sub->id)   != VM_SubFontEngine::subsMiddle.end()) ||
 			(VM_SubFontEngine::subsBottom.find(sub->id)   != VM_SubFontEngine::subsBottom.end()))
@@ -1291,7 +1292,8 @@ int MediaPlayer::VM_SubFontEngine::RenderSubText(const VM_PlayerSubContext &subC
 			continue;
 
 		// Custom draw operation (fill rect)
-		if (!SDL_RectEmpty(&sub->drawRect)) {
+		if (!SDL_RectEmpty(&sub->drawRect))
+		{
 			SDL_Rect drawRectScaled;
 
 			drawRectScaled.x = (int)ceil((float)sub->drawRect.x * subContext.scale.x);

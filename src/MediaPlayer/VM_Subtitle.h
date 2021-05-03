@@ -59,6 +59,7 @@ namespace VoyaMedia
 			bool               isAlignedMiddle();
 			bool               isAlignedRight();
 			bool               isAlignedTop();
+			bool               isExpired();
 
 		private:
 			VM_SubAlignment getAlignment();
