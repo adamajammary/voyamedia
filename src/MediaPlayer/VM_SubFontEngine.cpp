@@ -1671,8 +1671,11 @@ void MediaPlayer::VM_SubFontEngine::setSubPositionRelative(const VM_SubTexturesI
 			subLine.push_back(subTexture);
 
 			// Add split subs belonging to the same sub line
-			if ((i < subTextures.second.size() - 1) && !subTexture->offsetY) {
-				offsetX += (subTexture->locationRender.w + VM_SubStyle::GetOffsetX(subTexture));
+			if ((i < subTextures.second.size() - 1) && !subTexture->offsetY)
+			{
+				if (!VM_Text::Trim(subTexture->subtitle->text).empty())
+					offsetX += (subTexture->locationRender.w + VM_SubStyle::GetOffsetX(subTexture));
+	
 				continue;
 			}
 
@@ -1775,7 +1778,7 @@ void MediaPlayer::VM_SubFontEngine::setTotalWidth(const VM_SubTexturesId &subs)
 			if (subTexture->subtitle->skip)
 				continue;
 
-			if (subTexture->textureData != NULL)
+			if ((subTexture->textureData != NULL) && !VM_Text::Trim(subTexture->subtitle->text).empty())
 				totalWidth += subTexture->textureData->width;
 
 			subLine.push_back(subTexture);
