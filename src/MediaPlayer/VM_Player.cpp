@@ -907,9 +907,9 @@ int MediaPlayer::VM_Player::openSub()
 		int    videoHeight   = (VM_Player::videoContext.stream != NULL ? VM_Player::videoContext.stream->codec->height : 0);
 
 		if (invalidRes && (subHeader.find(defaultStyle1) != String::npos))
-			subHeader = VM_Text::Replace(subHeader, defaultStyle1, "Style: Default,Arial,24,");
+			subHeader = VM_Text::Replace(subHeader, defaultStyle1, "Style: Default,Arial,19,");
 		else if (invalidRes && (subHeader.find(defaultStyle2) != String::npos))
-			subHeader = VM_Text::Replace(subHeader, defaultStyle2, "Style: Default,Arial,30,");
+			subHeader = VM_Text::Replace(subHeader, defaultStyle2, "Style: Default,Arial,23,");
 
 		// SUB SCREEN SPACE SIZE
 		if ((scriptWidth > 0) && (scriptHeight > 0))
@@ -1191,10 +1191,11 @@ int MediaPlayer::VM_Player::PlaylistLoopTypeToggle()
 
 void MediaPlayer::VM_Player::Refresh()
 {
-	if (!SDL_RectEmpty(&VM_Player::VideoDimensions)) {
+	if (!SDL_RectEmpty(&VM_Player::VideoDimensions))
+	{
 		VM_Player::subContext.scale = {
-			(float)((float)VM_Player::VideoDimensions.w / (float)VM_Player::subContext.size.x * DEFAULT_FONT_DPI_RATIO),
-			(float)((float)VM_Player::VideoDimensions.h / (float)VM_Player::subContext.size.y * DEFAULT_FONT_DPI_RATIO)
+			(float)((float)VM_Player::VideoDimensions.w / (float)VM_Player::subContext.size.x),
+			(float)((float)VM_Player::VideoDimensions.h / (float)VM_Player::subContext.size.y)
 		};
 
 		for (auto sub : VM_Player::subContext.subs)

@@ -423,7 +423,6 @@ namespace VoyaMedia
 	const int          DEFAULT_MARGIN            = 10;
 	const int          DEFAULT_CHAR_BUFFER_SIZE  = 1024;
 	const int          DEFAULT_WCHAR_BUFFER_SIZE = 4096;
-	const float        DEFAULT_FONT_DPI_RATIO    = 0.75f; // (72.0 / 96.0)
 	const int          DEFAULT_FONT_SIZE         = 11;
 	const int          DEFAULT_FONT_SIZE_SUB     = 48;
 	const int          DEFAULT_IMG_TXT_SPACING   = 5;
