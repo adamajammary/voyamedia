@@ -87,6 +87,8 @@ if (APPLE)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f ../build/macosx/Info.plist ${OUT_DIR}/)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND cp -f ../build/macosx/PkgInfo    ${OUT_DIR}/)
 
+	add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND for lib in ${FWK_DIR}/*.dylib; do install_name_tool -change ${LIB_DIR}/libcrypto.1.1.dylib @executable_path/../Frameworks/libcrypto.1.1.dylib $$lib; install_name_tool -change ${LIB_DIR}/libssl.1.1.dylib @executable_path/../Frameworks/libssl.1.1.dylib $$lib; done)
+
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND codesign --entitlements ../build/macosx/Entitlements.plist --deep -i __APP_IDENTITY__ -s "__OSX_SIGN_APP__" -fv ${APP_DIR})
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND productbuild --component ${APP_DIR} /Applications --sign "__OSX_SIGN_INSTALLER__" __OSX_PKG__)
 elseif (UNIX)
