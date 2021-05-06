@@ -18,6 +18,7 @@ namespace VoyaMedia
 		public:
 			static String    Decrypt(const String &message);
 			static String    Encrypt(const String &message);
+			static bool      EndsWith(const String &text, char character);
 			static String    EscapeSQL(const String &unescapedString, bool removeQuotes = false);
 			static String    EscapeURL(const String &unescapedString);
 			static bool      FontSupportsLanguage(const TTF_Font* font, const uint16_t* utf16, size_t size);
@@ -34,12 +35,14 @@ namespace VoyaMedia
 			static String    GetMediaSampleRateString(const int sampleRate);
 			static String    GetNewLine(const String &text);
 			static String    GetSpaceHolder(const String &text);
+			static int       GetSpaceWidth(TTF_Font* font);
 			static Strings   GetTags(const String &fullPath);
 			static String    GetTimeFormatted(const time_t timeStamp,   bool weekday, bool clock = true);
 			static String    GetTimeFormatted(const String &timeString, bool weekday, bool clock = true);
 			static time_t    GetTimeStamp(const String &timeString);
 			static String    GetToken(String &source, const String &delimiter);
 			static String    GetUrlRoot(const String &mediaURL);
+			static int       GetWidth(const String &text, TTF_Font* font);
 			static String    GetXmlValue(const String &xmlContent, const String &openString, const int openTagLength, const String &closeString);
 			static bool      IsValidSubtitle(const String &subtitle);
 			static String    Remove(const String &text, const String &removeSubstring);

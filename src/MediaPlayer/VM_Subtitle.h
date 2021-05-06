@@ -50,6 +50,7 @@ namespace VoyaMedia
 			VM_Subtitles       getDuplicateSubs(const VM_Subtitles &subs);
 			TTF_Font*          getFont();
 			SDL_Rect           getMargins();
+			int                getMaxWidth();
 			int                getOutline();
 			SDL_Point          getShadow();
 			bool               isAlignedBottom();
@@ -58,6 +59,7 @@ namespace VoyaMedia
 			bool               isAlignedMiddle();
 			bool               isAlignedRight();
 			bool               isAlignedTop();
+			bool               isExpired();
 
 		private:
 			VM_SubAlignment getAlignment();

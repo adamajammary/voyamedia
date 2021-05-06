@@ -26,11 +26,11 @@ namespace VoyaMedia
 			static VM_Image*                CreateThumbnailAudioVideo(int mediaID, VM_MediaType mediaType);
 			static VM_Image*                CreateThumbnailPicture(int mediaID, VM_MediaType mediaType);
 			static int                      CreateThumbThread(void* userData);
-			static int                      FillArea(VM_Color* fillColor, const SDL_Rect* areaToFill);
-			static int                      FillBorder(VM_Color* color, const SDL_Rect* button, const int borderThickness);
-			static int                      FillBorder(VM_Color* color, const SDL_Rect* button, const VM_Border &borderThickness);
+			static int                      FillArea(const VM_Color &fillColor, const SDL_Rect &areaToFill);
+			static int                      FillBorder(const VM_Color &color, const SDL_Rect &button, const int borderThickness);
+			static int                      FillBorder(const VM_Color &color, const SDL_Rect &button, const VM_Border &borderThickness);
 			static void                     FillGradient(const VM_Color &colorStart, const VM_Color &colorEnd, int width, int height);
-			static VM_Texture*              GetButtonLabel(const String &label, VM_Color color, const uint32_t wrapLength = 0, const int fontSize = DEFAULT_FONT_SIZE);
+			static VM_Texture*              GetButtonLabel(const String &label, const SDL_Color &color, const uint32_t wrapLength = 0, const int fontSize = DEFAULT_FONT_SIZE);
 			static String                   GetImageCamera(LIB_FREEIMAGE::FIBITMAP* image);
 			static String                   GetImageDateTaken(LIB_FREEIMAGE::FIBITMAP* image);
 			static String                   GetImageResolutionString(int width, int height);
@@ -42,8 +42,8 @@ namespace VoyaMedia
 			static LIB_FREEIMAGE::FIBITMAP* ResizeImage(LIB_FREEIMAGE::FIBITMAP** image, unsigned int width, unsigned int height, const bool freeImage = true);
 			static LIB_FREEIMAGE::FIBITMAP* RotateImage(LIB_FREEIMAGE::FIBITMAP** image, double angle, const bool freeImage = true);
 			static VM_Border                ToVMBorder(const String &borderWidth);
-			static VM_Color                 ToVMColor(const String & colorHex);
-			static uint8_t                  ToVMColorAlpha(const String & alphaHex);
+			static VM_Color                 ToVMColor(const String &colorHex);
+			static uint8_t                  ToVMColorAlpha(const String &alphaHex);
 
 			#if defined _windows
 				static int                      CreateThumbFromCoverArtFile(const WString &fullPath, const WString &thumbPath);

@@ -268,7 +268,7 @@ void Graphics::VM_Modal::Render()
 	VM_Color color      = VM_Graphics::ToVMColor(VM_GUI::ColorTheme["modal.back-color"]);
 	SDL_Rect windowArea = { 0, VM_Window::StatusBarHeight, VM_Window::Dimensions.w, (VM_Window::Dimensions.h - VM_Window::StatusBarHeight) };
 
-	VM_Graphics::FillArea(&color, &windowArea);
+	VM_Graphics::FillArea(color, windowArea);
 
 	if (VM_Modal::Components["modal_background_image"] != NULL)
 		VM_Modal::Components["modal_background_image"]->render();

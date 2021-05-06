@@ -9,6 +9,8 @@ namespace VoyaMedia
 {
 	namespace MediaPlayer
 	{
+		struct VM_PlayerSubContext;
+
 		/**
 		* [V4 Styles]
 		* Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, TertiaryColour, BackColour,
@@ -30,6 +32,7 @@ namespace VoyaMedia
 		public:
 			VM_SubAlignment    alignment;
 			int                blur;
+			VM_SubBorderStyle  borderStyle;
 			Graphics::VM_Color colorOutline;
 			Graphics::VM_Color colorPrimary;
 			Graphics::VM_Color colorShadow;
@@ -55,16 +58,14 @@ namespace VoyaMedia
 			int       fontSizeScaled;
 
 		public:
-			void         copy(const VM_SubStyle &subStyle);
-			VM_SubStyle* getDefault(const VM_SubStyles &subStyles);
-			TTF_Font*    getFont();
+			void      copy(const VM_SubStyle &subStyle);
+			TTF_Font* getFont();
+			void      openFont(VM_PlayerSubContext &subContext, uint16_t* textUTF16);
+			TTF_Font* openFont(LIB_FFMPEG::AVFormatContext* formatContext);
+			TTF_Font* openFontArial();
 
-			#if defined _windows
-				void openFont(umap<WString, TTF_Font*> &styleFonts, const SDL_FPoint &subScale, VM_Subtitle* sub = NULL);
-			#else
-				void openFont(umap<String, TTF_Font*> &styleFonts, const SDL_FPoint &subScale, VM_Subtitle* sub = NULL);
-			#endif
-
+			static int             GetOffsetX(VM_SubTexture* subTexture);
+			static VM_SubStyle*    GetStyle(const String &name, const VM_SubStyles &subStyles);
 			static bool            IsAlignedBottom(VM_SubAlignment a);
 			static bool            IsAlignedCenter(VM_SubAlignment a);
 			static bool            IsAlignedLeft(VM_SubAlignment   a);
@@ -74,11 +75,8 @@ namespace VoyaMedia
 			static VM_SubAlignment ToSubAlignment(int alignment);
 
 		private:
-			bool      isFontValid(TTF_Font* font);
-			TTF_Font* openFont(LIB_FFMPEG::AVFormatContext* formatContext);
-			TTF_Font* openFontDisk();
-			TTF_Font* openFontInternal(LIB_FFMPEG::AVFormatContext* formatContext);
-			bool      streamHasExtraData(LIB_FFMPEG::AVStream* stream);
+			bool isFontValid(TTF_Font* font);
+			bool streamHasExtraData(LIB_FFMPEG::AVStream* stream);
 
 		};
 	}

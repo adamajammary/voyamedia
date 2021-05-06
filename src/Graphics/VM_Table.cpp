@@ -528,7 +528,7 @@ int Graphics::VM_Table::render()
 	SDL_SetRenderTarget(VM_Window::Renderer, this->scrollPane->data);
 
 	SDL_Rect backgroundArea = { 0, 0, this->scrollPane->width, this->scrollPane->height };
-	VM_Graphics::FillArea(&this->backgroundColor, &backgroundArea);
+	VM_Graphics::FillArea(this->backgroundColor, backgroundArea);
 
 	for (int row = 0; row < (int)this->rows.size();      row++) {
 	for (int col = 0; col < (int)this->rows[row].size(); col++)
@@ -584,7 +584,7 @@ int Graphics::VM_Table::render()
 		button->render();
 	}
 
-	VM_Graphics::FillBorder(&this->borderColor, &this->backgroundArea, this->borderWidth);
+	VM_Graphics::FillBorder(this->borderColor, this->backgroundArea, this->borderWidth);
 
 	return RESULT_OK;
 }

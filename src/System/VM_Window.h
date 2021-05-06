@@ -22,7 +22,6 @@ namespace VoyaMedia
 			static Graphics::VM_Display Display;
 			static bool                 FullScreenEnabled;
 			static bool                 FullScreenMaximized;
-			static bool                 Inactive;
 			static bool                 IsDoneRendering;
 			static StringMap            Labels;
 			static SDL_Window*          MainWindow;

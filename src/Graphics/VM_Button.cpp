@@ -160,15 +160,15 @@ int Graphics::VM_Button::render()
 
 	// BACKGROUND
 	if (this->selected)
-		VM_Graphics::FillArea(&this->highlightColor, &area);
+		VM_Graphics::FillArea(this->highlightColor, area);
 	else
-		VM_Graphics::FillArea(&this->backgroundColor, &area);
+		VM_Graphics::FillArea(this->backgroundColor, area);
 
 	// BORDER
 	if (this->active)
-		VM_Graphics::FillBorder(&this->activeColor, &this->backgroundArea, this->borderWidth);
+		VM_Graphics::FillBorder(this->activeColor, this->backgroundArea, this->borderWidth);
 	else
-		VM_Graphics::FillBorder(&this->borderColor, &this->backgroundArea, this->borderWidth);
+		VM_Graphics::FillBorder(this->borderColor, this->backgroundArea, this->borderWidth);
 
 	// TEXT
 	if ((this->textData != NULL) && (this->textData->data != NULL))
@@ -185,7 +185,7 @@ int Graphics::VM_Button::render()
 
 	// OVERLAY
 	if (this->overlayColor.a > 0)
-		VM_Graphics::FillArea(&this->overlayColor, &area);
+		VM_Graphics::FillArea(this->overlayColor, area);
 
 	return RESULT_OK;
 }
