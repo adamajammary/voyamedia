@@ -25,13 +25,8 @@ elseif (UNIX)
     file(GLOB LIBS_SO "${LIB_DIR}/*.so")
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} __CPU_ARCH_FLAGS__ -O3 -std=c++__CPP_VERSION__ -pthread -Wno-unused-result")
-
-    execute_process(COMMAND pkg-config --cflags gtk+-3.0 OUTPUT_VARIABLE GTK_CFLAGS)
-    string(REPLACE "-I" " -I " GTK_CFLAGS2 ${GTK_CFLAGS})
-    separate_arguments(GTK UNIX_COMMAND ${GTK_CFLAGS2})
-
-    execute_process(COMMAND pkg-config --libs gtk+-3.0 OUTPUT_VARIABLE GTK_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
-    set(LIBS ${LIBS_SO} ${GTK_LIBS})
+    set(GTK_CFLAGS      "__GTK_CFLAGS__")
+    set(LIBS            ${LIBS_SO} __GTK_LIBS__)
 
     add_compile_options(-D_linux)
 elseif (WIN32)
@@ -49,7 +44,7 @@ endif()
 file(GLOB SOURCES_H   "src/*/*.h")
 file(GLOB SOURCES_CPP "src/*/*.cpp")
 
-include_directories(${INC_DIR} ${INC_DIR}/freetype ${INC_DIR}/freetype2 ${INC_DIR}/libxml2 ${INC_DIR}/mjson-1.7 ${DIRENT} ${GTK})
+include_directories(${INC_DIR} ${INC_DIR}/freetype ${INC_DIR}/freetype2 ${INC_DIR}/libxml2 ${INC_DIR}/mjson-1.7 ${DIRENT} ${GTK_CFLAGS})
 link_directories(${LIB_DIR})
 
 add_executable(VoyaMedia ${SOURCES_CPP} ${SOURCES_H} ${RES})
