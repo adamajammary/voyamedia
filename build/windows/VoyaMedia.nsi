@@ -2,11 +2,8 @@ RequestExecutionLevel admin
 
 !include "FileFunc.nsh"
 !include "MUI2.nsh"
-!include "LogicLib.nsh"
-!include "WinVer.nsh"
-!include "x64.nsh"
 
-InstallDir "$PROGRAMFILES64\VoyaMedia"
+InstallDir "$__PROGRAMFILES__\VoyaMedia"
 Name       "__APP_NAME__ __APP_VERSION__"
 OutFile    __SETUP_EXE__
 
@@ -54,22 +51,22 @@ Section Install
 SectionEnd
 
 Section Uninstall
-   Delete "$PROGRAMFILES64\VoyaMedia\Uninstall.exe" ; delete self
-   Delete "$PROGRAMFILES64\VoyaMedia\docs\*"
-   Delete "$PROGRAMFILES64\VoyaMedia\fonts\*"
-   Delete "$PROGRAMFILES64\VoyaMedia\gui\*"
-   Delete "$PROGRAMFILES64\VoyaMedia\img\*"
-   Delete "$PROGRAMFILES64\VoyaMedia\lang\*"
-   Delete "$PROGRAMFILES64\VoyaMedia\web\*"
-   Delete "$PROGRAMFILES64\VoyaMedia\*"
+   Delete "$__PROGRAMFILES__\VoyaMedia\Uninstall.exe" ; delete self
+   Delete "$__PROGRAMFILES__\VoyaMedia\docs\*"
+   Delete "$__PROGRAMFILES__\VoyaMedia\fonts\*"
+   Delete "$__PROGRAMFILES__\VoyaMedia\gui\*"
+   Delete "$__PROGRAMFILES__\VoyaMedia\img\*"
+   Delete "$__PROGRAMFILES__\VoyaMedia\lang\*"
+   Delete "$__PROGRAMFILES__\VoyaMedia\web\*"
+   Delete "$__PROGRAMFILES__\VoyaMedia\*"
    
-   RMDir "$PROGRAMFILES64\VoyaMedia\docs"
-   RMDir "$PROGRAMFILES64\VoyaMedia\fonts"
-   RMDir "$PROGRAMFILES64\VoyaMedia\gui"
-   RMDir "$PROGRAMFILES64\VoyaMedia\img"
-   RMDir "$PROGRAMFILES64\VoyaMedia\lang"
-   RMDir "$PROGRAMFILES64\VoyaMedia\web"
-   RMDir "$PROGRAMFILES64\VoyaMedia"
+   RMDir "$__PROGRAMFILES__\VoyaMedia\docs"
+   RMDir "$__PROGRAMFILES__\VoyaMedia\fonts"
+   RMDir "$__PROGRAMFILES__\VoyaMedia\gui"
+   RMDir "$__PROGRAMFILES__\VoyaMedia\img"
+   RMDir "$__PROGRAMFILES__\VoyaMedia\lang"
+   RMDir "$__PROGRAMFILES__\VoyaMedia\web"
+   RMDir "$__PROGRAMFILES__\VoyaMedia"
    
    Delete "$DESKTOP\__APP_NAME__.lnk"
    Delete "$SMPROGRAMS\__APP_NAME__\*.lnk"
@@ -80,17 +77,9 @@ Section Uninstall
 SectionEnd
 
 Function KillProcess
-   ${If} ${IsWinXP}
-      ExecShell "open" "TSKILL.exe" "VoyaMedia /A /V" SW_HIDE
-   ${Else}
-      ExecShell "open" "TASKKILL.exe" "/F /IM VoyaMedia.exe /T" SW_HIDE
-   ${EndIf}
+   ExecShell "open" "TASKKILL.exe" "/F /IM VoyaMedia.exe /T" SW_HIDE
 FunctionEnd
 
 Function un.KillProcess
-   ${If} ${IsWinXP}
-      ExecShell "open" "TSKILL.exe" "VoyaMedia /A /V" SW_HIDE
-   ${Else}
-      ExecShell "open" "TASKKILL.exe" "/F /IM VoyaMedia.exe /T" SW_HIDE
-   ${EndIf}
+   ExecShell "open" "TASKKILL.exe" "/F /IM VoyaMedia.exe /T" SW_HIDE
 FunctionEnd
