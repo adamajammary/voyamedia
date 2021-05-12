@@ -7,7 +7,7 @@ Summary:       __APP_DESCRIPTION__
 URL:           __APP_URL__
 License:       GPL
 Requires:      libgcc >= 4.8.3, libstdc++ >= 4.8.3
-ExclusiveArch: x86_64
+ExclusiveArch: __CPU_ARCH__
 
 %description
 __APP_DESCRIPTION__
