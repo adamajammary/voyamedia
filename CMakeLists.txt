@@ -14,37 +14,30 @@ set(LIB_DIR         "${EXT_LIB_DIR}/lib")
 if (APPLE)
     file(GLOB LIBS_DYLIB "${LIB_DIR}/*.dylib")
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -arch x86_64 -O3 -ObjC++ -std=c++__CPP_VERSION__ -stdlib=libc++ -mmacosx-version-min=__OSX_MIN_VERSION__ -Wno-switch")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_macosx -arch x86_64 -O3 -ObjC++ -std=c++__CPP_VERSION__ -stdlib=libc++ -mmacosx-version-min=__OSX_MIN_VERSION__ -Wno-switch")
     set(LIBS            ${LIBS_DYLIB})
 
     execute_process(COMMAND xcrun --sdk macosx --show-sdk-path OUTPUT_VARIABLE OSX_SDK_PATH OUTPUT_STRIP_TRAILING_WHITESPACE)
 	set(OSX_FRAMEWORKS_PATH "${OSX_SDK_PATH}/System/Library/Frameworks")
-
-    add_compile_options(-D_macosx)
 elseif (UNIX)
     file(GLOB LIBS_SO "${LIB_DIR}/*.so")
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} __CPU_ARCH_FLAGS__ -O3 -std=c++__CPP_VERSION__ -pthread -Wno-unused-result")
-    set(GTK_CFLAGS      __GTK_CFLAGS__)
-    set(LIBS            ${LIBS_SO} __GTK_LIBS__)
-
-    add_compile_options(-D_linux)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_linux __CPU_ARCH_FLAGS__ -O3 -std=c++__CPP_VERSION__ -pthread -Wno-unused-result __GTK_CFLAGS__")
+    set(LIBS            ${LIBS_SO})
 elseif (WIN32)
     file(GLOB LIBS_LIB RELATIVE ${LIB_DIR} "${LIB_DIR}/*.lib")
     
-    set(DIRENT "__DIRENT__")
-    set(LIBS   ${LIBS_LIB} IPHLPAPI.lib Ws2_32.lib)
-    set(RES    "build/windows/VoyaMedia.rc")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_windows __DIRENT__")
+    set(LIBS            ${LIBS_LIB} IPHLPAPI.lib Ws2_32.lib)
+    set(RES             "build/windows/VoyaMedia.rc")
 
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT VoyaMedia)
-
-    add_compile_options(-D_windows)
 endif()
 
 file(GLOB SOURCES_H   "src/*/*.h")
 file(GLOB SOURCES_CPP "src/*/*.cpp")
 
-include_directories(${INC_DIR} ${INC_DIR}/freetype ${INC_DIR}/freetype2 ${INC_DIR}/libxml2 ${INC_DIR}/mjson-1.7 ${DIRENT} ${GTK_CFLAGS})
+include_directories(${INC_DIR} ${INC_DIR}/freetype ${INC_DIR}/freetype2 ${INC_DIR}/libxml2 ${INC_DIR}/mjson-1.7)
 link_directories(${LIB_DIR})
 
 add_executable(VoyaMedia ${SOURCES_CPP} ${SOURCES_H} ${RES})
@@ -90,7 +83,7 @@ if (APPLE)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND codesign --entitlements ../build/macosx/Entitlements.plist --deep -i __APP_IDENTITY__ -s "__OSX_SIGN_APP__" -fv ${APP_DIR})
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND productbuild --component ${APP_DIR} /Applications --sign "__OSX_SIGN_INSTALLER__" __OSX_PKG__)
 elseif (UNIX)
-    set_target_properties(VoyaMedia PROPERTIES LINK_FLAGS "-Wl,-rpath,.")
+    set_target_properties(VoyaMedia PROPERTIES LINK_FLAGS "-Wl,-rpath,. __GTK_LDFLAGS__")
 
     set(DIST_DIR "__LINUX_DIST__")
     set(OUT_DIR  "voyamedia")
