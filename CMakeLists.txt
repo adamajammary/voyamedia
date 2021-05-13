@@ -25,7 +25,7 @@ elseif (UNIX)
     file(GLOB LIBS_SO "${LIB_DIR}/*.so")
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} __CPU_ARCH_FLAGS__ -O3 -std=c++__CPP_VERSION__ -pthread -Wno-unused-result")
-    set(GTK_CFLAGS      "__GTK_CFLAGS__")
+    set(GTK_CFLAGS      __GTK_CFLAGS__)
     set(LIBS            ${LIBS_SO} __GTK_LIBS__)
 
     add_compile_options(-D_linux)
