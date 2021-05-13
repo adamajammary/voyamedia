@@ -23,7 +23,7 @@ elseif (UNIX)
     file(GLOB LIBS_SO "${LIB_DIR}/*.so")
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_linux __CPU_ARCH_FLAGS__ -O3 -std=c++__CPP_VERSION__ -pthread -Wno-unused-result __GTK_CFLAGS__")
-    set(LIBS            ${LIBS_SO})
+    set(LIBS            ${LIBS_SO} __GTK_LIBS__)
 elseif (WIN32)
     file(GLOB LIBS_LIB RELATIVE ${LIB_DIR} "${LIB_DIR}/*.lib")
     
@@ -83,7 +83,7 @@ if (APPLE)
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND codesign --entitlements ../build/macosx/Entitlements.plist --deep -i __APP_IDENTITY__ -s "__OSX_SIGN_APP__" -fv ${APP_DIR})
     add_custom_command(TARGET VoyaMedia POST_BUILD COMMAND productbuild --component ${APP_DIR} /Applications --sign "__OSX_SIGN_INSTALLER__" __OSX_PKG__)
 elseif (UNIX)
-    set_target_properties(VoyaMedia PROPERTIES LINK_FLAGS "-Wl,-rpath,. __GTK_LDFLAGS__")
+    set_target_properties(VoyaMedia PROPERTIES LINK_FLAGS "-Wl,-rpath,.")
 
     set(DIST_DIR "__LINUX_DIST__")
     set(OUT_DIR  "voyamedia")
