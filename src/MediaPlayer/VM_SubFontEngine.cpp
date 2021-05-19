@@ -983,7 +983,7 @@ MediaPlayer::VM_SubStyle* MediaPlayer::VM_SubFontEngine::getSubStyle(const VM_Su
 			return style;
 	}
 
-	return NULL;
+	return (!subStyles.empty() ? subStyles[0] : NULL);
 }
 
 void MediaPlayer::VM_SubFontEngine::handleSubCollisions(const VM_SubTextureId &subTextures, const VM_SubTexturesId &subs)
