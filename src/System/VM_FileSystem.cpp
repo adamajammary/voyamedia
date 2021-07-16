@@ -1227,51 +1227,14 @@ String System::VM_FileSystem::getMediaResolutionStringVideo(LIB_FFMPEG::AVStream
 	return VM_Text::Format("%dp (%dx%d)", stream->codec->height, stream->codec->width, stream->codec->height);
 }
 
-LIB_FFMPEG::AVStream* System::VM_FileSystem::GetMediaStreamBest(LIB_FFMPEG::AVFormatContext* formatContext, VM_MediaType mediaType)
+LIB_FFMPEG::AVStream* System::VM_FileSystem::GetMediaStreamBest(LIB_FFMPEG::AVFormatContext* formatContext, LIB_FFMPEG::AVMediaType mediaType)
 {
 	if (formatContext == NULL)
 		return NULL;
 
-	int64_t               quality;
-	LIB_FFMPEG::AVStream* stream;
-	LIB_FFMPEG::AVStream* bestStream  = NULL;
-	int64_t               bestQuality = 0;
+	int index = LIB_FFMPEG::av_find_best_stream(formatContext, mediaType, -1, -1, NULL, 0);
 
-	for (int i = 0; i < (int)formatContext->nb_streams; i++)
-	{
-		stream = formatContext->streams[i];
-
-		if ((stream != NULL) && (stream->codec != NULL) && ((VM_MediaType)stream->codec->codec_type == mediaType))
-		{
-			switch (mediaType) {
-			case MEDIA_TYPE_AUDIO:
-				quality = ((int64_t)stream->codec->channels * (int64_t)stream->codec->sample_rate);
-
-				if ((bestStream == NULL) || (quality > bestQuality)) {
-					bestStream  = stream;
-					bestQuality = quality;
-				}
-
-				break;
-			case MEDIA_TYPE_VIDEO:
-				quality = ((int64_t)stream->codec->width * (int64_t)stream->codec->height);
-
-				if ((bestStream == NULL) || (quality > bestQuality)) {
-					bestStream  = stream;
-					bestQuality = quality;
-				}
-
-				break;
-			default:
-				if (bestStream == NULL)
-					bestStream = stream;
-
-				break;
-			}
-		}
-	}
-
-	return (bestStream != NULL ? VM_FileSystem::GetMediaStreamByIndex(formatContext, bestStream->index) : NULL);
+	return (index >= 0 ? VM_FileSystem::GetMediaStreamByIndex(formatContext, index) : NULL);
 }
 
 LIB_FFMPEG::AVStream* System::VM_FileSystem::GetMediaStreamByIndex(LIB_FFMPEG::AVFormatContext* formatContext, int streamIndex)

@@ -48,7 +48,7 @@ namespace VoyaMedia
 			static int64_t                      GetMediaDuration(LIB_FFMPEG::AVFormatContext* formatContext, LIB_FFMPEG::AVStream* audioStream);
 			static LIB_FFMPEG::AVFormatContext* GetMediaFormatContext(const String &filePath, bool parseStreams);
 			static double                       GetMediaFrameRate(LIB_FFMPEG::AVStream* stream);
-			static LIB_FFMPEG::AVStream*        GetMediaStreamBest(LIB_FFMPEG::AVFormatContext* formatContext, VM_MediaType mediaType);
+			static LIB_FFMPEG::AVStream*        GetMediaStreamBest(LIB_FFMPEG::AVFormatContext* formatContext, LIB_FFMPEG::AVMediaType mediaType);
 			static LIB_FFMPEG::AVStream*        GetMediaStreamByIndex(LIB_FFMPEG::AVFormatContext* formatContext, int streamIndex);
 			static int                          GetMediaStreamCount(LIB_FFMPEG::AVFormatContext* formatContext, VM_MediaType mediaType);
 			static int                          GetMediaStreamCountSubs();

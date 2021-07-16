@@ -826,7 +826,7 @@ int MediaPlayer::VM_Player::openStreams()
 
 	// AUDIO STREAM
 	VM_Player::audioContext.stream = VM_FileSystem::GetMediaStreamBest(
-		VM_Player::FormatContext, MEDIA_TYPE_AUDIO
+		VM_Player::FormatContext, LIB_FFMPEG::AVMEDIA_TYPE_AUDIO
 	);
 
 	if (VM_Player::audioContext.stream == NULL)
@@ -836,14 +836,14 @@ int MediaPlayer::VM_Player::openStreams()
 	if (VIDEO_IS_SELECTED)
 	{
 		VM_Player::videoContext.stream = VM_FileSystem::GetMediaStreamBest(
-			VM_Player::FormatContext, MEDIA_TYPE_VIDEO
+			VM_Player::FormatContext, LIB_FFMPEG::AVMEDIA_TYPE_VIDEO
 		);
 
 		if (VM_Player::videoContext.stream == NULL)
 			return ERROR_UNKNOWN;
 
-		VM_Player::subContext.stream = VM_FileSystem::GetMediaStreamFirst(
-			VM_Player::FormatContext, MEDIA_TYPE_SUBTITLE
+		VM_Player::subContext.stream = VM_FileSystem::GetMediaStreamBest(
+			VM_Player::FormatContext, LIB_FFMPEG::AVMEDIA_TYPE_SUBTITLE
 		);
 	}
 
