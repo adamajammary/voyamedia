@@ -986,11 +986,13 @@ bool System::VM_EventManager::isClickedTopBar(SDL_Event* mouseEvent)
 
 bool System::VM_EventManager::isKeyPressedPlayer(SDL_Keycode key, uint16_t mod)
 {
+	const bool isFullscreen = (VM_Window::FullScreenEnabled && VM_Window::FullScreenMaximized);
+
 	switch (key) {
 	case SDLK_ESCAPE:
 	case SDLK_AC_BACK:
 	case SDLK_AUDIOSTOP:
-		VM_Player::FullScreenExit(true);
+		VM_Player::FullScreenExit(!isFullscreen);
 		break;
 	case SDLK_SPACE:
 	case SDLK_RETURN:
